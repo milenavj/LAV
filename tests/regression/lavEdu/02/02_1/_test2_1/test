@@ -1,0 +1,116 @@
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_2/07b/test2_2.c
+
+LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+_test2_2/09b/test2_2.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_2/04b/test2_2.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_2/05b/test2_2.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_2/11b/test2_2.c
+
+LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+_test2_2/02b/test2_2.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_2/10b/test2_2.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_2/08b/test2_2.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_2/01b/test2_2.c
+
+LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+_test2_2/03b/test2_2.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_2/06b/test2_2.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_1/01a/test2_1.c
+
+LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+_test2_1/13a/test2_1.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_1/14a/test2_1.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_1/04a/test2_1.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_1/11a/test2_1.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_1/08a/test2_1.c
+
+LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+_test2_1/02a/test2_1.c
+
+LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+_test2_1/20a/test2_1.c
+
+LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+_test2_1/10a/test2_1.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_1/15a/test2_1.c
+
+LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+_test2_1/05a/test2_1.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_1/18a/test2_1.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_1/06a/test2_1.c
+
+LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+_test2_1/21a/test2_1.c
+
+LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+_test2_1/09a/test2_1.c
+
+LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+_test2_1/17a/test2_1.c
+
+LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+_test2_1/03a/test2_1.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_1/12a/test2_1.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_1/07a/test2_1.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_1/16a/test2_1.c
+
+//verifikovano default
+//LAV -find-first-flawed -loop-unroll-begin=2 -loop-unroll-end=0 
+//_test2_1/19a/test2_1.c
+

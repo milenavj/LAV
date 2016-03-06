@@ -1,0 +1,3 @@
+LAV -find-first-flawed -loop-unroll-begin=10 -loop-unroll-end=0 -track-pointers=false -solver=Z3-BV-ARR-EUF 
+//custom options --- 04a bug confirmed
+

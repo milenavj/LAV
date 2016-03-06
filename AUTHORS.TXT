@@ -1,0 +1,19 @@
+
+The code is developed by 
+Milena Vujosevic-Janicic 
+University of Belgrade
+http://www.matf.bg.ac.rs/~milena
+
+The code in 
+lav/include/solvers  
+lav/include/expression 
+lav/lib/Solvers 
+lav/lib/Expression 
+is based on a code developed by 
+Filip Maric, University of Belgrade.
+
+Advised by 
+prof Dusan Tosic, University of Belgrade
+prof Viktor Kuncak, EPFL
+
+

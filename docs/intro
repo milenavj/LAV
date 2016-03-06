@@ -1,0 +1,10 @@
+/// @mainpage LAV
+///
+/// @section main_intro Introduction
+/// Welcome to LAV. LAV is a software verification tool. It works on LLVM
+/// bitcode.
+/// 
+/// @section Documentation
+/// The documentation of LAV is composed of the Doxygen documentation
+/// of the code as well as the following documents:
+/// - @subpage overview

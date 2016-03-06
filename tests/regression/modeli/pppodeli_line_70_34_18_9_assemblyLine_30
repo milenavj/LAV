@@ -1,0 +1,61 @@
+function: main
+error: division_by_zero
+70: 34: 18: 9: i = 1, j = 0, k = 5, l = 0, 
+68: i = 1, j = 0, k = 5, l = 0, 
+67: i = 0, j = 0, k = 5, l = 0, 
+63: i = 0, j = 0, k = 5, l = 0, 
+62: i = 0, j = 0, k = 5, l = 1, 
+59: i = 0, j = 0, k = 5, l = 1, 
+58: i = 0, j = 0, k = 5, l = 2, 
+55: i = 0, j = 0, k = 5, l = 2, 
+54: i = 0, j = 0, k = 5, l = 0, 
+51: i = 0, j = 0, k = 5, l = 3, 
+49: i = 0, j = 0, k = 5, l = 3, 
+47: i = 0, j = 0, k = 5, l = 3, 
+Function podeli is called at line no. 70
+In function podeli the trace is 
+34: 
+33: i = 3, j = 3, r = 19, 
+32: i = 3, j = 3, r = 18, 
+29: i = 3, j = 3, r = 18, 
+30: i = 2, j = 3, r = 18, 
+30: i = 2, j = 2, r = 14, 
+30: i = 2, j = 2, r = 14, 
+30: i = 2, j = 1, r = 11, 
+30: i = 2, j = 1, r = 11, 
+30: i = 2, j = 0, r = 9, 
+30: i = 2, j = 0, r = 9, 
+29: i = 2, j = 3, r = 9, 
+29: i = 2, j = 3, r = 9, 
+30: i = 1, j = 3, r = 9, 
+30: i = 1, j = 2, r = 6, 
+30: i = 1, j = 2, r = 6, 
+30: i = 1, j = 1, r = 4, 
+30: i = 1, j = 1, r = 4, 
+30: i = 1, j = 0, r = 3, 
+30: i = 1, j = 0, r = 3, 
+29: i = 1, j = 3, r = 3, 
+29: i = 1, j = 3, r = 3, 
+30: i = 0, j = 3, r = 3, 
+30: i = 0, j = 2, r = 1, 
+30: i = 0, j = 2, r = 1, 
+30: i = 0, j = 1, r = 0, 
+30: i = 0, j = 1, r = 0, 
+30: i = 0, j = 0, r = 0, 
+30: i = 0, j = 0, r = 0, 
+29: i = 0, r = 0, 
+29: i = 0, r = 0, 
+26: i = 3, j = 3, r = 19, 
+
+Function ppodeli is called at line no. 34
+In function ppodeli the trace is 
+18: 
+17: r = 2, 
+16: r = 2, 
+
+Function pppodeli is called at line no. 18
+In function pppodeli the trace is 
+70: 34: 18: 9: 
+8: r = 2, 
+7: r = 2, 
+

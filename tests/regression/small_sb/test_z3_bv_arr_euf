@@ -1,0 +1,247 @@
+//FA
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF   -find-first-flawed
+ex1.c
+
+//TO
+//time LAV  -loop-unroll-begin 513 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF   -find-first-flawed
+//ex1.c
+
+time LAV  -loop-unroll-begin 3 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF   -find-first-flawed
+ex1_3_0.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF  -find-first-flawed
+ex2.c
+
+time LAV  -loop-unroll-begin 3 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF  -find-first-flawed
+ex2_3_0.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex3.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed  
+ex4.c
+
+//time LAV  -loop-unroll-begin 10 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed  
+//ex4.c
+
+time LAV -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex5.c
+
+time LAV -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex6.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed   
+ex7.c
+
+time LAV  -loop-unroll-begin 3 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed   
+ex7_3_0.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed 
+ex8.c
+
+time LAV  -loop-unroll-begin 3 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed 
+ex8_3_0.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex9.c
+
+time LAV  -loop-unroll-begin 3 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex9_3_0.c
+
+//TO
+//time LAV  -loop-unroll-begin 1024 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+//ex9.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex10.c
+
+time LAV  -loop-unroll-begin 3 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex10_3_0.c
+
+//TO
+//time LAV  -loop-unroll-begin 17 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+//ex10.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex11.c
+
+time LAV  -loop-unroll-begin 3 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex11_3_0.c
+
+//time LAV  -loop-unroll-begin 10 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+//ex12.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex12.c
+
+time LAV -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex13.c
+
+//time LAV  -loop-unroll-begin 10 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed 
+//ex14.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed 
+ex14.c
+
+//time LAV  -check-assert=true -check-pointers=false -solver=Z3-BV-ARR-EUF -find-first-flawed
+//ex15.c
+
+time LAV  -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex15.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1  -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex16.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 0  -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex16_2_0.c
+
+//time LAV  -loop-unroll-begin 100 -loop-unroll-end 0  -solver=Z3-BV-ARR-EUF -find-first-flawed
+//ex17.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1  -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex17.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex18.c
+
+time LAV  -loop-unroll-begin 10 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex18_10_0.c
+
+//time LAV  -loop-unroll-begin 100 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+//ex18.c
+
+//FA
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex19.c
+
+time LAV  -loop-unroll-begin 3 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex19_3_0.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex20.c
+
+//moglo bi da se razmota i 1024 puta, radi 7-8 minuta
+time LAV  -loop-unroll-begin 3 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex20_3_0.c
+
+//time LAV  -loop-unroll-begin 1024 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+//ex20.c
+
+//time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+//ex21_1.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex21.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex22.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex23.c
+
+time LAV  -loop-unroll-begin 36 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex23_36_0.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -check-pointers=false -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex25.c
+
+time LAV  -loop-unroll-begin 3 -loop-unroll-end 0 -check-pointers=false -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex25_3_0.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex26.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex27.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex30.c
+
+//TO
+//time LAV  -loop-unroll-begin 100 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+//ex30.c
+
+time LAV  -loop-unroll-begin 3 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex30_3_0.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex31.c
+
+time LAV  -loop-unroll-begin 7 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex31_7_0.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex32.c
+
+time LAV  -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex34.c
+
+time LAV  -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex37.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex39.c
+
+time LAV  -loop-unroll-begin 3 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex39_3_0.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex40.c
+
+time LAV  -loop-unroll-begin 3 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex40_3_0.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex41.c
+
+time LAV  -loop-unroll-begin 3 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex41_3_0.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex43.c
+
+//time LAV  -loop-unroll-begin 3 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+//ex43.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex46.c
+
+//TO
+//time LAV  -loop-unroll-begin 2 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+//ex46_2_0.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex47.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex47_2_0.c
+
+time LAV  -loop-unroll-begin 2 -loop-unroll-end 1 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex49.c
+
+time LAV  -loop-unroll-begin 3 -loop-unroll-end 0 -solver=Z3-BV-ARR-EUF -find-first-flawed
+ex49_3_0.c
+
+time LAV -solver=Z3-BV-ARR-EUF -find-first-flawed
+inf1.c
+
+time LAV   -solver=Z3-BV-ARR-EUF -find-first-flawed 
+inf2.c
+
+time LAV -solver=Z3-BV-ARR-EUF -find-first-flawed
+inf4.c
+
+time LAV -solver=Z3-BV-ARR-EUF -find-first-flawed 
+inf5.c
+
+time LAV -solver=Z3-BV-ARR-EUF -find-first-flawed
+inf6.c
+
+time LAV -solver=Z3-BV-ARR-EUF -find-first-flawed
+inf8.c
+
+
+
+
+
+

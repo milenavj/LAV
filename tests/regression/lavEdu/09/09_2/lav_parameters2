@@ -1,0 +1,2 @@
+LAV -find-first-flawed -loop-unroll-begin=3 -loop-unroll-end=0 -students-mode -solver=Z3-BV-ARR-EUF 
+

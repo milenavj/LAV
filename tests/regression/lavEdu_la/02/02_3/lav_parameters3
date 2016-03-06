@@ -1,0 +1,9 @@
+LAV -find-first-flawed -loop-unroll-begin=101 -loop-unroll-end=0 -track-pointers=false -solver=Z3-LA-ARR-EUF 
+//13a --- bug confirmed
+//09b --- bug confirmed
+//10a --- bug confirmed
+//03b --- bug confirmed	
+//05a --- bug confirmed
+//21a --- bug confirmed
+//17a --- bug confirmed
+//02b --- verified

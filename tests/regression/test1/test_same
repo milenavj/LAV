@@ -1,0 +1,3 @@
+time LAV -solver=Boolector-BV-ARR-ACK -find-first-flawed 
+
+

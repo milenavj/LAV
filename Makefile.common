@@ -1,0 +1,33 @@
+#===-- Makefile.common ---------------------------------------------------===#
+#
+#                     The LAV Software Verification Tool
+#
+# This file is distributed under the University of Illinois Open Source
+# License. See LICENSE.TXT for details.
+#
+#===----------------------------------------------------------------------===#
+
+include $(LEVEL)/Makefile.config
+
+# Include LLVM's Master Makefile config and rules.
+include $(LLVM_OBJ_ROOT)/Makefile.config
+include $(LLVM_SRC_ROOT)/Makefile.rules
+
+CXX.Flags += -DLLVM_23
+CXX.Flags += -DNDEBUG
+
+#FIXME: ovo je dodato zbog expression-a ... 
+CXX.Flags += -fexceptions
+CXX.Flags += -D__GNUCPP__
+CXX.Flags += -Wno-deprecated
+ifeq ($(ENABLE_Z3), 1)
+	CXX.Flags += -fopenmp
+	LIBS += -lrt
+endif
+
+.PHONY: 
+
+clean::
+	rm -rf *.o *.d *~ *.a 
+	rm -rf Release 
+	rm -rf Debug 

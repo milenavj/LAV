@@ -1,0 +1,17 @@
+#!/bin/bash
+
+#brise sve fajlove sa ekstenzijom .log u direktorijumu i poddirektorijumima
+echo "deleting log files"
+echo "find . -type f -name \"*.log\" -exec rm -f {} \;"
+find . -type f -name "*.log" -exec rm -f {} \;
+
+#brise sve fajlove sa ~ u direktorijumu i poddirektorijumima
+echo "deleting ~ files"
+echo "find . -type f -name \"*~\" -exec rm -f {} \;"
+find . -type f -name "*~" -exec rm -f {} \;
+
+#brise sadrzaj output direktorijuma
+echo "deleting files from Output directory"
+echo "rm -rf Output/*" 
+rm -rf Output/*
+

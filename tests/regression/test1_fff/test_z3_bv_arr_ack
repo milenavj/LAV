@@ -1,0 +1,102 @@
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+void.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+switch.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+strukture.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+struct0.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+razno.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+prvi.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+pplus.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+pokazivaci.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+nizpq.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+nizovi.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+niz1.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+niz0.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+mallocs.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+malloc3.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+malloc2.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+malloc.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+main.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+kratak.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+izmenaSemantike.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+intchar.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+if15.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+globaladdress.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+global.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+funkcijaIpokazivaci.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+fuf.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+funkcija1.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+fip.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+fig.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+exit.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+ex21-izmenjen.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+ex6.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+define.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+proba/adrese.c
+
+time LAV -solver=Z3-BV-ARR-ACK -find-first-flawed 
+proba/add.c

@@ -1,0 +1,10 @@
+time LAV -solver=Boolector-BV-ARR-ACK -find-first-flawed -model -loop-unroll-begin=4 -loop-unroll-end=0 
+ff.c
+
+time LAV -solver=Boolector-BV-ARR-ACK -find-first-flawed -model -loop-unroll-begin=4 -loop-unroll-end=0 
+fff.c
+
+time LAV -solver=Boolector-BV-ARR-ACK -find-first-flawed -model -loop-unroll-begin=4 -loop-unroll-end=0 
+ffff.c
+
+

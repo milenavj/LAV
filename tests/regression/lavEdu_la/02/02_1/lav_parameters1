@@ -1,0 +1,1 @@
+time LAV -find-first-flawed -solver=Z3-LA-ARR-EUF 

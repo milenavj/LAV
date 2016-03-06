@@ -1,0 +1,16 @@
+ line: 5   UNSAFE 
+ line: 10   UNSAFE 
+ line: 10   UNSAFE 
+ line: 10   UNSAFE 
+ line: 22   UNSAFE 
+ line: 22   SAFE 
+ line: 22   UNSAFE 
+ line: 22   SAFE 
+ line: 45   SAFE 
+ line: 47  line: 5   SAFE 
+ line: 47  line: 10   SAFE 
+ line: 47  line: 10   SAFE 
+ line: 47  line: 10   SAFE 
+ line: 48  line: 22   SAFE 
+ line: 48  line: 22   SAFE 
+ line: 45   SAFE 

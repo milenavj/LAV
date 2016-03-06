@@ -1,0 +1,6 @@
+//all programs are verified with default options except 02a
+LAV -find-first-flawed file_name.o
+
+//custom options
+LAV -find-first-flawed -loop-unroll-begin=11 -loop-unroll-end=0 -track-pointers=false -solver=Z3-BV-ARR-EUF file_name.o
+

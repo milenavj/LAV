@@ -1,0 +1,5 @@
+LAV -find-first-flawed -loop-unroll-begin=3 -loop-unroll-end=0 
+//02a --- bug confirmed
+//09a --- bug confirmed
+//03a --- bug confirmed
+

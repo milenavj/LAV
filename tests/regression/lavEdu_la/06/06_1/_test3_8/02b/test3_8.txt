@@ -1,0 +1,27 @@
+ line: 5   UNSAFE 
+ line: 8   UNSAFE 
+ line: 8   UNSAFE 
+ line: 8   UNSAFE 
+ line: 8   SAFE 
+ line: 8   SAFE 
+ line: 8   SAFE 
+ line: 8   UNSAFE 
+ line: 8   UNSAFE 
+ line: 8   UNSAFE 
+ line: 8   UNSAFE 
+ line: 8   UNSAFE 
+ line: 8   UNSAFE 
+ line: 28   SAFE 
+ line: 30  line: 5   SAFE 
+ line: 30  line: 8   SAFE 
+ line: 30  line: 8   SAFE 
+ line: 30  line: 8   SAFE 
+ line: 30  line: 8   SAFE 
+ line: 30  line: 8   SAFE 
+ line: 30  line: 8   SAFE 
+ line: 30  line: 8   SAFE 
+ line: 30  line: 8   SAFE 
+ line: 30  line: 8   SAFE 
+ line: 28   SAFE 
+ line: 28   SAFE 
+ line: 28   SAFE 

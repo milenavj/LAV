@@ -1,0 +1,13 @@
+ line: 11   SAFE 
+ line: 21   UNSAFE 
+ line: 21   SAFE 
+ line: 23   SAFE 
+ line: 23   SAFE 
+ line: 35   SAFE 
+ line: 36   SAFE 
+ line: 39   SAFE 
+ line: 39   FLAWED
+ line: 44  line: 21   SAFE 
+ line: 46  line: 21   SAFE 
+ line: 48   FLAWED
+ line: 50   FLAWED

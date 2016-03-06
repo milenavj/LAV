@@ -1,0 +1,75 @@
+
+1
+  %retval = alloca i32                            ; <i32*> [#uses=1]
+  %i = alloca double, align 8                     ; <double*> [#uses=6]
+  %c = alloca double, align 8                     ; <double*> [#uses=3]
+  %b = alloca double, align 8                     ; <double*> [#uses=5]
+  %a = alloca double, align 8                     ; <double*> [#uses=5]
+  %"alloca point" = bitcast i32 0 to i32          ; <i32> [#uses=0]
+  call void @llvm.dbg.func.start({ }* bitcast (%llvm.dbg.subprogram.type* @llvm.dbg.subprogram to { }*))
+  %0 = bitcast double* %i to { }*                 ; <{ }*> [#uses=1]
+  call void @llvm.dbg.declare({ }* %0, { }* bitcast (%llvm.dbg.variable.type* @llvm.dbg.variable to { }*))
+  %1 = bitcast double* %c to { }*                 ; <{ }*> [#uses=1]
+  call void @llvm.dbg.declare({ }* %1, { }* bitcast (%llvm.dbg.variable.type* @llvm.dbg.variable9 to { }*))
+  %2 = bitcast double* %b to { }*                 ; <{ }*> [#uses=1]
+  call void @llvm.dbg.declare({ }* %2, { }* bitcast (%llvm.dbg.variable.type* @llvm.dbg.variable11 to { }*))
+  %3 = bitcast double* %a to { }*                 ; <{ }*> [#uses=1]
+  call void @llvm.dbg.declare({ }* %3, { }* bitcast (%llvm.dbg.variable.type* @llvm.dbg.variable13 to { }*))
+  call void @llvm.dbg.stoppoint(i32 5, i32 0, { }* bitcast (%llvm.dbg.compile_unit.type* @llvm.dbg.compile_unit to { }*))
+  %4 = call i32 (i8*, ...)* @printf(i8* noalias getelementptr ([13 x i8]* @.str14, i32 0, i32 0)) nounwind ; <i32> [#uses=0]
+  call void @llvm.dbg.stoppoint(i32 6, i32 0, { }* bitcast (%llvm.dbg.compile_unit.type* @llvm.dbg.compile_unit to { }*))
+  %5 = call i32 (i8*, ...)* @scanf(i8* noalias getelementptr ([7 x i8]* @.str15, i32 0, i32 0), double* %a, double* %b) nounwind ; <i32> [#uses=0]
+  call void @llvm.dbg.stoppoint(i32 7, i32 0, { }* bitcast (%llvm.dbg.compile_unit.type* @llvm.dbg.compile_unit to { }*))
+  %6 = load double* %a, align 8                   ; <double> [#uses=1]
+  %7 = load double* %b, align 8                   ; <double> [#uses=1]
+  %8 = fcmp olt double %6, %7                     ; <i1> [#uses=1]
+  br i1 %8, label %bb, label %bb4
+
+2
+  call void @llvm.dbg.stoppoint(i32 8, i32 0, { }* bitcast (%llvm.dbg.compile_unit.type* @llvm.dbg.compile_unit to { }*))
+  %9 = load double* %b, align 8                   ; <double> [#uses=1]
+  %10 = load double* %a, align 8                  ; <double> [#uses=1]
+  %11 = fsub double %9, %10                       ; <double> [#uses=1]
+  %12 = fdiv double %11, 9.000000e+00             ; <double> [#uses=1]
+  store double %12, double* %c, align 8
+  call void @llvm.dbg.stoppoint(i32 9, i32 0, { }* bitcast (%llvm.dbg.compile_unit.type* @llvm.dbg.compile_unit to { }*))
+  %13 = load double* %a, align 8                  ; <double> [#uses=1]
+  store double %13, double* %i, align 8
+  br label %bb2
+
+3
+  call void @llvm.dbg.stoppoint(i32 10, i32 0, { }* bitcast (%llvm.dbg.compile_unit.type* @llvm.dbg.compile_unit to { }*))
+  %14 = load double* %i, align 8                  ; <double> [#uses=1]
+  %15 = call double @cos(double %14) nounwind readonly ; <double> [#uses=1]
+  %16 = call i32 (i8*, ...)* @printf(i8* noalias getelementptr ([7 x i8]* @.str16, i32 0, i32 0), double %15) nounwind ; <i32> [#uses=0]
+  %17 = load double* %i, align 8                  ; <double> [#uses=1]
+  %18 = load double* %c, align 8                  ; <double> [#uses=1]
+  %19 = fadd double %17, %18                      ; <double> [#uses=1]
+  store double %19, double* %i, align 8
+  br label %bb2
+
+4
+  call void @llvm.dbg.stoppoint(i32 10, i32 0, { }* bitcast (%llvm.dbg.compile_unit.type* @llvm.dbg.compile_unit to { }*))
+  %20 = load double* %b, align 8                  ; <double> [#uses=1]
+  %21 = fadd double %20, 1.000000e-06             ; <double> [#uses=1]
+  %22 = load double* %i, align 8                  ; <double> [#uses=1]
+  %23 = fcmp oge double %21, %22                  ; <i1> [#uses=1]
+  br i1 %23, label %bb1, label %bb3
+
+5
+  br label %bb5
+
+6
+  call void @llvm.dbg.stoppoint(i32 12, i32 0, { }* bitcast (%llvm.dbg.compile_unit.type* @llvm.dbg.compile_unit to { }*))
+  %24 = call i32 @puts(i8* getelementptr ([3 x i8]* @.str17, i32 0, i32 0)) nounwind ; <i32> [#uses=0]
+  br label %bb5
+
+7
+  call void @llvm.dbg.stoppoint(i32 13, i32 0, { }* bitcast (%llvm.dbg.compile_unit.type* @llvm.dbg.compile_unit to { }*))
+  br label %return
+
+8
+  %retval6 = load i32* %retval                    ; <i32> [#uses=1]
+  call void @llvm.dbg.stoppoint(i32 13, i32 0, { }* bitcast (%llvm.dbg.compile_unit.type* @llvm.dbg.compile_unit to { }*))
+  call void @llvm.dbg.region.end({ }* bitcast (%llvm.dbg.subprogram.type* @llvm.dbg.subprogram to { }*))
+  ret i32 %retval6

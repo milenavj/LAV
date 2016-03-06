@@ -1,0 +1,98 @@
+time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+ex2-1.c
+
+time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+ex2-2.c
+
+time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+ex2-v.c
+
+time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+ex5-1.c
+
+time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+ex5-2.c
+
+time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+ex5-v.c
+
+time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+ex10-1.c
+
+time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+ex10-2.c
+
+time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+ex10-v.c
+
+time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+ex11-1.c
+
+time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+ex11-2.c
+
+time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+ex11-v.c
+
+time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+ex12-1.c
+
+time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+ex12-2.c
+
+time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+ex12-v.c
+
+time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+ex20-1.c
+
+time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+ex20-2.c
+
+time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+ex20-v.c
+
+//time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+//ex30-1.c
+
+//time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+//ex30-2.c
+
+//time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+//ex30-v.c
+
+//time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+//ex40-1.c
+
+//time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+//ex40-2.c
+
+//time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+//ex40-v.c
+
+//time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+//ex50-1.c
+
+//time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+//ex50-2.c
+
+//time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed
+//ex50-v.c
+
+//time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+//ex60-1.c
+
+//time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+//ex60-2.c
+
+//time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed
+//ex60-v.c
+
+//time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+//ex100-1.c
+
+//time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed       
+//ex100-2.c
+
+//time LAV  -solver=Z3-BV-ARR-EUF   -find-first-flawed
+//ex100-v.c

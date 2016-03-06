@@ -1,0 +1,2 @@
+ line: 6   UNSAFE 
+ line: 12  line: 6   SAFE 

@@ -1,0 +1,424 @@
+#!/bin/bash
+
+#to run this script it is neccessary to be in LAV/test/regression directory
+
+function line {
+echo "------------------------------------------------------------" >/dev/stderr
+}
+
+function printTime {
+line
+date +"%T" >/dev/stderr
+}
+
+function print {
+echo " " >/dev/stderr
+printTime
+echo "expected time ~$1" >/dev/stderr
+mt=`awk 'BEGIN{printf("%0.2f", '$1'*2)}'` 
+#echo "max time $mt" >/dev/stderr
+echo "time timeout --k=1 $mt" >/dev/stderr
+echo "TestLAV -test -directory=$2 -test-file=$3 $4" >/dev/stderr
+time timeout --k=1 $mt TestLAV -test -directory=$2 -test-file=$3 $4
+#echo " " >/dev/stderr
+#echo "expected time ~$1" >/dev/stderr
+line
+}
+
+function summary {
+echo " " >/dev/stderr
+line
+echo "+expected time ~$1" >/dev/stderr
+line
+}
+
+boolector="test_boolector_bv_arr_ack"
+z3ack="test_z3_bv_arr_ack"
+z3euf="test_z3_bv_arr_euf"
+
+printTime
+
+if [ $# == 0 ] ; then 
+echo "running light tests" >/dev/stderr
+summary "0min 40s"
+else
+if [[ $1 == [Ff][uU][Ll][Ll] ]] ; then
+echo "running full tests" >/dev/stderr
+summary "1min 50s + 23min 25s + 17min 25s"
+fi
+if [[ $1 == *[Mm][Ee][Dd]* ]] ; then
+echo "running medium tests" >/dev/stderr
+summary "62s"
+fi
+if [[ $1 == *[Ll][Aa][Vv][Ee][Dd][Uu]* ]] ; then
+echo "running lavedu tests" >/dev/stderr
+summary "~20min"
+fi
+if [[ $1 == ff ]] ; then
+echo "running ff tests" >/dev/stderr
+summary "1min 50s "
+fi
+if [[ $1 == f ]] ; then
+echo "running f tests" >/dev/stderr
+summary "1min 10s "
+fi
+if [[ $1 == m ]] ; then
+echo "running m tests" >/dev/stderr
+summary "20s "
+fi
+if [[ $1 == t ]] ; then
+echo "running t tests" >/dev/stderr
+summary "??"
+fi
+fi
+
+if [[ $1 == t ]] ; then 
+#echo "nothing to run..." >/dev/stderr
+
+
+et=130
+directory="lavEdu/08/08_2"
+tf="lav_parameters1"
+print $et $directory $tf "-same-options"
+
+
+et=600
+directory="lavEdu/08/08_1"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+fi
+
+if [ $# == 0 ] || [[ $1 == [Ff][uU][Ll][Ll] ]] || [[ $1 == *[Mm][Ee][Dd]* ]] || [[ $1 == ff ]] ; then 
+
+et=4
+directory="test1"
+print $et $directory $boolector
+
+et=3
+directory="test1_fff"
+print $et $directory $boolector
+
+et=4.5
+directory="test1_fff"
+print $et $directory $z3euf
+
+et=2.3
+directory="lav-ex1"
+print $et $directory $boolector
+
+et=3
+directory="lav-ex1"
+print $et $directory $z3ack
+
+et=0.8
+directory="modeli"
+print $et $directory "test" "-model"
+
+et=19
+directory="small_sb"
+print $et $directory $z3euf
+
+summary "0min 41s"
+fi
+
+
+if [[ $1 == [Ff][uU][Ll][Ll] ]] || [[ $1 == *[Mm][Ee][Dd]* ]] || [[ $1 == ff ]] || [[ $1 == m ]]; then
+
+et=3
+directory="lav-ex1"
+print $et $directory $z3euf
+
+et=10
+directory="test1"
+print $et $directory $z3euf
+
+et=4.5
+directory="test1_fff"
+print $et $directory $z3euf
+
+et=4
+directory="test1_fff"
+print $et $directory $z3ack
+if [[ $1 == m ]]; then
+summary "20s"
+else summary "62s"
+fi
+fi
+
+
+if [[ $1 == [Ff][uU][Ll][Ll] ]] ||  [[ $1 == f ]] || [[ $1 == ff ]] ; then
+et=13
+directory="test1"
+print $et $directory $z3ack
+
+et=38
+directory="small_sb"
+print $et $directory $boolector
+
+et=19
+directory="small_sb"
+print $et $directory $z3euf
+
+summary "  f --- 0min 51s  ff --- 1min 50s"
+fi
+
+if [[ $1 == [Ff][uU][Ll][Ll] ]] || [[ $1 == *[Ll][Aa][Vv][Ee][Dd][Uu] ]]; then
+#et=1
+et=1.5
+directory="lavEdu/11"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+#et=0.7
+et=1.7
+directory="lavEdu/12"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+#et=0.3
+et=1
+directory="lavEdu/13"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+#et=0.3
+et=1.3
+directory="lavEdu/14"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+#et=0.7
+et=1.7
+directory="lavEdu/15"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+et=1.5
+directory="lavEdu/07"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+et=1.5
+directory="lavEdu/09/09_2"
+tf="lav_parameters2"
+print $et $directory $tf "-same-options"
+
+et=2
+directory="lavEdu/10"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+et=3
+directory="lavEdu/05"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+et=3
+directory="lavEdu/06/06_2"
+tf="lav_parameters2"
+print $et $directory $tf "-same-options"
+
+et=5
+directory="lavEdu/03/03_1"
+tf="lav_parameters1"
+print $et $directory $tf "-same-options"
+
+et=12
+directory="lavEdu/04/04_3"
+tf="lav_parameters3"
+print $et $directory $tf "-same-options"
+
+et=13
+directory="lavEdu/02/02_2"
+tf="lav_parameters2"
+print $et $directory $tf "-same-options"
+
+et=15
+directory="lavEdu/01"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+et=17
+directory="lavEdu/04/04_2"
+tf="lav_parameters2"
+print $et $directory $tf "-same-options"
+
+et=20
+directory="lavEdu/06/06_1"
+tf="lav_parameters1"
+print $et $directory $tf "-same-options"
+
+et=20
+directory="lavEdu/02/02_4"
+tf="lav_parameters4"
+print $et $directory $tf "-same-options"
+
+et=23
+directory="lavEdu/02/02_1"
+tf="lav_parameters1"
+print $et $directory $tf "-same-options"
+
+et=25
+directory="lavEdu/04/04_1"
+tf="lav_parameters1"
+print $et $directory $tf "-same-options"
+
+et=40
+directory="lavEdu/03/03_2"
+tf="lav_parameters2"
+print $et $directory $tf "-same-options"
+
+et=50
+directory="lavEdu/09/09_1"
+tf="lav_parameters1"
+print $et $directory $tf "-same-options"
+
+#et=57
+et=300
+directory="lavEdu/02/02_3"
+tf="lav_parameters3"
+print $et $directory $tf "-same-options"
+
+et=130
+directory="lavEdu/08/08_2"
+tf="lav_parameters1"
+print $et $directory $tf "-same-options"
+
+
+et=600
+directory="lavEdu/08/08_1"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+#summary "17min 25s"
+summary "~20min"
+fi
+
+
+if [[ $1 == [Ff][uU][Ll][Ll] ]] || [[ $1 == *[Ll][Aa][Vv][Ee][Dd][Uu][Ll][Aa]* ]]; then
+#et=1
+
+et=1.5 
+directory="lavEdu_la/11"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+et=1.7 
+directory="lavEdu_la/12"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+et=0.3 
+directory="lavEdu_la/13"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+et=0.7 
+directory="lavEdu_la/14"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+et=1.1 
+directory="lavEdu_la/15"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+et=2.5 
+directory="lavEdu_la/07"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+et=0.6 
+directory="lavEdu_la/09/09_2"
+tf="lav_parameters2"
+print $et $directory $tf "-same-options"
+
+et=2 
+directory="lavEdu_la/10"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+et=1.1  
+directory="lavEdu_la/05"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+et=3 
+directory="lavEdu_la/06/06_2"
+tf="lav_parameters2"
+print $et $directory $tf "-same-options"
+
+et=5 
+directory="lavEdu_la/03/03_1"
+tf="lav_parameters1"
+print $et $directory $tf "-same-options"
+
+et=12 
+directory="lavEdu_la/04/04_3"
+tf="lav_parameters3"
+print $et $directory $tf "-same-options"
+
+et=13 
+directory="lavEdu_la/02/02_2"
+tf="lav_parameters2"
+print $et $directory $tf "-same-options"
+
+et=15 
+directory="lavEdu_la/01"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+et=17 
+directory="lavEdu_la/04/04_2"
+tf="lav_parameters2"
+print $et $directory $tf "-same-options"
+
+et=20 
+directory="lavEdu_la/06/06_1"
+tf="lav_parameters1"
+print $et $directory $tf "-same-options"
+
+et=20 
+directory="lavEdu_la/02/02_4"
+tf="lav_parameters4"
+print $et $directory $tf "-same-options"
+
+et=4 
+directory="lavEdu_la/02/02_1"
+tf="lav_parameters1"
+print $et $directory $tf "-same-options"
+
+et=2 
+directory="lavEdu_la/04/04_1"
+tf="lav_parameters1"
+print $et $directory $tf "-same-options"
+
+et=3 
+directory="lavEdu_la/03/03_2"
+tf="lav_parameters2"
+print $et $directory $tf "-same-options"
+
+et=2 
+directory="lavEdu_la/09/09_1"
+tf="lav_parameters1"
+print $et $directory $tf "-same-options"
+
+et=300 
+directory="lavEdu_la/02/02_3"
+tf="lav_parameters3"
+print $et $directory $tf "-same-options"
+
+et=100 
+directory="lavEdu_la/08/08_2"
+tf="lav_parameters1"
+print $et $directory $tf "-same-options"
+
+et=600 
+directory="lavEdu_la/08/08_1"
+tf="lav_parameters"
+print $et $directory $tf "-same-options"
+
+summary "17min 25s"
+
+fi

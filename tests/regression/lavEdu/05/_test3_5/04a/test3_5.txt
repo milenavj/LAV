@@ -1,0 +1,20 @@
+ line: 6   UNSAFE 
+ line: 6   UNSAFE 
+ line: 12   UNSAFE 
+ line: 12   UNSAFE 
+ line: 12   UNSAFE 
+ line: 12   UNSAFE 
+ line: 12   UNSAFE 
+ line: 12   UNSAFE 
+ line: 12   SAFE 
+ line: 12   SAFE 
+ line: 6   UNSAFE 
+ line: 25  line: 6   SAFE 
+ line: 25  line: 6   SAFE 
+ line: 25  line: 12   SAFE 
+ line: 25  line: 12   SAFE 
+ line: 25  line: 12   SAFE 
+ line: 25  line: 12   SAFE 
+ line: 25  line: 12   SAFE 
+ line: 25  line: 12   SAFE 
+ line: 25  line: 6   SAFE 

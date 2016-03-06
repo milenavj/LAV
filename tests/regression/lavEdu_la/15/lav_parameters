@@ -1,0 +1,2 @@
+LAV -find-first-flawed -solver=Z3-LA-ARR-EUF 
+//all programs should be verified with default options

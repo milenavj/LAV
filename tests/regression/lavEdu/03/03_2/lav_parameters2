@@ -1,0 +1,3 @@
+LAV -find-first-flawed -loop-unroll-begin=20 -loop-unroll-end=0 
+//custom options, bugs are in programs 01b i 02b, other programs are verified
+

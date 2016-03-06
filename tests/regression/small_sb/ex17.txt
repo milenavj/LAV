@@ -1,0 +1,10 @@
+ line: 12   UNSAFE 
+ line: 12   UNSAFE 
+ line: 26   SAFE 
+ line: 34  line: 12   SAFE 
+ line: 34  line: 12   SAFE 
+ line: 38  line: 12   SAFE 
+ line: 38  line: 12   SAFE 
+ line: 40   SAFE 
+ line: 40   SAFE 
+ line: 26   SAFE 
