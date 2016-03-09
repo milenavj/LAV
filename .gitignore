@@ -1,0 +1,10 @@
+
+*/Release+Asserts/
+solvers/
+
+Makefile.config
+config.log
+config.status
+include/config.h
+
+

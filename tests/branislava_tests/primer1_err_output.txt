@@ -1,0 +1,19 @@
+0  LAV       0x08530daf llvm::sys::PrintStackTrace(_IO_FILE*) + 47
+1  LAV       0x0853101f
+2  LAV       0x08530a24
+3            0xb7767c8c __kernel_sigreturn + 0
+4  LAV       0x081306cb lav::LBlock::GetExitConditions() const + 251
+5  LAV       0x081314d4 lav::LBlock::SetPostcondition() + 516
+6  LAV       0x081320ce lav::LBlock::CalculateDescriptions() + 78
+7  LAV       0x080f2096 lav::LFunction::CalculateDescriptions() + 86
+8  LAV       0x080f553c lav::LFunction::Run() + 28
+9  LAV       0x080e7752 lav::LModule::Run() + 146
+10 LAV       0x080e71cd
+11 LAV       0x084bea2c llvm::MPPassManager::runOnModule(llvm::Module&) + 668
+12 LAV       0x084bec83 llvm::PassManagerImpl::run(llvm::Module&) + 243
+13 LAV       0x084bedf6 llvm::PassManager::run(llvm::Module&) + 38
+14 LAV       0x080d8b36 main + 1670
+15 libc.so.6 0xb73bea83 __libc_start_main + 243
+16 LAV       0x080df582
+Stack dump:
+0.	Running pass 'LavPass analysis' on module '../../../test primeri/primer1.o'.

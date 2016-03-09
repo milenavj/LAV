@@ -577,6 +577,7 @@ void LBlock::CalculateConditions()
   for(unsigned i=0; i<_LocalConditions.size(); i++)
   {
 
+
     if(SkipLocalCondition(_LocalConditions[i])) continue;
 
     aExp e1 = aExp::AND(cond, _LocalConditions[i].LHS());

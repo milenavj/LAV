@@ -1420,9 +1420,9 @@ void LState::ProcessGEPI(LInstruction* fi)
       uint64_t iaddend = sl->getElementOffset((unsigned) ci->getZExtValue());
       addend = ExpNum1(int(iaddend), fint_type);
     } else {
-      const llvm::SequentialType *st = llvm::cast<llvm::SequentialType>(*ii);
+      const llvm::SequentialType *sty = llvm::cast<llvm::SequentialType>(*ii);
       unsigned elementSize = 
-        GetParentBlock()->GetParentModule()->GetTargetData()->getTypeStoreSize(st->getElementType());
+        GetParentBlock()->GetParentModule()->GetTargetData()->getTypeStoreSize(sty->getElementType());
       llvm::Value *operand = ii.getOperand();
       if (llvm::Constant *c = llvm::dyn_cast<llvm::Constant>(operand)) {
         aExp e = evalConstant(c);
@@ -2225,10 +2225,10 @@ std::cout << std::endl << std::endl << "evalConstantExpr ---- GetElementPtr" << 
           const llvm::ConstantInt *ci = llvm::cast<llvm::ConstantInt>(ii.getOperand());
           addend = ExpNum1((int)sl->getElementOffset((unsigned)ci->getZExtValue()), fint_type); 
           } else {
-          const llvm::SequentialType *st = llvm::cast<llvm::SequentialType>(*ii);
+          const llvm::SequentialType *sty = llvm::cast<llvm::SequentialType>(*ii);
         aExp e = evalConstant(llvm::cast<llvm::Constant>(ii.getOperand()));
         aExp index = ToInt(e, e.getIntWidth());
-          unsigned elementSize = GetParentBlock()->GetParentModule()->GetTargetData()->getTypeStoreSize(st->getElementType());
+          unsigned elementSize = GetParentBlock()->GetParentModule()->GetTargetData()->getTypeStoreSize(sty->getElementType());
 
           addend = SimplifyExpression(aExp::mul(index, ExpNum1(elementSize, fint_type)));
           }

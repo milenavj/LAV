@@ -1,0 +1,12 @@
+
+Loading the bytecode...
+Loading the bytecode... Completed 
+
+Generating and testing conditions... 
+Generating and testing conditions... Completed 
+
+Printing results ... 
+Printing results ... Completed 
+
+Finished 
+
