@@ -1,5 +1,7 @@
 
-*/Release+Asserts/
+**/Release+Asserts/
+/solvers/boolector
+/solvers/z3
 
 Makefile.config
 config.log
