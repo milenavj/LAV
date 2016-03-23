@@ -6,7 +6,7 @@
 // License. See LICENSE.TXT for details.
 //
 //===----------------------------------------------------------------------===//
- 
+
 #include "lav/Internal/LBlock.h"
 #include "lav/Internal/LFunction.h"
 #include "lav/Internal/LModule.h"
@@ -47,11 +47,17 @@
 
 #include "expression/output/SMTFormater.h"
 #include "expression/expressions/NumeralTypes.h"
- 
+
+
+#include "lav/Threads/FixedQueue.h"
+#include "lav/Threads/ThreadPool.h"
+using namespace ThreadSafe;
+using namespace Utils;
+
 namespace {
- 
+
   llvm::cl::opt<bool>
-  CalculateBlock("check-block-conds", 
+  CalculateBlock("check-block-conds",
                llvm::cl::desc("LAV --- Check in one solver call all conditions inside one block (default = false)"),
                llvm::cl::init(false));
 
@@ -95,8 +101,8 @@ std::ostream& LLocalCondition::Print(std::ostream& ostr) const
   _Instruction->Print(ostr);
   if(_Status == SAFE)           ostr << "SAFE "; else
   if(_Status == FLAWED)         ostr << "FLAWED"; else
-  if(_Status == UNSAFE)         ostr << "UNSAFE "; else 
-  if(_Status == ERROR)          ostr << "ERROR "; else 
+  if(_Status == UNSAFE)         ostr << "UNSAFE "; else
+  if(_Status == ERROR)          ostr << "ERROR "; else
   if(_Status == UNREACHABLE)    ostr << "UNREACHABLE"; else
   if(_Status == UNCHECKED)      ostr << "UNCHECKED"; else ostr << "???";
   ostr << std::endl;
@@ -113,23 +119,23 @@ std::ostream& LLocalCondition::PrintHTML(std::ostream& f) const
   f << std::endl;
   f << "<br>RHS: <br>";
   _RHS.Print(&SMTF, f);*/
-  
+
   if(_Status == UNSAFE || _Status == FLAWED)
   {
     if(Model)
     {
-    f  << "</tt><br>"<< std::endl;  
+    f  << "</tt><br>"<< std::endl;
     std::string s = ExtractFileName(_Instruction->GetModelFileName());
     f << "<tt><a href=\"" << s <<"\">" << "Model" << "</a>";
     }
-    f  << "</tt><br></font> "<< std::endl;  
+    f  << "</tt><br></font> "<< std::endl;
   }
 
   f << std::endl << "<font face = \"Courier New\"> status: <tt>";
   if(_Status == SAFE)     f << "<font color = \"#008080\">SAFE </font>"; else
   if(_Status == FLAWED)   f << "<font color = red>FLAWED</font>"; else
-  if(_Status == UNSAFE)   f << "<font color = brown>UNSAFE </font>"; else 
-  if(_Status == ERROR)    f << "<font color = red>ERROR </font>"; else 
+  if(_Status == UNSAFE)   f << "<font color = brown>UNSAFE </font>"; else
+  if(_Status == ERROR)    f << "<font color = red>ERROR </font>"; else
   if(_Status == UNREACHABLE)      f << "<font color = orange>UNREACHABLE </font>"; else
   if(_Status == UNCHECKED)        f << "<font color = blue> UNCHECKED</font>"; else f << "???";
   f << "</tt> </font ><br>" << std::endl;
@@ -145,7 +151,7 @@ std::ostream& LJump::Print(std::ostream& ostr) const
   ostr << "Jump: " ;
   _Condition.Print(&SMTF, ostr);
   ostr << " BB: " << _BB;
-  if(_BB) 
+  if(_BB)
     {
     std::string s = _BB->getName();
     ostr << " BB->name: " << s;
@@ -160,18 +166,18 @@ std::ostream& LJump::Print(std::ostream& ostr) const
 // LBlock
 //////////////////////////////////////////////////////////////
 
-LBlock::LBlock(llvm::BasicBlock *bb, LFunction* parent) 
-                        : 
-                          _Id(BlockNumber++), 
-                          _BBlock(bb), 
-                          _Parent(parent), 
+LBlock::LBlock(llvm::BasicBlock *bb, LFunction* parent)
+                        :
+                          _Id(BlockNumber++),
+                          _BBlock(bb),
+                          _Parent(parent),
                           _State(this),
                           _PredsSet(false),
                           _TraceCalculated(false),
                           _DescriptionsCalculated(false),
                           _ConditionsCalculated(false),
-                          _StateIsSet(false), 
-                          _PostconditionIsSet(false), 
+                          _StateIsSet(false),
+                          _PostconditionIsSet(false),
                           _PostconditionInSolver(false),
                           _ChangeInitStore(false),
                           _HasNoReturnFC(false),
@@ -185,7 +191,7 @@ LBlock::LBlock(llvm::BasicBlock *bb, LFunction* parent)
 unsigned LBlock::BlockNumber = 0;
 
 LBlock::~LBlock()
-{ 
+{
 for(unsigned i=0; i<_Instructions.size(); i++)
     delete _Instructions[i];
 }
@@ -193,7 +199,7 @@ for(unsigned i=0; i<_Instructions.size(); i++)
 std::ostream& LBlock::Print(std::ostream& ostr) const
 {
   for(unsigned i=0; i<_LocalConditions.size(); i++)
-    _LocalConditions[i].Print(ostr); 
+    _LocalConditions[i].Print(ostr);
   return ostr;
 }
 
@@ -201,12 +207,12 @@ std::ostream& LBlock::PrintHTML (std::ostream& f) const
 {
   if(_LocalConditions.size()==0)
     return f;
-    
+
   for(unsigned i=0; i<_LocalConditions.size(); i++)
-  { 
-    f << "<p><font face = \"Courier New\" size = \"2\"> command: " 
-      << std::endl; 
-    _LocalConditions[i].PrintHTML(f); 
+  {
+    f << "<p><font face = \"Courier New\" size = \"2\"> command: "
+      << std::endl;
+    _LocalConditions[i].PrintHTML(f);
     f << std::endl;
   }
 
@@ -230,7 +236,7 @@ void LBlock::ConnectFunctionConditions(LInstruction* fi, LFunction* ff)
     if(SkipInsideLoop)
     {
         const LBlock* fb = fLBlocks[k];
-        if(fb->IsInsideLoop() && fb->DoNotCalculate()) 
+        if(fb->IsInsideLoop() && fb->DoNotCalculate())
         {
         //FIXME ovde bi trebalo sacuvati koje se ne proveravaju i izbrisati ih iz niza da se ne cuvaju
         continue;
@@ -243,14 +249,14 @@ void LBlock::ConnectFunctionConditions(LInstruction* fi, LFunction* ff)
 
     //pravimo lhs1 samo jednom i to prvi put kada zatreba
     aExp lhs1;
-    int b=1;    
+    int b=1;
     for(unsigned m = 0; m<lc.size(); m++)
     {
 
     //proveravaju se oni uslovi koji nisu safe
 
-//    if((lc[m].Status()==UNSAFE) || (lc[m].Status()==UNCHECKED) || (lc[m].Status()==ERROR)) {      
-    if((lc[m].Status()==UNSAFE)  || (lc[m].Status()==ERROR)) {     
+//    if((lc[m].Status()==UNSAFE) || (lc[m].Status()==UNCHECKED) || (lc[m].Status()==ERROR)) {
+    if((lc[m].Status()==UNSAFE)  || (lc[m].Status()==ERROR)) {
 
 
     //ako postoji takav uslov onda se sracunava rename trace-a od blok-a
@@ -276,19 +282,20 @@ void LBlock::ConnectFunctionConditions(LInstruction* fi, LFunction* ff)
       //ovde ima neki problem kada je povratna vrednost struktura
       //kod je takav da se ne vidi gde se ta memorija rezervise za strukturu
       //treba proveriti da li je u pitanju neka optimizacija koja to zezne
-      if(Id() == 0) 
+      if(Id() == 0)
       {
           aExp l = AddAddresses(aExp::AND(AllConstraints(), lhs3));
           s = LSolver::callSolver(l, rhs, this,ffi, lc[m].ErrorKind(), true);
-          stopWhenFound(ffi, s, true);
+          if(stopWhenFound(ffi, s, true) == -1)
+            exit(1);
           if(FindFirstFlawed && Model && (s==UNSAFE || s==FLAWED))
               Delete(ffi->GetModelFileName());
       }
-      
+
 //FIXME proveriti da li se ovde mozda ne dodaju funkcijske adrese i zato nastane
-//greska posle!!!!!!!!!!!!!!!!!!!!!!! 
-      LLocalCondition newlc(lhs, rhs, ffi, lc[m].ErrorKind(), s); 
-//      LLocalCondition newlc(aExp::AND(lhs, ff->GetFunctionConstraints()), rhs, ffi, lc[m].ErrorKind(), s); 
+//greska posle!!!!!!!!!!!!!!!!!!!!!!!
+      LLocalCondition newlc(lhs, rhs, ffi, lc[m].ErrorKind(), s);
+//      LLocalCondition newlc(aExp::AND(lhs, ff->GetFunctionConstraints()), rhs, ffi, lc[m].ErrorKind(), s);
       _LocalConditions.push_back(newlc);
       }
     }
@@ -303,15 +310,15 @@ return _Parent->GetContext();
 
 
 const LModule* LBlock::GetParentModule() const
-{       
-    return GetParentFunction()->GetParentModule(); 
+{
+    return GetParentFunction()->GetParentModule();
 }
 
 
-void LBlock::CalculateAssume() 
+void LBlock::CalculateAssume()
 {
 bool b = false;
-  for(unsigned i=0; i<_Instructions.size(); i++) 
+  for(unsigned i=0; i<_Instructions.size(); i++)
   {
     llvm::Instruction * instr = _Instructions[i]->Instruction();
 
@@ -320,10 +327,10 @@ bool b = false;
       unsigned numArgs;
       llvm::Function *f = GetFunction(instr, numArgs);
 
-      if (f && f->isDeclaration()) 
-      { 
+      if (f && f->isDeclaration())
+      {
           if(f->getIntrinsicID() == llvm::Intrinsic::not_intrinsic)
-            if(f->getName() == "assume" || f->getName() == "ASSUME") 
+            if(f->getName() == "assume" || f->getName() == "ASSUME")
                 {b = true; break;}
       }
     }
@@ -334,7 +341,7 @@ else _HasAssume = false;
 }
 
 //FIXME
-//ovo bi verovatno moglo inteligentnije jer se ovako gubi mnogo informacija bez potrebe - 
+//ovo bi verovatno moglo inteligentnije jer se ovako gubi mnogo informacija bez potrebe -
 //trebalo bi obeleziti samo sta ucestvuje u assume i to prespajati, a ostalo nedirati
 bool LBlock::HasAssume() const
 {
@@ -354,21 +361,21 @@ void LBlock::ChangeInitStore()
 
 
   std::vector<bool> change(_Preds.size());
-  for(unsigned m=0; m<change.size(); m++) 
+  for(unsigned m=0; m<change.size(); m++)
       change[m] = false;
-      
+
   std::string s;
   std::map<std::string, LVariableInfo>::const_iterator iter = _State.GetStore().GetStore().begin(), itere = _State.GetStore().GetStore().end();
   for(;iter!= itere; iter++)
   {
     s = iter->first;
-    if(isAddress(iter->second.Value()->GetName())) 
+    if(isAddress(iter->second.Value()->GetName()))
     { continue; }
     //ne znam zasto sam ovo dodala???
-    if(isMalloc(iter->second.Value()->GetName())) 
+    if(isMalloc(iter->second.Value()->GetName()))
     { continue; }
     //ne znam zasto sam ovo dodala???
-    if(isMalloc2(iter->second.Value()->GetName())) 
+    if(isMalloc2(iter->second.Value()->GetName()))
     {continue;}
 
     aExp v1 = *_Preds[0]->_State.GetValue(s);
@@ -379,10 +386,10 @@ void LBlock::ChangeInitStore()
       if(v1 != v3) {b = true; break;}
     }
     if(b) continue;
-    
+
     _State.GetStore().ChangeValue(s, new aExp(v1));
     _State.GetStore().ChangeConnect(s, false);
-    
+
     for(unsigned j = 0; j<_Preds.size(); j++)
     {
       if(_Preds[j]->_Jumps.size() == 1)
@@ -390,7 +397,7 @@ void LBlock::ChangeInitStore()
         _Preds[j]->_State.GetStore().ChangeTransform(s,false);
         change[j]=true;
       }
-      else 
+      else
           //FIXME mozda dodati i opsti slucaj ako je jumps.size>2 ali ovo je zapetljano i bez toga
           if(_Preds[j]->_Jumps.size() == 2)
           {
@@ -443,8 +450,8 @@ if(IsEntryBlock() && GetFunctionName() == StartFunction)
 }
 
 
-const std::map<std::string, llvm::Type*>& LBlock::GetReferences() const { 
-return GetParentFunction()->GetReferences(); 
+const std::map<std::string, llvm::Type*>& LBlock::GetReferences() const {
+return GetParentFunction()->GetReferences();
 }
 
 
@@ -454,7 +461,7 @@ void LBlock::init()
     //  ResetGetOperandName();
     const InstructionInfoTable* infos = GetParentModule()->Infos();
     llvm::BasicBlock::iterator it = _BBlock->begin(), ie = _BBlock->end();
-    for ( ; it != ie; ++it) 
+    for ( ; it != ie; ++it)
     {
       llvm::Instruction* i = it;
       const InstructionInfo* info = &infos->getInfo(i);
@@ -464,7 +471,7 @@ void LBlock::init()
     CalculateAssume();
     _Addresses = aExp::TOP();
 
-    std::map<llvm::BasicBlock*, vLoop >::iterator itloop = lav::FLoopBlocks.find(_BBlock); 
+    std::map<llvm::BasicBlock*, vLoop >::iterator itloop = lav::FLoopBlocks.find(_BBlock);
     if(itloop!=lav::FLoopBlocks.end())
     {
     _Loop = itloop->second;
@@ -472,24 +479,24 @@ void LBlock::init()
     }
 
 }
-  
 
-const std::string& LBlock::GetFunctionName   () const { 
-return _Parent->GetFunctionName(); 
+
+const std::string& LBlock::GetFunctionName   () const {
+return _Parent->GetFunctionName();
 }
 
 
 
 
-void LBlock::stopWhenFound(const LInstruction* fi, STATUS s, bool count)
+int LBlock::stopWhenFound(const LInstruction* fi, STATUS s, bool count)
 {
-  if(!FindFirstFlawed) return;
-  
-  if(s==FLAWED || (count && (GetFunctionName() == StartFunction) && (s == UNSAFE))) 
+  if(!FindFirstFlawed) return 0;
+
+  if(s==FLAWED || (count && (GetFunctionName() == StartFunction) && (s == UNSAFE)))
   {
     std::string sFilename=OutputFolder + "/" + ExtractFileName(InputFile) + ".html";
 
-    const LModule* parent = NULL; 
+    const LModule* parent = NULL;
 
     if(PrintHtml)
     {
@@ -497,16 +504,16 @@ void LBlock::stopWhenFound(const LInstruction* fi, STATUS s, bool count)
     const LModule* parent = GetParentModule();
     const LFunction* function = GetParentFunction();
     parent->PrintHTMLHeader(sFilename);
-    function->PrintHTMLHeader(sFilename);  
+    function->PrintHTMLHeader(sFilename);
     }
 
     fi->PrintFlawedFoundResults(s);
 
     if(PrintHtml)
       parent->PrintHTMLFooter(sFilename);
-    exit(1);
+    return -1;
   }
-  else return;
+  else return 0;
 }
 
 const LBlock* LBlock::GetPredWithId(unsigned id) const
@@ -520,9 +527,9 @@ void LBlock::ReCalculateConditions(int ex_size)
 {
   if(_ConditionsCalculated) _ConditionsCalculated = false;
   if(IsUnreachableBlock()) {_ConditionsCalculated = true; return;}
-  
-  if(!_DescriptionsCalculated) CalculateDescriptions();  
-  if((_LocalConditions.size() == 0) && (_Jumps.size() == 0))                
+
+  if(!_DescriptionsCalculated) CalculateDescriptions();
+  if((_LocalConditions.size() == 0) && (_Jumps.size() == 0))
   {_ConditionsCalculated = true;  return;}
   if((_LocalConditions.size() == 0)) { _ConditionsCalculated = true; return; }
 
@@ -532,18 +539,18 @@ void LBlock::ReCalculateConditions(int ex_size)
 
   for(unsigned i=ex_size; i<_LocalConditions.size(); i++)
   {
-    if((_LocalConditions[i].Status()==SAFE) || (_LocalConditions[i].Status()==FLAWED) 
-        || (_LocalConditions[i].Status()==UNREACHABLE)) 
+    if((_LocalConditions[i].Status()==SAFE) || (_LocalConditions[i].Status()==FLAWED)
+        || (_LocalConditions[i].Status()==UNREACHABLE))
     continue;
 
     aExp e1 = aExp::AND(e, _LocalConditions[i].LHS());
     aExp e2 = _LocalConditions[i].RHS();
 
-    STATUS s = LSolver::instance().callSolverIncremental(e1, e2, this, 
-                                                        _LocalConditions[i].Instruction(), 
+    STATUS s = LSolver::instance().callSolverIncremental(e1, e2, this,
+                                                        _LocalConditions[i].Instruction(),
                                                         _LocalConditions[i].ErrorKind());
 
-      stopWhenFound( _LocalConditions[i].Instruction(), s,true);
+    if(stopWhenFound( _LocalConditions[i].Instruction(), s,true) == -1) exit(1);
     if(FindFirstFlawed && Model && (s==UNSAFE || s==FLAWED))
       Delete(_LocalConditions[i].Instruction()->GetModelFileName());
 
@@ -552,7 +559,7 @@ void LBlock::ReCalculateConditions(int ex_size)
   _ConditionsCalculated = true;
 }
 
-bool LBlock::CheckReachability() 
+bool LBlock::CheckReachability()
 {
   if(_Reachable == BLOCK_REACHABLE) return true;  //reachable
   if(_Reachable == BLOCK_UNREACHABLE) return false; //unreachable
@@ -574,24 +581,72 @@ void LBlock::CalculateConditions()
 
   aExp cond = AddAddresses(GetTraceGlobFuncCons());
 
-  for(unsigned i=0; i<_LocalConditions.size(); i++)
+  std::cout << "\n\n\n\n\n -----------------BRANISLAVA begin ------------------ \n\n\n\n\n";
+
+  auto maxf = [&](LLocalCondition localCond, aExp cond, LBlock *block, int i) {
+
+
+  //         aExp e1 = aExp::AND(cond, localCond.LHS());
+  //         aExp e2 = localCond.RHS();
+  //         std::cout << "\n\n\n\n\n -----------------Start solver "<< i <<" ------------------ \n\n\n\n\n";
+  //
+  //         STATUS s = LSolver::callSolver(e1, e2, block,
+  //                                           localCond.Instruction(),
+  //                                           localCond.ErrorKind(), true);
+  //
+  //         std::cout << "\n\n\n\n\n -----------------End solver ------------------ \n\n\n\n\n";
+  //
+  //
+  //         if(stopWhenFound(localCond.Instruction(), s, true) == -1)
+  //         {
+  //           return -1;
+  //         }
+  //         if(s == UNSAFE || s == FLAWED)
+  //         {
+  //           // Delete(localCond.Instruction()->GetModelFileName());
+  //         }
+  //       //  localCond.Status() = s;
+  //         return 0;
+              return i*i;
+       };
+
+  std::vector<std::function<int()>> functions;
+
+  for (unsigned i = 0; i<_LocalConditions.size(); i++)
   {
-
-
     if(SkipLocalCondition(_LocalConditions[i])) continue;
 
-    aExp e1 = aExp::AND(cond, _LocalConditions[i].LHS());
-    aExp e2 = _LocalConditions[i].RHS();
-    STATUS s = LSolver::callSolver(e1, e2, this, 
-                                      _LocalConditions[i].Instruction(), 
-                                      _LocalConditions[i].ErrorKind(), true);
-
-    stopWhenFound(_LocalConditions[i].Instruction(), s, true);
-    if(FindFirstFlawed && Model && (s==UNSAFE || s==FLAWED))
-       Delete(_LocalConditions[i].Instruction()->GetModelFileName());
-
-    _LocalConditions[i].Status() = s;
+    functions.push_back(std::bind(maxf,_LocalConditions[i], cond, this, i));
   }
+
+  ThreadPool t{FixedQueue<std::function<int()>>(functions) ,30};
+
+  std::cout << "\n\n\n\n\n -----------------BRANISLAVA end ------------------ \n\n\n\n\n";
+
+
+  //    std::cout << "\n\n ----------------- BEGIN SEQUENTIAL LAV ------------------ \n\n";
+  //
+  // for(unsigned i=0; i<_LocalConditions.size(); i++)
+  // {
+  //   if(SkipLocalCondition(_LocalConditions[i])) continue;
+  //
+  //   aExp e1 = aExp::AND(cond, _LocalConditions[i].LHS());
+  //   aExp e2 = _LocalConditions[i].RHS();
+  //   STATUS s = LSolver::callSolver(e1, e2, this,
+  //                                     _LocalConditions[i].Instruction(),
+  //                                     _LocalConditions[i].ErrorKind(), true);
+  //
+  //   if(stopWhenFound(_LocalConditions[i].Instruction(), s, true) == -1) exit(1);
+  //
+  //   if(FindFirstFlawed && Model && (s==UNSAFE || s==FLAWED))
+  //      Delete(_LocalConditions[i].Instruction()->GetModelFileName());
+  //
+  //   _LocalConditions[i].Status() = s;
+  // }
+  //    std::cout << "\n\n ----------------- END SEQUENTIAL LAV ------------------ \n\n";
+
+//   std::cout << "\n\n\n\n\n -----------------BRANISLAVA end------------------ \n\n\n\n\n";
+
 }
 
 bool LBlock::IsInsideLoop() const
@@ -609,9 +664,9 @@ return true;
 
 bool LBlock::DoNotCalculate() const
 {
-  
+
 for(unsigned i=0; i<_Loop.size(); i++)
-    if(_Loop[i].second >= 1 && _Loop[i].second < GetParentFunction()->GetLoopMax(_Loop[i].first)) 
+    if(_Loop[i].second >= 1 && _Loop[i].second < GetParentFunction()->GetLoopMax(_Loop[i].first))
       return true;
 
 return false;
@@ -622,22 +677,22 @@ bool LBlock::QuickCalculate()
 {
   if(_ConditionsCalculated) return true;
   if(IsUnreachableBlock()) {_ConditionsCalculated = true; return true;}
-  if(!_DescriptionsCalculated) CalculateDescriptions();  
+  if(!_DescriptionsCalculated) CalculateDescriptions();
   if((_LocalConditions.size() == 0) && (_Jumps.size() == 0)) {_ConditionsCalculated = true;  return true;}
 
-  //ako imamo prethodnika koji nije u dokazivacu dodamo ga 
-  AddPredsConditionsIncremental(); 
+  //ako imamo prethodnika koji nije u dokazivacu dodamo ga
+  AddPredsConditionsIncremental();
 
-    if((_LocalConditions.size() == 0)) { 
-        _ConditionsCalculated = true; 
-        return true; 
+    if((_LocalConditions.size() == 0)) {
+        _ConditionsCalculated = true;
+        return true;
     }
 
     if(SkipInsideLoop && !(HasMerged()))
         if(IsInsideLoop() && DoNotCalculate()) {
-            _LocalConditions.clear(); 
-            _ConditionsCalculated = true; 
-            return true; 
+            _LocalConditions.clear();
+            _ConditionsCalculated = true;
+            return true;
     }
   return false;
 }
@@ -665,7 +720,7 @@ void LBlock::UpdateAndSetAddresses()
 //ovaj metod treba da ide uklasu llocalcondition
 bool LBlock::SkipLocalCondition(LLocalCondition& lc)
 {
-    if((lc.Status()==SAFE) || (lc.Status()==FLAWED) || (lc.Status()==UNREACHABLE)) 
+    if((lc.Status()==SAFE) || (lc.Status()==FLAWED) || (lc.Status()==UNREACHABLE))
 {
         return true;
 }
@@ -687,10 +742,10 @@ bool LBlock::SkipLocalCondition(LLocalCondition& lc)
     if(SkipInsideLoop)
     {
         const LBlock* fb;
-        if(!(fi->StackEmpty())) 
+        if(!(fi->StackEmpty()))
             fi = fi->Stack()[fi->Stack().size()-1];
         fb = fi->GetParentBlock();
-        if(fb->IsInsideLoop() && fb->DoNotCalculate()) 
+        if(fb->IsInsideLoop() && fb->DoNotCalculate())
         {
         return true;
         }
@@ -699,7 +754,7 @@ bool LBlock::SkipLocalCondition(LLocalCondition& lc)
  return false;
 }
 
-aExp LBlock::AllConstraints() const 
+aExp LBlock::AllConstraints() const
 {
 /*    std::vector<aExp> exps;
     exps.push_back(_State.GetStateConstraint());
@@ -709,7 +764,7 @@ aExp LBlock::AllConstraints() const
     return aExp::AND(GetGlobFuncCons(), _State.GetStateConstraint());
 }
 
-aExp LBlock::AddAddresses(caExp& e) 
+aExp LBlock::AddAddresses(caExp& e)
 {
 /*    std::vector<aExp> exps;
     UpdateAndSetAddresses();
@@ -724,7 +779,7 @@ aExp LBlock::GetGlobFuncCons() const
 {
   return aExp::AND(GetParentFunction()->GetFunctionConstraints(), GetParentModule()->GetGlobalConstraints());
 }
-aExp LBlock::GetTraceGlobFuncCons() 
+aExp LBlock::GetTraceGlobFuncCons()
 {
 /*    std::vector<aExp> exps;
     exps.push_back(GetParentFunction()->GetFunctionConstraints());
@@ -732,25 +787,25 @@ aExp LBlock::GetTraceGlobFuncCons()
     exps.push_back(GetTrace());
     return MakeANDFromExpressions(exps);*/
     return aExp::AND(GetGlobFuncCons(), GetTrace());
-}  
+}
 
-caExp& LBlock::GetTrace() 
+caExp& LBlock::GetTrace()
 {
 if(_TraceCalculated) return _Trace;
 _Trace = MakeTrace();
 _TraceCalculated = true;
 return _Trace;
-}  
+}
 
 
 
 aExp LBlock::MakeTrace() const
 {
 /*  std::vector<aExp> expressions;
-  expressions.push_back(GetPredsConditions());  
+  expressions.push_back(GetPredsConditions());
   expressions.push_back(GetEntryConditions());
   expressions.push_back(Active());
-  return MakeANDFromExpressions(expressions); 
+  return MakeANDFromExpressions(expressions);
   */
   return aExp::AND(GetPredsConditions(), BlockEntry());
 }
@@ -782,7 +837,7 @@ void LBlock::CalculateConditionsBlock()
 
   if(s!=SAFE && FindFirstFlawed)
       for(unsigned i=0; i<conds.size(); i++)
-             stopWhenFound(conds[i]->Instruction(), s, true);
+             if(stopWhenFound(conds[i]->Instruction(), s, true) == -1) exit(1);
 
   _ConditionsCalculated = true;
 }
@@ -809,7 +864,7 @@ void LBlock::CalculateConditionsIncremental()
 //std::cout << "DODAJE SE ODAVDE!!!!!!!" << std::endl;
       STATUS s = LSolver::instance().callSolverIncremental(e1, e2, this, _LocalConditions[i].Instruction(), _LocalConditions[i].ErrorKind());
 
-      stopWhenFound(_LocalConditions[i].Instruction(), s, true);
+      if(stopWhenFound(_LocalConditions[i].Instruction(), s, true) == -1) exit(1);
 
     if(FindFirstFlawed && Model && (s==UNSAFE || s==FLAWED))
       Delete(_LocalConditions[i].Instruction()->GetModelFileName());
@@ -825,10 +880,10 @@ void LBlock::CalculateConditionsIncremental()
 void LBlock::SetState()
 {
 
-if(!_ChangeInitStore) 
+if(!_ChangeInitStore)
 {
-//ChangeInitStoreTimer.startTimer(); 
-ChangeInitStore(); 
+//ChangeInitStoreTimer.startTimer();
+ChangeInitStore();
 //ChangeInitStoreTimer.stopTimer();
 }
 if(_StateIsSet) return;
@@ -841,12 +896,12 @@ if(IsUnreachableBlock())
 }
 
 
-//UpdateStoreTimer.startTimer(); 
-  for(unsigned i=0; i<_Instructions.size(); i++) 
+//UpdateStoreTimer.startTimer();
+  for(unsigned i=0; i<_Instructions.size(); i++)
       _State.Update(_Instructions[i]);
-//UpdateStoreTimer.stopTimer(); 
+//UpdateStoreTimer.stopTimer();
 
-//ako ima samo dva bloka u funkciji, onda model nije dobar jer se ovime izbace 
+//ako ima samo dva bloka u funkciji, onda model nije dobar jer se ovime izbace
 //sve promenljive jer ni jedna nije relevantna
   _State.ExtractRelevant();
   _StateIsSet = true;
@@ -864,7 +919,7 @@ void LBlock::SetJumps()
     //FIXME ovde nije podeseno da ovaj blok nemoze da bude nikome sledbenik i to nedostaje!!!
     LFunction* f=GetParentFunction();
 
-    //Svakom sledbeniku se postavlja da ovaj nije njegov predhodnik jer je unreachable 
+    //Svakom sledbeniku se postavlja da ovaj nije njegov predhodnik jer je unreachable
     llvm::succ_iterator it=llvm::succ_begin(_BBlock), ite = llvm::succ_end(_BBlock);
     for( ; it!=ite; it++)
     {
@@ -895,7 +950,7 @@ void LBlock::SetJumps()
 void LBlock::SetPostconditionTop()
 {
 _Postcondition = aExp::TOP();
-_PostconditionIsSet = true; 
+_PostconditionIsSet = true;
 }
 
 bool NotIn(const vpBlock& vfb, LBlock* fb)
@@ -909,13 +964,13 @@ void LBlock::SetPreds()
 {
 if(_PredsSet) return;
   LFunction* f=GetParentFunction();
-  //Izracunavaju se svi predhodnici bloka - ovo ne moze u init-u 
+  //Izracunavaju se svi predhodnici bloka - ovo ne moze u init-u
   llvm::pred_iterator it=llvm::pred_begin(_BBlock), ite = llvm::pred_end(_BBlock);
   for( ; it!=ite; it++)
   {
       llvm::BasicBlock* bb_pred=*it;
       LBlock* fb_pred = f->GetLBlock(bb_pred);
-      if(fb_pred != NULL) fb_pred->CalculateDescriptions(); 
+      if(fb_pred != NULL) fb_pred->CalculateDescriptions();
       else continue;
       if(fb_pred != NULL && (!fb_pred->HasNoReturnFunctionCall()) && NotIn(_NoPreds, fb_pred))
         _Preds.push_back(fb_pred);
@@ -944,7 +999,7 @@ void LBlock::TryMerge()
     vStr vs;
     for(;iter!= itere; iter++)
     {
-      if(iter->second.Connect()) vs.push_back(iter->first); 
+      if(iter->second.Connect()) vs.push_back(iter->first);
     }
 
 
@@ -991,7 +1046,7 @@ void LBlock::TryMerge()
     _MergeInfo.SetMerged(fb);
     fb->_MergeInfo.AddMerged(this);
     _ChangeInitStore = true;
-    //fixme ovde petlje nismo oslobodili, jer nam ta informacija treba 
+    //fixme ovde petlje nismo oslobodili, jer nam ta informacija treba
     //za kasnije, to je bas lose resenje, ali sta da se radi, treba
     //smisliti nesto bolje
   }
@@ -1070,7 +1125,7 @@ aExp LBlock::ConnectBlocks(unsigned id1, unsigned id2) const
 }
 
 
-  //dodaje se uslovi ulaska u blok, ovo se dodaje samo temporary, 
+  //dodaje se uslovi ulaska u blok, ovo se dodaje samo temporary,
   //bice stvarno dodato onda kada
   //ovaj blok postane nekome prethodnik
   //ovde je sada transformacija i uslovi ulaska
@@ -1078,10 +1133,10 @@ aExp LBlock::GetEntryConditions() const
 {
   vaExp expressions;
 
-  if(_Preds.size() == 0) 
-  {     
-        expressions.push_back(Active()); 
-        return expressions[0];       
+  if(_Preds.size() == 0)
+  {
+        expressions.push_back(Active());
+        return expressions[0];
   }
 
   if((_Preds.size() == 1) && HasAssume())
@@ -1089,7 +1144,7 @@ aExp LBlock::GetEntryConditions() const
       aExp e = ConnectBlocks(Id(), _Preds[0]->Id());
       expressions.push_back(e);
   }
- 
+
   if(_Preds.size()>1)
   //uslovi prespajanja blokova
   for(unsigned j=0; j<_Preds.size(); j++)
@@ -1102,7 +1157,7 @@ aExp LBlock::GetEntryConditions() const
 
   aExp e = aExp::TOP();
   if(_Preds.size() > 1) e = aExp::OR(exs);
-  else if (_Preds.size() == 1) e = exs[0]; 
+  else if (_Preds.size() == 1) e = exs[0];
 
   expressions.push_back(aExp::IFF(e, Active()));
 
@@ -1134,7 +1189,7 @@ aExp LBlock::GetExitConditions() const
     //pij \/ pik \/pil <=> pi
     for(unsigned i=0; i<_Jumps.size(); i++)
       exprs.push_back(Transformation(GetFunctionName(), Id(), _Jumps[i].FB()->Id()));
-    expressions.push_back(aExp::IFF(aExp::OR(exprs), Active()));  
+    expressions.push_back(aExp::IFF(aExp::OR(exprs), Active()));
   }
 
   return MakeANDFromExpressions(expressions);
@@ -1161,7 +1216,7 @@ void LBlock::AddNewPreds(vpBlock& preds, LBlock* p) const
 {
   bool b;
   for(unsigned k=0; k<p->_Preds.size(); k++)
-  { 
+  {
       b = true;
       for(unsigned l=0; l<preds.size(); l++)
            if(preds[l] == p->_Preds[k]) {b = false; break;}
@@ -1177,21 +1232,21 @@ void LBlock::AddPredsConditionsIncremental() const
    for(unsigned j=0; j<preds.size(); j++)
    {
       if(preds[j]->PostconditionInSolver()) continue;
-      if(!(preds[j]->PostconditionInSolver())) 
+      if(!(preds[j]->PostconditionInSolver()))
       {
         //trebalo bi da su descriptions vec sracunati pa da ne moze da se mesa
         preds[j]->CalculateConditionsIncremental();
-        //ovako moze da se doda neki postcondition pre nego sto mu se sracuna prethodnik i onda 
+        //ovako moze da se doda neki postcondition pre nego sto mu se sracuna prethodnik i onda
         //to da bude problem --- a mozda i nije problem
         LSolver::instance().AddIntoSolver(preds[j]->Postcondition());
         preds[j]->PostconditionInSolver() = true;
       }
       AddNewPreds(preds, preds[j]);
    }
-}   
+}
 
 
-//Postavlja se postuslov bloka 
+//Postavlja se postuslov bloka
 //= Transformacija + uslovi izlaska iz bloka + odakle smo usli u blok
 void LBlock::SetPostcondition()
 {
@@ -1211,16 +1266,16 @@ if(IsUnreachableBlock())
     vJump p;
 
     for(unsigned i=0; i<_Jumps.size(); i++)
-        if(NotIn(_NoJumps, _Jumps[i].FB())) 
+        if(NotIn(_NoJumps, _Jumps[i].FB()))
                 p.push_back(_Jumps[i]);
 
-    if(p.size()!=_Jumps.size()) 
+    if(p.size()!=_Jumps.size())
     {
         _Jumps.clear();
         _Jumps = p;
-            
-        //odavde moze da se ode samo u blok za koji je zakljuceno da je unreachable pa je prema tome i ovaj unreachable, i to treba ponovo proslediti dalje 
-        if(_Jumps.size() == 0) 
+
+        //odavde moze da se ode samo u blok za koji je zakljuceno da je unreachable pa je prema tome i ovaj unreachable, i to treba ponovo proslediti dalje
+        if(_Jumps.size() == 0)
         {
             for(unsigned i=0; i<_Preds.size(); i++)
             _Preds[i]->AddNoJump(this);
@@ -1231,11 +1286,11 @@ if(IsUnreachableBlock())
             _Preds[i]->RecalculatePostcondition();
             _NoPreds.push_back(_Preds[i]);
             }
-            _Preds.clear();     
+            _Preds.clear();
             //ovo bi trebalo da postavi sve da je unreachable
             //i da unazad postavi jos neki ako je unreachable
-            RecalculatePostcondition();            
-        }  
+            RecalculatePostcondition();
+        }
     }
   }
 
@@ -1267,15 +1322,15 @@ void LBlock::FlawedFound(const LInstruction* fi, ERRKIND e)
 {
 
 bool reachable = CheckReachability();
-if(reachable) 
+if(reachable)
     {
       AddLocalConditionTimer.stopTimer();
-      stopWhenFound(fi, FLAWED, false);
+      if(stopWhenFound(fi, FLAWED, false) == -1) exit(1);
        //ovo је dostizno ukoliko nije find-first-flawed
       _LocalConditions.push_back(LLocalCondition(aExp::TOP(),aExp::TOP(),fi,e, FLAWED));
       return;
     }
-else 
+else
     {
       //Svakom sledbeniku se postavlja da ovaj nije njegov predhodnik jer je unreachable --- to bi trebalo da uradi setjumps
 
@@ -1294,9 +1349,9 @@ else
 
     _Preds.clear();
     _LocalConditions.clear();
-     RecalculatePostcondition();     
+     RecalculatePostcondition();
      AddLocalConditionTimer.stopTimer();
-    return; 
+    return;
     }
 }
 
@@ -1326,7 +1381,7 @@ void LBlock::AddLocalCondition(caExp& r, LInstruction* fi, ERRKIND e)
     STATUS s;
     AddLocalConditionTimer.startTimer();
 
-    if(IsUnreachableBlock())                       
+    if(IsUnreachableBlock())
     {
 //        _LocalConditions.push_back(LLocalCondition(aExp::TOP(),aExp::TOP(),fi, e, UNREACHABLE));
         AddLocalConditionTimer.stopTimer();
@@ -1337,7 +1392,7 @@ void LBlock::AddLocalCondition(caExp& r, LInstruction* fi, ERRKIND e)
     {
       //prvi ulazak u petlju ce ipak da proveri, a poslednji nece jer jos
       //uvek ne zna koji je poslednji
-      if(IsInsideLoop() && !DoCalculate()) 
+      if(IsInsideLoop() && !DoCalculate())
       {
         //bilo bi dobro ovo nekako ne dodavati jer se jednako nece proveravati
         _LocalConditions.push_back(LLocalCondition(_State.Constraints(),r,fi, e, UNCHECKED));
@@ -1354,7 +1409,7 @@ void LBlock::AddLocalCondition(caExp& r, LInstruction* fi, ERRKIND e)
     aExp l = AddAddresses(AllConstraints());
     s = LSolver::callSolver(l, r, this,fi, e, true);
 
-    if(Id() == 0)  stopWhenFound( fi, s, true);
+    if(Id() == 0)  if(stopWhenFound( fi, s, true) == -1) exit(1);
     if(ProcessStatus(fi,e,s) == true) return;
 
     //ako je u prvom bloku, onda nema potrebe ponovo da se racuna u odnosu na prethodne blokove,
@@ -1362,7 +1417,7 @@ void LBlock::AddLocalCondition(caExp& r, LInstruction* fi, ERRKIND e)
     if(Id()!=0) s = UNCHECKED;
     _LocalConditions.push_back(LLocalCondition(_State.Constraints(),r,fi,e, s));
     AddLocalConditionTimer.stopTimer();
-} 
+}
 
 
 void LBlock::AddLocalConditionZeroDisequality(caExp& e, LInstruction* fi)
@@ -1373,7 +1428,7 @@ void LBlock::AddLocalConditionZeroDisequality(caExp& e, LInstruction* fi)
         aExp r = aExp::Disequality(e, ExpNumZero(GetIntType(t)));
         AddLocalCondition(r, fi, DIVISIONBYZERO);
     }
-} 
+}
 
 //ovo je cudno, i ne znam cemu sluzi, dodato je zbog ssphi ali ne znam zasto
 LBlock* LBlock::GetPred() const
@@ -1387,4 +1442,4 @@ LBlock* LBlock::GetPred() const
 }
 
 
-} //end of namespace 
+} //end of namespace

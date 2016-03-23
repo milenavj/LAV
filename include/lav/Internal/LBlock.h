@@ -25,7 +25,7 @@
 #include "lav/Internal/LMerge.h"
 
 namespace llvm
-{ 
+{
   struct BasicBlock;
   class Type;
 }
@@ -36,22 +36,22 @@ class LFunction;
 class LModule;
 class LInstruction;
 
-class LBlock 
+class LBlock
 {
 
 
 public:
 
-  LBlock(llvm::BasicBlock *bb, LFunction* parent); 
+  LBlock(llvm::BasicBlock *bb, LFunction* parent);
   ~LBlock();
-  
+
   void CalculateDescriptions             ();
   void CalculateConditions               ();
   void CalculateConditionsIncremental    ();
   void CalculateConditionsBlock          ();
   void ReCalculateConditions             (int n);
   void RecalculatePostcondition          ();
-  
+
   //dodavanje lokalnih uslova
   void  AddLocalCondition                (const aExp& e, LInstruction* fi, ERRKIND er);
   void  AddLocalConditionZeroDisequality (const aExp& e, LInstruction* fi);
@@ -77,7 +77,7 @@ public:
   inline llvm::BasicBlock*  GetBasicBlock           () const { return _BBlock; }
   inline bool               StateIsSet              () const { return _StateIsSet; }
   inline unsigned           Id                      () const { return _Id; }
-  inline bool               HasNoReturnFunctionCall () const { return _HasNoReturnFC; }       
+  inline bool               HasNoReturnFunctionCall () const { return _HasNoReturnFC; }
   inline void               SetNoReturnFunctionCall ()       { _HasNoReturnFC = true; }
   inline const LState&      GetState                () const { return _State; }
   inline       LState&      GetState                ()       { return _State; }
@@ -88,10 +88,10 @@ public:
   int                       GetContext              () const;
   const aExp&               GetTrace                ();
   aExp                      GetTraceGlobFuncCons    ();
-  aExp                      GetGlobFuncCons         () const; 
-  aExp                      Active                  () const; 
+  aExp                      GetGlobFuncCons         () const;
+  aExp                      Active                  () const;
   bool                      IsEntryBlock            () const;
-  
+
   std::ostream&             Print     (std::ostream& ostr)      const;
   std::ostream&             PrintHTML (std::ostream& ostr)      const;
 
@@ -106,7 +106,7 @@ public:
 
   mspaExp                   GetModelValues          () const {return _State.GetModelValues();}
   const mspType&            GetReferences           () const;
-   
+
   //spajanje blokova
   void                      TryMerge                ();
   inline bool               IsMerged                () const {return _MergeInfo.IsMerged();}
@@ -115,7 +115,7 @@ public:
   inline const vpBlock&     BlocksMerged            () const {return _MergeInfo.BlocksMerged();}
 
 
-  aExp                      AddAddresses(const aExp& e); 
+  aExp                      AddAddresses(const aExp& e);
   void                      UpdateAndSetAddresses   ();
 
 private:
@@ -140,26 +140,26 @@ private:
 
   void     FlawedFound          (const LInstruction* fi, ERRKIND er);
   bool     ProcessStatus        (const LInstruction* fi, ERRKIND er, STATUS s);
-  void     stopWhenFound        (const LInstruction* fi, STATUS s, bool count);  
+  int     stopWhenFound        (const LInstruction* fi, STATUS s, bool count);  
 
   aExp     GetExitConditions    ()                         const;
-  aExp     GetEntryConditions   ()                         const; 
+  aExp     GetEntryConditions   ()                         const;
   aExp     GetPredsConditions   ()                         const;
   void     AddNewPreds          (vpBlock& preds, LBlock* p) const;
   aExp     BlockEntry           ()                         const;
   void     UpdateAddresses      ();
   aExp     Addresses            ()                         const {return _Addresses;}
 
-  aExp     AllConstraints       ()                         const; 
+  aExp     AllConstraints       ()                         const;
   aExp     ConnectBlocks        (unsigned id1, unsigned id2)const;
   void     AddPredsConditionsIncremental ()                const;
-  
+
   bool     HasAssume            ()                         const;
   void     CalculateAssume      ();
 
 private:
-  
-  LBlock(const LBlock& fb);  
+
+  LBlock(const LBlock& fb);
   LBlock& operator=(const LBlock& fb);
 
   static unsigned                BlockNumber;
@@ -197,7 +197,7 @@ private:
   enum BLOCK_REACHABILITY       _Reachable;
 
   vLoop                         _Loop;
-  
+
 };
 
 }//end of namespace

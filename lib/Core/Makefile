@@ -13,7 +13,7 @@
 LEVEL=../..
 
 PARALLEL_DIRS=
-USEDLIBS = misc.a expression.a solvers.a
+USEDLIBS = misc.a expression.a solvers.a threads.a
 LIBRARYNAME=core
 BUILD_ARCHIVE=1
 
@@ -34,5 +34,3 @@ endif
 ifeq ($(ENABLE_MATHSAT), 1)
         CXX.Flags += -I$(PROJ_SRC_ROOT)/solvers/mathsat/include
 endif
-
-

@@ -23,7 +23,8 @@ public:
     enum Outcome {
         Unsat = 1,
         Finished = 2,
-        Canceled = 3
+        Canceled = 3,
+        Sat = 4
     };
 
     ThreadPool(FixedQueue<std::function<int()>>&& tasks, int num = std::thread::hardware_concurrency() - 1);
@@ -37,6 +38,9 @@ public:
     bool IsActive();
     void ShutDown();
     void Cancel();
+    void JoinAll();
+    void Start();
+    void InitWorkerThreads();
     //void Add(const typename FixedQueue<std::function<int()>>::ValueType& newValue);
 
 private:
@@ -45,7 +49,8 @@ private:
    std::thread m_control_thread;
    Event::Pointer m_cancel_event;
    bool m_active;
-
+   int m_num_threads;
+   int m_num_tasks;
 };
 
 }

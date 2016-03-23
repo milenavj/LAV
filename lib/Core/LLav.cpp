@@ -17,9 +17,11 @@
 #include "llvm/Support/CommandLine.h"
 
 #include "lav/Internal/LModule.h"
+#include "lav/Threads/Event.h"
 
 using namespace llvm;
 using namespace lav;
+using namespace Utils;
 
 namespace {
 
@@ -62,7 +64,13 @@ bool LavPass::runOnModule(Module &M)
             << std::endl << std::endl;
 
 
+
+//  std::cout << "Creating event ..." << std::endl;
+//  auto e = Event::Create();
+//  std::cout << "Created event ..." << std::endl;
+
   std::cout << "Printing results ... " << std::endl;
+
   PrintingTime.startTimer();
   LavModule.PrintResults();
   PrintingTime.stopTimer();
