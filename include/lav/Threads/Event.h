@@ -12,6 +12,12 @@ namespace Utils
     class Event
     {
     public:
+        enum Outcome {
+            Unsat = 1,
+            Finished = 2,
+            Canceled = 3,
+            Sat = 4
+        };
         using Pointer = std::shared_ptr<Event>;
         using Sigval = uint64_t;
 
@@ -19,6 +25,8 @@ namespace Utils
     private:
         int m_fd;
         bool m_ready;
+        bool m_unsat;
+        bool m_cancel;
         // Event is movable
         Event();
         Event(Event &&e);
@@ -36,7 +44,7 @@ namespace Utils
         // Value() gets notification value
         // WaitForEvents() waint until one of the events return
         bool Ready() const;
-        void Signal(Sigval value = 1) const;
+        void Signal(Sigval value = 1);
         Sigval Value(bool block = false);
         static std::vector<std::size_t> WaitForEvents(std::vector<Event::Pointer> &events,
                                                       const std::chrono::milliseconds &waitMs = {},

@@ -154,12 +154,12 @@ void ThreadPool::InitWorkerThreads()
                 if(retval == 433)
                 {
                     cout << "Thread signal unsat" << endl;
-                    eptr->Signal(Outcome::Unsat);
+                    eptr->Signal(Utils::Event::Outcome::Unsat);
                  }
                 else
                 {
                   //  cout << "Thread signal sat" << endl;
-                    eptr->Signal(Outcome::Sat);
+                    eptr->Signal(Utils::Event::Outcome::Sat);
                     this_thread::sleep_for(chrono::seconds{1});
                 }
                 //cout << "Thread signal finished" << endl;
@@ -192,8 +192,9 @@ void ThreadPool::Start()
             events.push_back(t.ShareEvent());
         events.push_back(m_cancel_event);
 
+        bool cancel = false;
         int num_finished_tasks = 0;
-        while(num_finished_tasks != m_num_tasks)
+        while(num_finished_tasks != m_num_tasks && !cancel)
         {
             vector<size_t> vidxs = Event::WaitForEvents(events);
             // If some event has been signaled
@@ -203,34 +204,39 @@ void ThreadPool::Start()
 
                 Event::Sigval value = events[idx]->Value();
 
-                cout << "NUM FINISHED " << num_finished_tasks << "  signal " <<  value << endl;
+                // cout << "NUM FINISHED " << num_finished_tasks << "  signal " <<  value << endl;
                // Event::Sigval value = events[idx]->Value();
-                if(value == Outcome::Unsat)
+                if(value == Utils::Event::Outcome::Unsat)
                  {
                     cout << "UNSAT shutting down threads..." << endl;
                     for(auto &t : m_threads)
                            t.Cancel();
                     m_active = false;
+                    cancel = true;
                     break;
                 }
-                else if(value == Outcome::Sat)
+                else if(value == Utils::Event::Outcome::Finished)
                 {
                     cout << "SAT." << endl;
 
                     m_active = false;
                 }
-                else if(value == Outcome::Canceled)
+                else if(value == Utils::Event::Outcome::Canceled)
                 {
                     cout << "Cancel from main." << endl;
                     for(auto &t : m_threads)
                         t.Cancel();
 
+                    cancel = true;
                     m_active = false;
                     break;
                 }
+                if(cancel)
+                   break;
             }
-
         }
+        if(num_finished_tasks == m_num_tasks)
+            cout << "All threads signal SAT" << endl;
    });
   if(m_control_thread.joinable())
         m_control_thread.join();
@@ -240,7 +246,7 @@ void ThreadPool::Start()
 // Cancelation from caller
 void ThreadPool::Cancel()
 {
-   m_cancel_event->Signal(Outcome::Canceled);
+   m_cancel_event->Signal(Utils::Event::Outcome::Canceled);
 
 }
 

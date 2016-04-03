@@ -586,27 +586,27 @@ void LBlock::CalculateConditions()
   auto maxf = [&](LLocalCondition localCond, aExp cond, LBlock *block, int i) {
 
 
-  //         aExp e1 = aExp::AND(cond, localCond.LHS());
-  //         aExp e2 = localCond.RHS();
-  //         std::cout << "\n\n\n\n\n -----------------Start solver "<< i <<" ------------------ \n\n\n\n\n";
-  //
-  //         STATUS s = LSolver::callSolver(e1, e2, block,
-  //                                           localCond.Instruction(),
-  //                                           localCond.ErrorKind(), true);
-  //
-  //         std::cout << "\n\n\n\n\n -----------------End solver ------------------ \n\n\n\n\n";
-  //
-  //
-  //         if(stopWhenFound(localCond.Instruction(), s, true) == -1)
-  //         {
-  //           return -1;
-  //         }
-  //         if(s == UNSAFE || s == FLAWED)
-  //         {
-  //           // Delete(localCond.Instruction()->GetModelFileName());
-  //         }
-  //       //  localCond.Status() = s;
-  //         return 0;
+          aExp e1 = aExp::AND(cond, localCond.LHS());
+          aExp e2 = localCond.RHS();
+        //   std::cout << "\n\n\n\n\n -----------------Start solver "<< i <<" ------------------ \n\n\n\n\n";
+        // 
+        //   STATUS s = LSolver::callSolver(e1, e2, block,
+        //                                     localCond.Instruction(),
+        //                                     localCond.ErrorKind(), true);
+        //
+        //   std::cout << "\n\n\n\n\n -----------------End solver ------------------ \n\n\n\n\n";
+        //
+        //
+        //   if(stopWhenFound(localCond.Instruction(), s, true) == -1)
+        //   {
+        //     return -1;
+        //   }
+        //   if(FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED))
+        //   {
+        //     Delete(localCond.Instruction()->GetModelFileName());
+        //   }
+        //  localCond.Status() = s;
+        //   return 0;
               return i*i;
        };
 
@@ -645,7 +645,6 @@ void LBlock::CalculateConditions()
   // }
   //    std::cout << "\n\n ----------------- END SEQUENTIAL LAV ------------------ \n\n";
 
-//   std::cout << "\n\n\n\n\n -----------------BRANISLAVA end------------------ \n\n\n\n\n";
 
 }
 

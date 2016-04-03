@@ -20,12 +20,12 @@ class ThreadPool
 {
 public:
 
-    enum Outcome {
-        Unsat = 1,
-        Finished = 2,
-        Canceled = 3,
-        Sat = 4
-    };
+    // enum Signal {
+    //     Unsat = 1,
+    //     Finished = 2,
+    //     Canceled = 3,
+    //     Sat = 4
+    // };
 
     ThreadPool(FixedQueue<std::function<int()>>&& tasks, int num = std::thread::hardware_concurrency() - 1);
     ThreadPool(ThreadPool&& t);
