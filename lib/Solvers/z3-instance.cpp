@@ -16,7 +16,7 @@ namespace UrsaMajor {
     unsigned Z3Instance::_pushed = 0;
 
     Z3Instance& Z3Instance::instance() {
-      static Z3Instance _instance;
+      thread_local Z3Instance _instance;
       return _instance;
     }
 
@@ -27,7 +27,7 @@ namespace UrsaMajor {
     }
 
     Z3Instance::~Z3Instance() {
-      if (_m) 
+      if (_m)
           Z3_del_model(_ctx, _m);
       Z3_del_context(_ctx);
     }
@@ -40,7 +40,7 @@ namespace UrsaMajor {
         Z3_assert_cnstr(_ctx, _blocking_clause);
       }
       _blocking_clause = Z3_mk_false(_ctx);
-    if (_m) 
+    if (_m)
         Z3_del_model(_ctx, _m);
     _m = 0;
     Z3_lbool result = Z3_check_and_get_model(_ctx, &_m);
@@ -48,7 +48,7 @@ namespace UrsaMajor {
       return result == Z3_L_TRUE;
     }
 
-    bool Z3Instance::addConstraint(Z3_ast expr) 
+    bool Z3Instance::addConstraint(Z3_ast expr)
     {
         Z3_push(_ctx);
         Z3_assert_cnstr(_ctx, expr);
@@ -60,9 +60,9 @@ namespace UrsaMajor {
 
 void display_model(Z3_context c, FILE * out, Z3_model m) ;
 
-bool Z3Instance::addTempConstraint(Z3_ast expr) 
+bool Z3Instance::addTempConstraint(Z3_ast expr)
     {
-    if (_m) 
+    if (_m)
         Z3_del_model(_ctx, _m);
     _m = 0;
 
@@ -72,9 +72,9 @@ bool Z3Instance::addTempConstraint(Z3_ast expr)
 //      Z3_lbool result = Z3_check(_ctx);
      Z3_lbool result = Z3_check_and_get_model(_ctx, &_m);
 
-//     if(result == Z3_L_TRUE) 
+//     if(result == Z3_L_TRUE)
 //            printf("sat\n%s\n", Z3_model_to_string(_ctx, _m));
- 
+
       Z3_pop(_ctx, 1);
       return result == Z3_L_TRUE;
     }
@@ -93,7 +93,7 @@ bool Z3Instance::addTempConstraint(Z3_ast expr)
 /**
    \brief Display a symbol in the given output stream.
 */
-std::string display_symbol(Z3_context c, Z3_symbol s) 
+std::string display_symbol(Z3_context c, Z3_symbol s)
 {
 //std::cout<< "display_symbol" << std::endl;
     char ss[100];
@@ -112,11 +112,11 @@ std::string display_symbol(Z3_context c, Z3_symbol s)
 
 
 /**
-   \brief Custom ast pretty printer. 
+   \brief Custom ast pretty printer.
 
    This function demonstrates how to use the API to navigate terms.
 */
-std::string display_ast(Z3_context c, Z3_ast v) 
+std::string display_ast(Z3_context c, Z3_ast v)
 {
     switch (Z3_get_ast_kind(c, v)) {
     case Z3_NUMERAL_AST: {
@@ -152,7 +152,7 @@ std::string display_ast(Z3_context c, Z3_ast v)
     }
     case Z3_QUANTIFIER_AST: {
         return "quantifier" ;
-        ;	
+        ;
     }
     default:
     return "unknown";
@@ -168,41 +168,41 @@ std::string display_ast(Z3_context c, Z3_ast v)
         return display_ast(_ctx, v);
     }
 
-    void exitf(const char* message) 
+    void exitf(const char* message)
     {
       fprintf(stderr,"BUG: %s.\n", message);
       exit(1);
     }
 
-/*    void error_handler(Z3_error_code e) 
+/*    void error_handler(Z3_error_code e)
     {
             printf("Error code: %d\n", e);
         exitf("incorrect use of Z3");
-    } 
+    }
 */
 
-void error_handler(Z3_context c, Z3_error_code e) 
+void error_handler(Z3_context c, Z3_error_code e)
 {
     printf("Error code: %d\n", e);
     exitf("incorrect use of Z3");
 }
 
 
- Z3_context mk_context_custom(Z3_config cfg, Z3_error_handler err) 
+ Z3_context mk_context_custom(Z3_config cfg, Z3_error_handler err)
 {
     Z3_context ctx;
-    
+
     Z3_set_param_value(cfg, "MODEL", "true");
     ctx = Z3_mk_context(cfg);
     Z3_set_error_handler(ctx, err);
-    
+
     return ctx;
 }
 
-    Z3_context mk_context() 
+    Z3_context mk_context()
     {
         Z3_config  cfg;
-        Z3_context ctx; 
+        Z3_context ctx;
         cfg = Z3_mk_config();
         ctx = mk_context_custom(cfg, error_handler);
         Z3_del_config(cfg);

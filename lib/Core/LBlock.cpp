@@ -588,26 +588,26 @@ void LBlock::CalculateConditions()
 
           aExp e1 = aExp::AND(cond, localCond.LHS());
           aExp e2 = localCond.RHS();
-        //   std::cout << "\n\n\n\n\n -----------------Start solver "<< i <<" ------------------ \n\n\n\n\n";
-        // 
-        //   STATUS s = LSolver::callSolver(e1, e2, block,
-        //                                     localCond.Instruction(),
-        //                                     localCond.ErrorKind(), true);
-        //
-        //   std::cout << "\n\n\n\n\n -----------------End solver ------------------ \n\n\n\n\n";
-        //
-        //
-        //   if(stopWhenFound(localCond.Instruction(), s, true) == -1)
-        //   {
-        //     return -1;
-        //   }
-        //   if(FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED))
-        //   {
-        //     Delete(localCond.Instruction()->GetModelFileName());
-        //   }
-        //  localCond.Status() = s;
-        //   return 0;
-              return i*i;
+          std::cout << "\n\n\n\n\n -----------------Start solver "<< i <<" ------------------ \n\n\n\n\n";
+
+          STATUS s = LSolver::callSolver(e1, e2, block,
+                                            localCond.Instruction(),
+                                            localCond.ErrorKind(), true);
+
+          std::cout << "\n\n\n\n\n -----------------End solver ------------------ \n\n\n\n\n";
+
+
+          if(stopWhenFound(localCond.Instruction(), s, true) == -1)
+          {
+            return -1;
+          }
+          if(FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED))
+          {
+            // FIXME duplo oslobadjanje
+            Delete(localCond.Instruction()->GetModelFileName());
+          }
+         localCond.Status() = s;
+        return 0;
        };
 
   std::vector<std::function<int()>> functions;
