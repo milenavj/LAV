@@ -601,11 +601,13 @@ void LBlock::CalculateConditions()
           {
             return -1;
           }
+
           if(FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED))
           {
-            // FIXME duplo oslobadjanje
             Delete(localCond.Instruction()->GetModelFileName());
+            return -1;
           }
+
          localCond.Status() = s;
         return 0;
        };
