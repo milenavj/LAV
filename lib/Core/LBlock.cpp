@@ -583,32 +583,32 @@ void LBlock::CalculateConditions()
 
   std::cout << "\n\n\n\n\n -----------------BRANISLAVA begin ------------------ \n\n\n\n\n";
 
-  auto maxf = [&](LLocalCondition localCond, aExp cond, LBlock *block, int i) {
+  auto maxf = [&](LLocalCondition *localCond, aExp *cond, LBlock *block, int i) {
 
 
-          aExp e1 = aExp::AND(cond, localCond.LHS());
-          aExp e2 = localCond.RHS();
+          aExp e1 = aExp::AND(*cond, localCond->LHS());
+          aExp e2 = localCond->RHS();
           std::cout << "\n\n\n\n\n -----------------Start solver "<< i <<" ------------------ \n\n\n\n\n";
 
           STATUS s = LSolver::callSolver(e1, e2, block,
-                                            localCond.Instruction(),
-                                            localCond.ErrorKind(), true);
+                                            localCond->Instruction(),
+                                            localCond->ErrorKind(), true);
 
           std::cout << "\n\n\n\n\n -----------------End solver ------------------ \n\n\n\n\n";
 
 
-          if(stopWhenFound(localCond.Instruction(), s, true) == -1)
+          if(stopWhenFound(localCond->Instruction(), s, true) == -1)
           {
             return -1;
           }
 
           if(FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED))
           {
-            Delete(localCond.Instruction()->GetModelFileName());
+            Delete(localCond->Instruction()->GetModelFileName());
             return -1;
           }
 
-         localCond.Status() = s;
+         localCond->Status() = s;
         return 0;
        };
 
@@ -618,7 +618,7 @@ void LBlock::CalculateConditions()
   {
     if(SkipLocalCondition(_LocalConditions[i])) continue;
 
-    functions.push_back(std::bind(maxf,_LocalConditions[i], cond, this, i));
+    functions.push_back(std::bind(maxf,&_LocalConditions[i], &cond, this, i));
   }
 
   ThreadPool t{FixedQueue<std::function<int()>>(functions) ,30};
