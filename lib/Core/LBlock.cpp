@@ -60,6 +60,10 @@ namespace {
   CalculateBlock("check-block-conds",
                llvm::cl::desc("LAV --- Check in one solver call all conditions inside one block (default = false)"),
                llvm::cl::init(false));
+ llvm::cl::opt<int>
+               NumberThreads("number-threads",
+                            llvm::cl::desc("LAV --- Number of threads (default = hardware_concurrency)"),
+                            llvm::cl::init(0));
 
 }
 
@@ -580,8 +584,8 @@ void LBlock::CalculateConditions()
   if(_LocalConditions.size() == 0) {_ConditionsCalculated = true; return;}
 
   aExp cond = AddAddresses(GetTraceGlobFuncCons());
-  
-  std::cout << "\n\n\n\n\n -----------------BRANISLAVA begin ------------------ \n\n\n\n\n";
+
+  //std::cout << "\n\n\n\n\n -----------------BRANISLAVA begin ------------------ \n\n\n\n\n";
 
   std::cout << FindFirstFlawed << std::endl;
   auto maxf = [&](LLocalCondition *localCond, aExp *cond, LBlock *block, int i) {
@@ -589,16 +593,16 @@ void LBlock::CalculateConditions()
 
           aExp e1 = aExp::AND(*cond, localCond->LHS());
           aExp e2 = localCond->RHS();
-          std::cout << "\n\n\n\n\n -----------------Start solver "<< i <<" ------------------ \n\n\n\n\n";
+          std::cout << "\n\n\n\n\n -----------------Start solver "<< i <<" ------------------ \n\n\n\n\n" << std::endl;
 
           STATUS s = LSolver::callSolver(e1, e2, block,
                                             localCond->Instruction(),
                                             localCond->ErrorKind(), true);
 
-          std::cout << "\n\n\n\n\n -----------------End solver ------------------ \n\n\n\n\n";
+          std::cout << "\n\n\n\n\n -----------------End solver " <<  i <<"------------------ \n\n\n\n\n" <<std::endl;
 
 
-          std::cout << FindFirstFlawed << " find first flawed" << std::endl;
+          //std::cout << FindFirstFlawed << " find first flawed" << std::endl;
           if(stopWhenFound(localCond->Instruction(), s, true) == -1)
           {
             return -1;
@@ -623,7 +627,10 @@ void LBlock::CalculateConditions()
     functions.push_back(std::bind(maxf,&_LocalConditions[i], &cond, this, i));
   }
 
-  ThreadPool t{FixedQueue<std::function<int()>>(functions) ,30};
+  if(NumberThreads)
+    ThreadPool t{FixedQueue<std::function<int()>>(functions) ,NumberThreads};
+  else
+    ThreadPool t{FixedQueue<std::function<int()>>(functions)};
 
   std::cout << "\n\n\n\n\n -----------------BRANISLAVA end ------------------ \n\n\n\n\n";
 
