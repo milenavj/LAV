@@ -12,10 +12,9 @@
 
 using namespace Utils;
 using namespace ThreadSafe;
-using namespace std;
 
-ThreadPool::ThreadPool(FixedQueue<function<int()>> &&tasks, int num)
-    :m_tasks{move(tasks)},m_num_threads{num}
+ThreadPool::ThreadPool(FixedQueue<std::function<int()>> &&tasks, int num)
+    :m_tasks{std::move(tasks)},m_num_threads{num}
 {
   m_num_tasks = m_tasks.Size();
 
@@ -25,15 +24,15 @@ ThreadPool::ThreadPool(FixedQueue<function<int()>> &&tasks, int num)
 
 
 ThreadPool::ThreadPool(ThreadPool &&t)
-    :m_tasks{move(t.m_tasks)},m_threads{move(t.m_threads)},m_active{t.m_active}
+    :m_tasks{std::move(t.m_tasks)},m_threads{std::move(t.m_threads)},m_active{t.m_active}
 {}
 
 ThreadPool& ThreadPool::operator=(ThreadPool&& oth)
 {
     if(this != &oth)
     {
-        m_tasks = move(oth.m_tasks);
-        m_threads = move(oth.m_threads);
+        m_tasks = std::move(oth.m_tasks);
+        m_threads = std::move(oth.m_threads);
         m_active = oth.m_active;
     }
     return *this;
@@ -54,7 +53,7 @@ bool ThreadPool::IsActive()
 void ThreadPool::InitWorkerThreads()
 {
     // Function for every thread
-    auto f = [=](shared_ptr<FixedQueue<function<int()>>> queuePtr, const Event::Pointer &eptr)
+    auto f = [=](std::shared_ptr<FixedQueue<std::function<int()>>> queuePtr, const Event::Pointer &eptr)
     {
       //  cout << "Starting new thread" <<endl;
         // Get tasks and execute it
@@ -64,12 +63,12 @@ void ThreadPool::InitWorkerThreads()
                 int retval = (*taskPtr)();
                 if(retval == -1)
                 {
-                    cout << "Thread signal unsat" << endl;
+                    std::cout << "Thread signal unsat" << std::endl;
                     eptr->Signal(Utils::Event::Outcome::Unsat);
                  }
                 else
                 {
-                    cout << "Thread signal sat" << endl;
+                    std::cout << "Thread signal sat" << std::endl;
                     eptr->Signal(Utils::Event::Outcome::Sat);
                     //this_thread::sleep_for(chrono::seconds{1});
                 }
@@ -81,9 +80,9 @@ void ThreadPool::InitWorkerThreads()
 
     //cout << "NUM THREADS = " << m_num_threads << endl;
     // Bind tasks
-    auto queuePtr = make_shared<FixedQueue<function<int()>>>(move(m_tasks));
+    auto queuePtr = std::make_shared<FixedQueue<std::function<int()>>>(std::move(m_tasks));
     for(auto i = 0; i<m_num_threads; i++)
-        m_threads.emplace_back(bind(f, queuePtr, placeholders::_1));
+        m_threads.emplace_back(std::bind(f, queuePtr, std::placeholders::_1));
 
 }
 
@@ -95,10 +94,10 @@ void ThreadPool::Start()
     m_cancel_event = Event::Create();
 
     // Create control thread and force it to wait for events of working threads, and wait for cancel event
-    m_control_thread = thread([this]()
+    m_control_thread = std::thread([this]()
     {
 
-        vector<Event::Pointer> events;
+        std::vector<Event::Pointer> events;
         for(const auto &t : m_threads)
             events.push_back(t.ShareEvent());
         events.push_back(m_cancel_event);
@@ -107,7 +106,7 @@ void ThreadPool::Start()
         int num_finished_tasks = 0;
         while(num_finished_tasks != m_num_tasks && !cancel)
         {
-            vector<size_t> vidxs = Event::WaitForEvents(events);
+            std::vector<size_t> vidxs = Event::WaitForEvents(events);
             // If some event has been signaled
             for(auto idx : vidxs)
             {
@@ -119,7 +118,7 @@ void ThreadPool::Start()
                // Event::Sigval value = events[idx]->Value();
                 if(value == Utils::Event::Outcome::Unsat)
                  {
-                    cout << "UNSAT shutting down threads..." << endl;
+                    std::cout << "UNSAT shutting down threads..." << std::endl;
                     for(auto &t : m_threads)
                            t.Cancel();
                     m_active = false;
@@ -128,13 +127,13 @@ void ThreadPool::Start()
                 }
                 else if(value == Utils::Event::Outcome::Finished)
                 {
-                    cout << "SAT." << endl;
+                    std::cout << "SAT." << std::endl;
 
                     m_active = false;
                 }
                 else if(value == Utils::Event::Outcome::Canceled)
                 {
-                    cout << "Cancel from main." << endl;
+                    std::cout << "Cancel from main." << std::endl;
                     for(auto &t : m_threads)
                         t.Cancel();
 
@@ -147,7 +146,7 @@ void ThreadPool::Start()
             }
         }
         if(num_finished_tasks == m_num_tasks)
-            cout << "All threads signal SAT" << endl;
+            std::cout << "All threads signal SAT" << std::endl;
    });
   if(m_control_thread.joinable())
         m_control_thread.join();

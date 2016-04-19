@@ -580,9 +580,10 @@ void LBlock::CalculateConditions()
   if(_LocalConditions.size() == 0) {_ConditionsCalculated = true; return;}
 
   aExp cond = AddAddresses(GetTraceGlobFuncCons());
-
+  
   std::cout << "\n\n\n\n\n -----------------BRANISLAVA begin ------------------ \n\n\n\n\n";
 
+  std::cout << FindFirstFlawed << std::endl;
   auto maxf = [&](LLocalCondition *localCond, aExp *cond, LBlock *block, int i) {
 
 
@@ -597,6 +598,7 @@ void LBlock::CalculateConditions()
           std::cout << "\n\n\n\n\n -----------------End solver ------------------ \n\n\n\n\n";
 
 
+          std::cout << FindFirstFlawed << " find first flawed" << std::endl;
           if(stopWhenFound(localCond->Instruction(), s, true) == -1)
           {
             return -1;
@@ -626,26 +628,26 @@ void LBlock::CalculateConditions()
   std::cout << "\n\n\n\n\n -----------------BRANISLAVA end ------------------ \n\n\n\n\n";
 
 
-  //    std::cout << "\n\n ----------------- BEGIN SEQUENTIAL LAV ------------------ \n\n";
-  //
-  // for(unsigned i=0; i<_LocalConditions.size(); i++)
-  // {
-  //   if(SkipLocalCondition(_LocalConditions[i])) continue;
-  //
-  //   aExp e1 = aExp::AND(cond, _LocalConditions[i].LHS());
-  //   aExp e2 = _LocalConditions[i].RHS();
-  //   STATUS s = LSolver::callSolver(e1, e2, this,
-  //                                     _LocalConditions[i].Instruction(),
-  //                                     _LocalConditions[i].ErrorKind(), true);
-  //
-  //   if(stopWhenFound(_LocalConditions[i].Instruction(), s, true) == -1) exit(1);
-  //
-  //   if(FindFirstFlawed && Model && (s==UNSAFE || s==FLAWED))
-  //      Delete(_LocalConditions[i].Instruction()->GetModelFileName());
-  //
-  //   _LocalConditions[i].Status() = s;
-  // }
-  //    std::cout << "\n\n ----------------- END SEQUENTIAL LAV ------------------ \n\n";
+ // std::cout << "\n\n ----------------- BEGIN SEQUENTIAL LAV ------------------ \n\n";
+ //
+ //  for(unsigned i=0; i<_LocalConditions.size(); i++)
+ //  {
+ //    if(SkipLocalCondition(_LocalConditions[i])) continue;
+ //
+ //    aExp e1 = aExp::AND(cond, _LocalConditions[i].LHS());
+ //    aExp e2 = _LocalConditions[i].RHS();
+ //    STATUS s = LSolver::callSolver(e1, e2, this,
+ //                                      _LocalConditions[i].Instruction(),
+ //                                      _LocalConditions[i].ErrorKind(), true);
+ //
+ //    if(stopWhenFound(_LocalConditions[i].Instruction(), s, true) == -1) exit(1);
+ //
+ //    if(FindFirstFlawed && Model && (s==UNSAFE || s==FLAWED))
+ //       Delete(_LocalConditions[i].Instruction()->GetModelFileName());
+ //
+ //    _LocalConditions[i].Status() = s;
+ //  }
+ //     std::cout << "\n\n ----------------- END SEQUENTIAL LAV ------------------ \n\n";
 
 
 }
