@@ -19,7 +19,7 @@ namespace UrsaMajor {
 
   class Z3Instance {
   public:
-    static Z3Instance& instance();
+    thread_local static Z3Instance& instance();
 
     ~Z3Instance();
 
@@ -30,7 +30,7 @@ namespace UrsaMajor {
     bool nextModel(Z3_ast expr);
     bool addConstraint(Z3_ast expr) ;
     bool addTempConstraint(Z3_ast expr) ;
-    void reset(); 
+    void reset();
     std::string getAssignment(Z3_ast expr, size_t width);
 
   private:
@@ -39,7 +39,7 @@ namespace UrsaMajor {
     Z3_model _m;
     Z3_context _ctx;
     Z3_ast _blocking_clause;
-    static unsigned _pushed;
+    thread_local static unsigned _pushed;
   };
 
 } // namespace UrsaMajor
