@@ -17,7 +17,7 @@ CXX.Flags += -DLLVM_23
 CXX.Flags += -DNDEBUG
 CXX.Flags += -std=c++11
 
-#FIXME: ovo je dodato zbog expression-a ... 
+#FIXME: ovo je dodato zbog expression-a ...
 CXX.Flags += -fexceptions
 CXX.Flags += -D__GNUCPP__
 CXX.Flags += -Wno-deprecated
@@ -26,9 +26,9 @@ ifeq ($(ENABLE_Z3), 1)
 	LIBS += -lrt
 endif
 
-.PHONY: 
+.PHONY:
 
 clean::
-	rm -rf *.o *.d *~ *.a 
-	rm -rf Release 
-	rm -rf Debug 
+	rm -rf *.o *.d *~ *.a
+	rm -rf Release
+	rm -rf Debug

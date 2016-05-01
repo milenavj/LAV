@@ -118,6 +118,7 @@ std::ostream& LLocalCondition::Print(std::ostream& ostr) const
   return ostr;
 }
 
+
 std::ostream& LLocalCondition::PrintHTML(std::ostream& f) const
 {
   _Instruction->PrintHTML(f);

@@ -61,7 +61,7 @@ namespace ThreadSafe
             uint idx = m_idxPtr->fetch_add(1U);
 
             // Check index
-            if(idx > Size())
+            if(idx >= Size())
                return nullptr;
 
             return &m_data[idx];

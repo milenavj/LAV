@@ -60,19 +60,24 @@ void ThreadPool::InitWorkerThreads()
         while(!queuePtr->Empty())
         {
                 auto taskPtr = queuePtr->Pop();
-                int retval = (*taskPtr)();
-                if(retval == -1)
+                if(taskPtr != nullptr)
                 {
-                    std::cout << "Thread signal unsat" << std::endl;
-                    eptr->Signal(Utils::Event::Outcome::Unsat);
-                 }
-                else
-                {
-                    std::cout << "Thread signal sat" << std::endl;
-                    eptr->Signal(Utils::Event::Outcome::Sat);
-                    //this_thread::sleep_for(chrono::seconds{1});
-                }
+                    int retval = (*taskPtr)();
+                    if(retval == -1)
+                    {
+                        std::cout << "Thread signal unsat" << std::endl;
+                        eptr->Signal(Utils::Event::Outcome::Unsat);
+                     }
+                    else
+                    {
+                        std::cout << "Thread signal sat" << std::endl;
+                        eptr->Signal(Utils::Event::Outcome::Sat);
+                        //this_thread::sleep_for(chrono::seconds{1});
+                    }
                 //cout << "Thread signal finished" << endl;
+              }
+              else
+                break;
         }
 
      //  eptr->Signal(Outcome::Finished);
