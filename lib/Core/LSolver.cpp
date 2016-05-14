@@ -1548,7 +1548,6 @@ if(Ackermannize()) AckImplications(ls, rs, exported_a, symbolTable);
 
     exported = TryExportExpression(abs_b, exported_b, symbolTable);
     if(!exported) return ERROR;
- 
     NonIncrementalTime.startTimer();
     bool satb = AddTempConstraint(exported_b);
     NonIncrementalTime.stopTimer();

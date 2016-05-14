@@ -13,7 +13,7 @@ namespace UrsaMajor {
 //    Z3_context mk_context_custom(Z3_config cfg, Z3_error_handler err) ;
     Z3_context mk_context() ;
 
-    unsigned Z3Instance::_pushed = 0;
+    thread_local unsigned Z3Instance::_pushed = 0;
 
     Z3Instance& Z3Instance::instance() {
       thread_local Z3Instance _instance;

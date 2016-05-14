@@ -29,6 +29,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/GlobalVariable.h"
+#include "llvm/Support/Timer.h"
 
 #include "expression/output/SMTFormater.h"
 
@@ -562,11 +563,19 @@ void LFunction::AddLoopMax(const std::pair<unsigned, unsigned> &loop)
 
 }
 
+llvm::Timer CalculateDescriptionsTimer("Calculate Descriptions");
+llvm::Timer CalculateConditionsTimer("Calculate Conditions");
 
 void LFunction::Run()
 {
+
+CalculateDescriptionsTimer.startTimer();
 CalculateDescriptions(); 
+CalculateDescriptionsTimer.stopTimer();
+
+CalculateConditionsTimer.startTimer();
 CalculateConditions();
+CalculateConditionsTimer.stopTimer();
 
 //ovo sada je izmena:
 /*if(_Blocks.size() <= 7)

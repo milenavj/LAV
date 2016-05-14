@@ -37,7 +37,7 @@ LModule::LModule(llvm::Module* m) :_Module(m),
                                     _GlobalMemoryOffset(1)
 { init(); }
 
-
+/*
 void LModule::CalculateConditions()
 {
     int b = 0;
@@ -61,7 +61,7 @@ void LModule::CalculateDescriptions()
   if(b==0)
     for(unsigned i=0; i<_Functions.size(); i++) 
 	    _Functions[i]->CalculateDescriptions();
-}
+}*/
 
 void LModule::Run()
 {

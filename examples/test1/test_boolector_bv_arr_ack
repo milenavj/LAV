@@ -1,0 +1,102 @@
+
+time LAV -solver=Boolector-BV-ARR-ACK
+void.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+switch.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+strukture.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+struct0.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+razno.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+prvi.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+pplus.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+pokazivaci.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+nizpq.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+nizovi.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+niz1.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+niz0.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+mallocs.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+malloc3.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+malloc2.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+malloc.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+main.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+kratak.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+izmenaSemantike.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+intchar.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+if15.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+globaladdress.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+global.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+funkcijaIpokazivaci.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+fuf.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+funkcija1.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+fip.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+fig.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+exit.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+ex21-izmenjen.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+ex6.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+define.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+proba/adrese.c
+
+time LAV -solver=Boolector-BV-ARR-ACK
+proba/add.c

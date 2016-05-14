@@ -39,7 +39,7 @@ namespace UrsaMajor {
     Z3_model _m;
     Z3_context _ctx;
     Z3_ast _blocking_clause;
-    static unsigned _pushed;
+    thread_local static unsigned _pushed;
   };
 
 } // namespace UrsaMajor
