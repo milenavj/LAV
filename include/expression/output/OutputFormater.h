@@ -10,33 +10,24 @@ class OperatorNode;
 
 #include "expression/output/OutputFormaterType.h"
 namespace argo {
-class OutputFormater
-{
+class OutputFormater {
 public:
-     virtual void PrintExpressionNode(ExpressionNode* _node, std::ostream& ostr) = 0;
-     virtual void PrintOperatorNode(OperatorNode* _node, std::ostream& ostr) = 0;
+  virtual void PrintExpressionNode(ExpressionNode *_node,
+                                   std::ostream &ostr) = 0;
+  virtual void PrintOperatorNode(OperatorNode *_node, std::ostream &ostr) = 0;
 
-	 virtual ~OutputFormater()
-     {}
+  virtual ~OutputFormater() {}
 
-     static OutputFormater* GetInstance(FORMATER type)
-     {
-	  return registry()[type];
-     }
-     
-protected : 
-     OutputFormater(FORMATER formater)
-     {
-	  registry()[formater] = this;
-     }
+  static OutputFormater *GetInstance(FORMATER type) { return registry()[type]; }
 
-    
-     static std::map <int, OutputFormater*>& registry()
-     {
-	  static std::map <int, OutputFormater*> _registry;
-	  return _registry;
-     }
-     
+protected:
+  OutputFormater(FORMATER formater) { registry()[formater] = this; }
+
+  static std::map<int, OutputFormater *> &registry() {
+    static std::map<int, OutputFormater *> _registry;
+    return _registry;
+  }
+
 };
 
 extern int printing_precedence[];

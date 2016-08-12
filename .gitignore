@@ -1,11 +1,12 @@
 
 **/Release+Asserts/
-/solvers/boolector
-/solvers/z3
+/solvers
 
-Makefile.config
-config.log
 config.status
-include/config.h
+
+**/*.log
+**/*.o
+**/*~
+**/Output/
 
 

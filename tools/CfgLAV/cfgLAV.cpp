@@ -11,7 +11,7 @@
 #include "lav/Transformation/LSimplify.h"
 #include "lav/Transformation/InlineAll.h"
 #include "lav/Misc/misc.h"
-  
+
 #include "llvm/IR/Module.h"
 #include "llvm/Support/CallSite.h"
 #include "llvm/Bitcode/ReaderWriter.h"
@@ -35,35 +35,36 @@ using namespace llvm;
 using namespace lav;
 
 namespace {
-  llvm::cl::opt<std::string>
-  OutputFolder("output-folder", 
-               llvm::cl::desc("CfgLAV --- Name of output folder (default = Output)"),
-               llvm::cl::init("Output"));
+llvm::cl::opt<std::string> OutputFolder(
+    "output-folder",
+    llvm::cl::desc("CfgLAV --- Name of output folder (default = Output)"),
+    llvm::cl::init("Output"));
 
-  llvm::cl::opt<bool>
-  EnableOptimizations("enable-optimizations", 
-               llvm::cl::desc("CfgLAV --- Enable LLVM optimizations (default = false)"),
-               llvm::cl::init(false));
- 
-  llvm::cl::opt<bool>
-  EnableInline("enable-inline", 
-               llvm::cl::desc("CfgLAV --- Enable inlining (default = false)"),
-               llvm::cl::init(false));
- 
-  llvm::cl::opt<int>
-  Threshold("threshold", 
-               llvm::cl::desc("CfgLAV --- If enable inlining is specified, specify threshold for inlining (default = 200 --- inline small functions only)"),
-               llvm::cl::init(200));
+llvm::cl::opt<bool> EnableOptimizations(
+    "enable-optimizations",
+    llvm::cl::desc("CfgLAV --- Enable LLVM optimizations (default = false)"),
+    llvm::cl::init(false));
 
-  llvm::cl::opt<std::string>
-  InputFileName(cl::desc("<input bytecode>"), cl::Positional, cl::init("-"));               
+llvm::cl::opt<bool>
+    EnableInline("enable-inline",
+                 llvm::cl::desc("CfgLAV --- Enable inlining (default = false)"),
+                 llvm::cl::init(false));
+
+llvm::cl::opt<int> Threshold(
+    "threshold",
+    llvm::cl::desc(
+        "CfgLAV --- If enable inlining is specified, specify threshold for "
+        "inlining (default = 200 --- inline small functions only)"),
+    llvm::cl::init(200));
+
+llvm::cl::opt<std::string> InputFileName(cl::desc("<input bytecode>"),
+                                         cl::Positional, cl::init("-"));
 }
-
 
 static void DumpCFG(Module *mainModule);
 
-int main(int argc, char **argv) {  
-  atexit(llvm_shutdown);  // Call llvm_shutdown() on exit.
+int main(int argc, char **argv) {
+  atexit(llvm_shutdown); // Call llvm_shutdown() on exit.
   lav::parseArguments(argc, argv);
   sys::PrintStackTraceOnErrorSignal();
 
@@ -74,12 +75,14 @@ int main(int argc, char **argv) {
   Module *mainModule = 0;
 
   OwningPtr<MemoryBuffer> BufferPtr;
-  llvm::error_code ec=MemoryBuffer::getFileOrSTDIN(InputFileName.c_str(), BufferPtr);
+  llvm::error_code ec =
+      MemoryBuffer::getFileOrSTDIN(InputFileName.c_str(), BufferPtr);
   if (ec) {
-    lav::exit_error((std::string)"error loading program '%s': %s"+ InputFileName.c_str() +
-               ec.message().c_str());
+    lav::exit_error((std::string) "error loading program '%s': %s" +
+                    InputFileName.c_str() + ec.message().c_str());
   }
-  mainModule = getLazyBitcodeModule(BufferPtr.get(), getGlobalContext(), &ErrorMsg);
+  mainModule =
+      getLazyBitcodeModule(BufferPtr.get(), getGlobalContext(), &ErrorMsg);
 
   if (mainModule) {
     if (mainModule->MaterializeAllPermanently(&ErrorMsg)) {
@@ -88,114 +91,110 @@ int main(int argc, char **argv) {
     }
   }
   if (!mainModule)
-    lav::exit_error((std::string)"error loading program '%s': %s" + InputFileName.c_str() +
-               ErrorMsg.c_str());  
+    lav::exit_error((std::string) "error loading program '%s': %s" +
+                    InputFileName.c_str() + ErrorMsg.c_str());
 
-  std::cout << "Loading the bytecode... Completed " << std::endl<< std::endl;
-
-
-
+  std::cout << "Loading the bytecode... Completed " << std::endl << std::endl;
 
   PassManager Passes;
   Passes.add(new llvm::DataLayout(mainModule));
-  Passes.add( createFCFGSimplificationPass());    // Clean up after IPCP & DAE
-  if(EnableInline)
-     Passes.add(createAllInlinerPass(Threshold)); //Inline malo vece funkcije, parametar inlininga od 200 do milijardu, ako je bez argumenta postavljeno je na milijardu
+  Passes.add(createFCFGSimplificationPass()); // Clean up after IPCP & DAE
+  if (EnableInline)
+    Passes.add(createAllInlinerPass(
+        Threshold)); //Inline malo vece funkcije, parametar inlininga od 200 do
+                     //milijardu, ako je bez argumenta postavljeno je na
+                     //milijardu
 
   Passes.run(*mainModule);
   MakeDirectory(OutputFolder);
   DumpCFG(mainModule);
 
   BufferPtr.take();
-  std::cout << "Finished " << std::endl<< std::endl;
+  std::cout << "Finished " << std::endl << std::endl;
 
   return 0;
 }
 
-
-
 ///////////////////////////////////////////////////////////////////////////
 
-static std::string BBToString(llvm::BasicBlock* bb)
-{
+static std::string BBToString(llvm::BasicBlock *bb) {
   std::ostringstream str_stream;
   str_stream << bb;
   return str_stream.str();
 }
 
-static std::string IIToString(llvm::Instruction* ii)
-{
+static std::string IIToString(llvm::Instruction *ii) {
   std::ostringstream str_stream;
   str_stream << ii;
   return str_stream.str();
 }
 
-static llvm::Function* GetFunction(llvm::Instruction* instr, unsigned &numArgs)
-{
+static llvm::Function *GetFunction(llvm::Instruction *instr,
+                                   unsigned &numArgs) {
   llvm::CallSite cs;
-  if (instr->getOpcode()==llvm::Instruction::Call) {
-  cs = llvm::CallSite(llvm::cast<llvm::CallInst>(instr));
+  if (instr->getOpcode() == llvm::Instruction::Call) {
+    cs = llvm::CallSite(llvm::cast<llvm::CallInst>(instr));
   } else {
-  cs = llvm::CallSite(llvm::cast<llvm::InvokeInst>(instr));
+    cs = llvm::CallSite(llvm::cast<llvm::InvokeInst>(instr));
   }
   numArgs = cs.arg_size();
   return cs.getCalledFunction();
 }
 
-static void DumpCFG(Module *mainModule, std::ofstream& of, std::ofstream& ofNodes)
-{
+static void DumpCFG(Module *mainModule, std::ofstream &of,
+                    std::ofstream &ofNodes) {
 
-unsigned num_blocks = 0;
-std::map<std::string, unsigned> blokovi;
+  unsigned num_blocks = 0;
+  std::map<std::string, unsigned> blokovi;
 
-//ime funkcije, adresa ulaznog i adresa izlaznog cvora
-std::map<std::string, std::pair<std::string, std::string> > funkcija;
+  //ime funkcije, adresa ulaznog i adresa izlaznog cvora
+  std::map<std::string, std::pair<std::string, std::string> > funkcija;
 
-llvm::Module::iterator fnIt = mainModule->begin(), fn_ie = mainModule->end();
+  llvm::Module::iterator fnIt = mainModule->begin(), fn_ie = mainModule->end();
 
-  for (; fnIt != fn_ie; ++fnIt) 
-  {
-    if (fnIt->isDeclaration())// && !fnIt->use_empty())
-        continue;
+  for (; fnIt != fn_ie; ++fnIt) {
+    if (fnIt->isDeclaration()) // && !fnIt->use_empty())
+      continue;
 
-    llvm::Function* f = fnIt;
-    llvm::Function::iterator bbIt = f->begin(), bbIe = f->end(), bbIee = f->end();
+    llvm::Function *f = fnIt;
+    llvm::Function::iterator bbIt = f->begin(), bbIe = f->end(),
+                             bbIee = f->end();
 
     //FIXME
-    //pretpostavimo da je prvi ulazni a da je poslednji izlazni, mada to ne mora da bude slucaj
-    llvm::BasicBlock* bbu = bbIt;
-    llvm::BasicBlock* bbi = (--bbIee);
+    //pretpostavimo da je prvi ulazni a da je poslednji izlazni, mada to ne mora
+    //da bude slucaj
+    llvm::BasicBlock *bbu = bbIt;
+    llvm::BasicBlock *bbi = (--bbIee);
     std::string addr_ulaznog = BBToString(bbu);
     std::string addr_izlaznog = BBToString(bbi);
     //postavili smo koji je za ovu funkciju ulazni a koji izlazni
-    funkcija.insert(std::pair<std::string, std::pair<std::string,std::string> > (f->getName(), std::pair<std::string, std::string>(addr_ulaznog, addr_izlaznog)));
+    funkcija.insert(
+        std::pair<std::string, std::pair<std::string, std::string> >(
+            f->getName(),
+            std::pair<std::string, std::string>(addr_ulaznog, addr_izlaznog)));
 
-      for ( ; bbIt != bbIe; ++bbIt) 
-      {
-        llvm::BasicBlock* bb = bbIt;
+    for (; bbIt != bbIe; ++bbIt) {
+      llvm::BasicBlock *bb = bbIt;
       //Proveriti sta raditi sa blokovima koji nemaju ime
-        if(bb->hasName())
-          {
-          num_blocks++;
+      if (bb->hasName()) {
+        num_blocks++;
 
         ofNodes << std::endl << num_blocks << std::endl;
 
         std::string addr = BBToString(bb);
-          blokovi.insert(std::pair<std::string, unsigned>(addr,num_blocks));
+        blokovi.insert(std::pair<std::string, unsigned>(addr, num_blocks));
 
         llvm::BasicBlock::iterator ii = bb->begin(), ie = bb->end();
-        for ( ; ii != ie; ++ii) 
-        {
-        llvm::Instruction* i = ii;
-        if(i->getOpcode() == llvm::Instruction::Invoke || i->getOpcode() == llvm::Instruction::Call)
-        {
-          unsigned numArgs;
-          llvm::Function *f = GetFunction(i, numArgs);
+        for (; ii != ie; ++ii) {
+          llvm::Instruction *i = ii;
+          if (i->getOpcode() == llvm::Instruction::Invoke ||
+              i->getOpcode() == llvm::Instruction::Call) {
+            unsigned numArgs;
+            llvm::Function *f = GetFunction(i, numArgs);
 
-          if (!f)          
-          { 
+            if (!f) {
               CallSite cs;
-              if (i->getOpcode()==Instruction::Call) {
+              if (i->getOpcode() == Instruction::Call) {
                 cs = CallSite(cast<CallInst>(i));
               } else {
                 cs = CallSite(cast<InvokeInst>(i));
@@ -203,148 +202,155 @@ llvm::Module::iterator fnIt = mainModule->begin(), fn_ie = mainModule->end();
               // special case the call with a bitcast case
               llvm::Value *fp = cs.getCalledValue();
               llvm::ConstantExpr *ce = dyn_cast<llvm::ConstantExpr>(fp);
-        
-              if (ce && ce->getOpcode()==llvm::Instruction::BitCast) {
+
+              if (ce && ce->getOpcode() == llvm::Instruction::BitCast) {
                 f = dyn_cast<llvm::Function>(ce->getOperand(0));
                 num_blocks++;
 
                 std::string instruct;
                 llvm::raw_string_ostream rso(instruct);
                 i->print(rso);
-                ofNodes<<rso.str();
+                ofNodes << rso.str();
                 ofNodes << std::endl;
-//              ofNodes << *i  <<std::endl;
+                //              ofNodes << *i  <<std::endl;
                 ofNodes << std::endl << num_blocks << std::endl;
-                std::string addr = IIToString(i); 
-                blokovi.insert(std::pair<std::string, unsigned>(addr,num_blocks));
-                }
-          }//end of if(!f)
-          else if(f && f->isDeclaration())
-          {
-                std::string instruct;
-                llvm::raw_string_ostream rso(instruct);
-                i->print(rso);
-                ofNodes<<rso.str();
-                ofNodes << std::endl;
-//            ofNodes << *i <<std::endl;
-            continue;
-          }
-          //ovo je ako imamo negde definiciju funckije
-          else 
-          {
-            std::string instruct;
-            llvm::raw_string_ostream rso(instruct);
-            i->print(rso);
-            ofNodes<<rso.str();
-            ofNodes << std::endl;
-//            ofNodes << *i <<std::endl;
-            num_blocks++;
-            ofNodes << std::endl << num_blocks << std::endl;
+                std::string addr = IIToString(i);
+                blokovi.insert(
+                    std::pair<std::string, unsigned>(addr, num_blocks));
+              }
+            } //end of if(!f)
+                else if (f && f->isDeclaration()) {
+              std::string instruct;
+              llvm::raw_string_ostream rso(instruct);
+              i->print(rso);
+              ofNodes << rso.str();
+              ofNodes << std::endl;
+              //            ofNodes << *i <<std::endl;
+              continue;
+            }
+                //ovo je ako imamo negde definiciju funckije
+                else {
+              std::string instruct;
+              llvm::raw_string_ostream rso(instruct);
+              i->print(rso);
+              ofNodes << rso.str();
+              ofNodes << std::endl;
+              //            ofNodes << *i <<std::endl;
+              num_blocks++;
+              ofNodes << std::endl << num_blocks << std::endl;
 
-            std::string addr = IIToString(i); 
-            blokovi.insert(std::pair<std::string, unsigned>(addr,num_blocks));
-          } 
-        }//end od if-a
+              std::string addr = IIToString(i);
+              blokovi.insert(
+                  std::pair<std::string, unsigned>(addr, num_blocks));
+            }
+          } //end od if-a
 
-                std::string instruct;
-                llvm::raw_string_ostream rso(instruct);
-                i->print(rso);
-                ofNodes<<rso.str();
-                ofNodes << std::endl;
-//        ofNodes << *i <<std::endl;
-      }//end od for-a
-    }// end od if(bb->hasName())
-  } //end od prolaska kroz kroz funkciju
- } // kraj prolaska kroz sve funkcije, trebalo bi da imamo sve brojeve i svu tabelu
+          std::string instruct;
+          llvm::raw_string_ostream rso(instruct);
+          i->print(rso);
+          ofNodes << rso.str();
+          ofNodes << std::endl;
+          //        ofNodes << *i <<std::endl;
+        } //end od for-a
+      }   // end od if(bb->hasName())
+    }     //end od prolaska kroz kroz funkciju
+  } // kraj prolaska kroz sve funkcije, trebalo bi da imamo sve brojeve i svu
+    // tabelu
 
-    of << num_blocks << std::endl;
+  of << num_blocks << std::endl;
 
-    ofNodes.close();
+  ofNodes.close();
 
-  fnIt = mainModule ->begin(), fn_ie = mainModule ->end();
+  fnIt = mainModule->begin(), fn_ie = mainModule->end();
   for (; fnIt != fn_ie; ++fnIt) {
 
-    if (fnIt->isDeclaration())// && !fnIt->use_empty())
-        continue;
+    if (fnIt->isDeclaration()) // && !fnIt->use_empty())
+      continue;
 
-     llvm::Function* f = fnIt;
+    llvm::Function *f = fnIt;
 
-      llvm::Function::iterator bbIt = f->begin(), bbIe = f->end();
-      //Dodavanje grana blokova koji imaju ime
-      for (bbIt = f->begin(), bbIe = f->end(); bbIt != bbIe; ++bbIt) 
-      {
-        llvm::BasicBlock* bb = bbIt;
+    llvm::Function::iterator bbIt = f->begin(), bbIe = f->end();
+    //Dodavanje grana blokova koji imaju ime
+    for (bbIt = f->begin(), bbIe = f->end(); bbIt != bbIe; ++bbIt) {
+      llvm::BasicBlock *bb = bbIt;
       //FIXME Proveriti sta raditi sa blokovima koji nemaju ime???
-        if(bb->hasName())
-        {
-        unsigned current_block = blokovi.find(BBToString(bb))->second ;
+      if (bb->hasName()) {
+        unsigned current_block = blokovi.find(BBToString(bb))->second;
 
-       llvm::BasicBlock::iterator ii = bb->begin(), ie = bb->end();
-        for ( ; ii != ie; ++ii) 
-        {
-        llvm::Instruction* i = ii;
-        if(i->getOpcode() == llvm::Instruction::Invoke || i->getOpcode() == llvm::Instruction::Call)
-        {
-          unsigned numArgs;
-          llvm::Function *ff = GetFunction(i, numArgs);
+        llvm::BasicBlock::iterator ii = bb->begin(), ie = bb->end();
+        for (; ii != ie; ++ii) {
+          llvm::Instruction *i = ii;
+          if (i->getOpcode() == llvm::Instruction::Invoke ||
+              i->getOpcode() == llvm::Instruction::Call) {
+            unsigned numArgs;
+            llvm::Function *ff = GetFunction(i, numArgs);
 
-          if ((ff && ff->isDeclaration())) 
-          continue;
+            if ((ff && ff->isDeclaration()))
+              continue;
 
-        if(!ff)
-        {
-          CallSite cs;
-          if (i->getOpcode()==Instruction::Call) {
-            cs = CallSite(cast<CallInst>(i));
-          } else {
-            cs = CallSite(cast<InvokeInst>(i));
-          }
-          // special case the call with a bitcast case
-          llvm::Value *fp = cs.getCalledValue();
-          llvm::ConstantExpr *ce = dyn_cast<llvm::ConstantExpr>(fp);
-        
-          if (ce && ce->getOpcode()==llvm::Instruction::BitCast) {
-            ff = dyn_cast<llvm::Function>(ce->getOperand(0));
-           std::string addr = IIToString(i); 
-            unsigned blok_koji_odgovara_instrukciji = blokovi.find(addr)->second;
-          unsigned ulazni_cvor_u_funkciju = blokovi.find(funkcija.find(ff->getName())->second.first)->second;
-          unsigned izlazni_cvor_iz_funkcije = blokovi.find(funkcija.find(ff->getName())->second.second)->second;
-          //current_block spojiti granom sa ulaznim cvorom
-          of << current_block << " " << ulazni_cvor_u_funkciju << std::endl;
-          //izlazni cvor spojiti sa blokom koji odgovara ovoj instrukcji
-          of << izlazni_cvor_iz_funkcije << " " << blok_koji_odgovara_instrukciji << std::endl;
-          //naci cvor koji odgovara ovoj instrukciji i to je onda novi current_block
-          current_block = blok_koji_odgovara_instrukciji;
-        }
-} 
-          //ovo je ako imamo negde definiciju funckije
-          else 
-          {
-           std::string addr = IIToString(i); 
-            unsigned blok_koji_odgovara_instrukciji = blokovi.find(addr)->second;
-          unsigned ulazni_cvor_u_funkciju = blokovi.find(funkcija.find(ff->getName())->second.first)->second;
-          unsigned izlazni_cvor_iz_funkcije = blokovi.find(funkcija.find(ff->getName())->second.second)->second;
+            if (!ff) {
+              CallSite cs;
+              if (i->getOpcode() == Instruction::Call) {
+                cs = CallSite(cast<CallInst>(i));
+              } else {
+                cs = CallSite(cast<InvokeInst>(i));
+              }
+              // special case the call with a bitcast case
+              llvm::Value *fp = cs.getCalledValue();
+              llvm::ConstantExpr *ce = dyn_cast<llvm::ConstantExpr>(fp);
 
-          //current_block spojiti granom sa ulaznim cvorom
-          of << current_block << " " << ulazni_cvor_u_funkciju << std::endl;
-          //izlazni cvor spojiti sa blokom koji odgovara ovoj instrukcji
-          of << izlazni_cvor_iz_funkcije << " " << blok_koji_odgovara_instrukciji << std::endl;
+              if (ce && ce->getOpcode() == llvm::Instruction::BitCast) {
+                ff = dyn_cast<llvm::Function>(ce->getOperand(0));
+                std::string addr = IIToString(i);
+                unsigned blok_koji_odgovara_instrukciji =
+                    blokovi.find(addr)->second;
+                unsigned ulazni_cvor_u_funkciju = blokovi
+                    .find(funkcija.find(ff->getName())->second.first)->second;
+                unsigned izlazni_cvor_iz_funkcije = blokovi
+                    .find(funkcija.find(ff->getName())->second.second)->second;
+                //current_block spojiti granom sa ulaznim cvorom
+                of << current_block << " " << ulazni_cvor_u_funkciju
+                   << std::endl;
+                //izlazni cvor spojiti sa blokom koji odgovara ovoj instrukcji
+                of << izlazni_cvor_iz_funkcije << " "
+                   << blok_koji_odgovara_instrukciji << std::endl;
+                //naci cvor koji odgovara ovoj instrukciji i to je onda novi
+                //current_block
+                current_block = blok_koji_odgovara_instrukciji;
+              }
+            }
+                //ovo je ako imamo negde definiciju funckije
+                else {
+              std::string addr = IIToString(i);
+              unsigned blok_koji_odgovara_instrukciji =
+                  blokovi.find(addr)->second;
+              unsigned ulazni_cvor_u_funkciju = blokovi
+                  .find(funkcija.find(ff->getName())->second.first)->second;
+              unsigned izlazni_cvor_iz_funkcije = blokovi
+                  .find(funkcija.find(ff->getName())->second.second)->second;
 
-          //naci cvor koji odgovara ovoj instrukciji i to je onda novi current_block
-          current_block = blok_koji_odgovara_instrukciji;
-          } 
-        }//end od if-a
-      }//end od for-a
- 
-          llvm::succ_iterator it=llvm::succ_begin(bb), ite = llvm::succ_end(bb);
-          for( ; it!=ite; it++) 
-          {
-          llvm::BasicBlock* succ=*it;
-          of <<  current_block<< " " << blokovi.find(BBToString(succ))->second << std::endl;
-          }
+              //current_block spojiti granom sa ulaznim cvorom
+              of << current_block << " " << ulazni_cvor_u_funkciju << std::endl;
+              //izlazni cvor spojiti sa blokom koji odgovara ovoj instrukcji
+              of << izlazni_cvor_iz_funkcije << " "
+                 << blok_koji_odgovara_instrukciji << std::endl;
+
+              //naci cvor koji odgovara ovoj instrukciji i to je onda novi
+              //current_block
+              current_block = blok_koji_odgovara_instrukciji;
+            }
+          } //end od if-a
+        }   //end od for-a
+
+        llvm::succ_iterator it = llvm::succ_begin(bb), ite = llvm::succ_end(bb);
+        for (; it != ite; it++) {
+          llvm::BasicBlock *succ = *it;
+          of << current_block << " " << blokovi.find(BBToString(succ))->second
+             << std::endl;
         }
       }
     }
+  }
 }
 
 /*
@@ -386,10 +392,10 @@ static void KorpusZaKlasifikaciju(std::ofstream& of, std::ofstream& ofNodes)
     sufixFileO << suf << std::endl;
     sufixFileO.close();
 
-    std::string nodeName  = nodes + sufix + "_" + s; 
+    std::string nodeName  = nodes + sufix + "_" + s;
     ofNodes.open(nodeName.c_str());
 
-    std::string cfgName = cfg + sufix + "_" + s; 
+    std::string cfgName = cfg + sufix + "_" + s;
     of.open(cfgName.c_str());
 
     std::string filenames = cfile;
@@ -407,45 +413,44 @@ static void KorpusZaKlasifikaciju(std::ofstream& of, std::ofstream& ofNodes)
 
 */
 
-static int OpenCFGAndNodesFiles(std::ofstream& of, std::ofstream& ofNodes)
-{
-    std::string s_cfg = InputFileName;
-    s_cfg[s_cfg.size()-1] = 'c'; 
-    s_cfg.push_back('f');
-    s_cfg.push_back('g');
+static int OpenCFGAndNodesFiles(std::ofstream &of, std::ofstream &ofNodes) {
+  std::string s_cfg = InputFileName;
+  s_cfg[s_cfg.size() - 1] = 'c';
+  s_cfg.push_back('f');
+  s_cfg.push_back('g');
 
-    std::string s_nodes = InputFileName;
-    s_nodes[s_nodes.size()-1] = 'n'; 
-    s_nodes.push_back('o');
-    s_nodes.push_back('d');
+  std::string s_nodes = InputFileName;
+  s_nodes[s_nodes.size() - 1] = 'n';
+  s_nodes.push_back('o');
+  s_nodes.push_back('d');
 
-    ofNodes.open(s_nodes.c_str());
-    of.open(s_cfg.c_str());
-    if(!ofNodes) exit_error("OpenCFGAndNodesFiles::Could not open "+s_cfg+" file!");
-    if(!of) exit_error("OpenCFGAndNodesFiles::Could not open "+s_nodes+" file!");
+  ofNodes.open(s_nodes.c_str());
+  of.open(s_cfg.c_str());
+  if (!ofNodes)
+    exit_error("OpenCFGAndNodesFiles::Could not open " + s_cfg + " file!");
+  if (!of)
+    exit_error("OpenCFGAndNodesFiles::Could not open " + s_nodes + " file!");
 
-    std::string filenames = OutputFolder+"/files";
-    std::ofstream fn(filenames.c_str(), std::ios::app);
-    if(!fn) exit_error("OpenCFGAndNodesFiles::Could not open "+filenames+" file!");
+  std::string filenames = OutputFolder + "/files";
+  std::ofstream fn(filenames.c_str(), std::ios::app);
+  if (!fn)
+    exit_error("OpenCFGAndNodesFiles::Could not open " + filenames + " file!");
 
-    fn << s_cfg << std::endl;
-    fn << s_nodes << std::endl;
-    fn.close();
+  fn << s_cfg << std::endl;
+  fn << s_nodes << std::endl;
+  fn.close();
 
-    return 1;
+  return 1;
 }
 
+static void DumpCFG(Module *mainModule) {
+  std::ofstream nodes;
+  std::ofstream cfg;
 
-static void DumpCFG(Module *mainModule )
-{
-    std::ofstream nodes;
-    std::ofstream cfg;
+  //    KorpusZaKlasifikaciju(cfg, nodes);
+  OpenCFGAndNodesFiles(cfg, nodes);
+  DumpCFG(mainModule, cfg, nodes);
 
-//    KorpusZaKlasifikaciju(cfg, nodes);
-    OpenCFGAndNodesFiles(cfg, nodes);
-    DumpCFG(mainModule, cfg, nodes);
-
-    cfg.close();
-    nodes.close();
+  cfg.close();
+  nodes.close();
 }
-

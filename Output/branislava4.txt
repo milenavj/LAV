@@ -1,3 +1,0 @@
-
-VERIFICATION FAILED: 
- line: 11   Assembly line: 48

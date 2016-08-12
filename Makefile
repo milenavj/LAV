@@ -15,7 +15,6 @@ LEVEL = .
 DIRS = lib tools
 EXTRA_DIST = include
 
-
 #
 # Include the Master Makefile that knows how to build all.
 #
@@ -32,4 +31,5 @@ clean::
 	rm -rf Output/*
 	rm -rf include/*~
 	tests/regression/clean
+
 

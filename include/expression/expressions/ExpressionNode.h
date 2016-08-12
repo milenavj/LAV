@@ -9,9 +9,7 @@
 #include <cassert>
 #include "expression/auxiliary/hash_set.h"
 
-namespace argo {
-class OutputFormater;
-}
+namespace argo { class OutputFormater; }
 
 #include "expression/expressions/ExpressionTypes.h"
 #include "expression/expressions/Sorts.h"
@@ -25,7 +23,6 @@ class ExpressionSet;
 typedef unsigned short Literal;
 typedef std::deque<unsigned> Position;
 
-
 extern std::vector<Expression> dummy_vector;
 
 #define PRIME_HASH 157
@@ -33,379 +30,292 @@ extern std::vector<Expression> dummy_vector;
 ////////////////////////////////////////////////////////////////////////////////
 ////	Class ExpressionNode
 ////////////////////////////////////////////////////////////////////////////////
-/** 
-* \brief Helper class used for representation of First Order Logic Expressions (Terms and Formulae). This
-* is base class of a hierarchy and is used to represents Expressions that don't have children (atoms)
+/**
+* \brief Helper class used for representation of First Order Logic Expressions
+* (Terms and Formulae). This
+* is base class of a hierarchy and is used to represents Expressions that don't
+* have children (atoms)
 *
-* This class should be hidden from the library end-users, and Expressions should be accessed only thrue 
+* This class should be hidden from the library end-users, and Expressions should
+* be accessed only thrue
 * Expression class (smart pointers)
 * \nosubgrouping
 */
-class ExpressionNode
-{
-    friend class Expression;
-    friend class ExpressionFactory;
+class ExpressionNode {
+  friend class Expression;
+  friend class ExpressionFactory;
 
-    /**
-     * @name Construction, Destruction, Cloning
-     */
-    //@{
- public:
+  /**
+   * @name Construction, Destruction, Cloning
+   */
+  //@{
+public:
 #ifdef _DEBUG
-    static std::vector<ExpressionNode*> _nodes;
+  static std::vector<ExpressionNode *> _nodes;
 
-    static void PrintAllNodes();
+  static void PrintAllNodes();
 #endif
 
-    virtual ~ExpressionNode() {
+  virtual ~ExpressionNode() {
 #ifdef _DEBUG
-	std::vector<ExpressionNode*>::iterator i;
-	for (i = _nodes.begin(); i!=_nodes.end(); i++)
-	    if (*i == this) {
-		_nodes.erase(i);
-		break;
-	    }
+    std::vector<ExpressionNode *>::iterator i;
+    for (i = _nodes.begin(); i != _nodes.end(); i++)
+      if (*i == this) {
+        _nodes.erase(i);
+        break;
+      }
 #endif
-    }
+  }
 
-    ExpressionNode(const ExpressionNode& e)
-	: _reference_count(e._reference_count), 
-	_union_find_parrent(e._union_find_parrent), 
-	_index(e._index), 
-	_assigned(e._assigned),
-	_literal(e._literal),
-	_name(e._name), 
-	_type(e._type),
-        _intType(e._intType)
-        {
+  ExpressionNode(const ExpressionNode &e)
+      : _reference_count(e._reference_count),
+        _union_find_parrent(e._union_find_parrent), _index(e._index),
+        _assigned(e._assigned), _literal(e._literal), _name(e._name),
+        _type(e._type), _intType(e._intType) {
 #ifdef _DEBUG
-	_nodes.push_back(this);
+    _nodes.push_back(this);
 #endif
-    }
-	
-    ExpressionNode(EXPRESSION_TYPE type, const std::string& name, IntType intType = noInt, bool r = true)
-	: _reference_count(0), 
-	_union_find_parrent(0), 
-	_index((unsigned)(-1)), 
-	_assigned(false), 
-	_literal((Literal)(-1)),
-	_name(name), 
-	_type(type),
-        _intType(intType), 
-        _relevant(r)
-        {
+  }
+
+  ExpressionNode(EXPRESSION_TYPE type, const std::string &name,
+                 IntType intType = noInt, bool r = true)
+      : _reference_count(0), _union_find_parrent(0), _index((unsigned)(-1)),
+        _assigned(false), _literal((Literal)(-1)), _name(name), _type(type),
+        _intType(intType), _relevant(r) {
 #ifdef _DEBUG
-	_nodes.push_back(this);
+    _nodes.push_back(this);
 #endif
-    }
-	
-    virtual ExpressionNode* Clone() const {	
-	return new ExpressionNode(*this);	
-    } 
-    //@}
+  }
 
- private:
-    /**
-     * @name Reference-counting
-     */
-    //@{
-    void IncreaseReferenceCount()
-	{
-	    ++_reference_count;	
-	}
+  virtual ExpressionNode *Clone() const { return new ExpressionNode(*this); }
+  //@}
 
-    int DecreaseReferenceCount()
-	{
-	    assert(_reference_count>0);
-	    return --_reference_count;
-	}
+private:
+  /**
+   * @name Reference-counting
+   */
+  //@{
+  void IncreaseReferenceCount() { ++_reference_count; }
 
-    int _reference_count;
-    //@}
+  int DecreaseReferenceCount() {
+    assert(_reference_count > 0);
+    return --_reference_count;
+  }
 
-    /** @name Type Checking
-     *  Functions that are used to query the type of the expression
-     */	
-    //@{
- public:
-    virtual const std::string& GetName() {	
-	return _name;	
-    }
+  int _reference_count;
+  //@}
 
-    EXPRESSION_TYPE  GetType () const {	
-	return _type;	
-    }
+  /** @name Type Checking
+   *  Functions that are used to query the type of the expression
+   */
+  //@{
+public:
+  virtual const std::string &GetName() { return _name; }
 
-    SORT GetSort () const {
-	assert(IsTerm());
-	return SortRegistry::Instance()->GetSort(_name);
-    }
+  EXPRESSION_TYPE GetType() const { return _type; }
 
-    virtual bool IsAND() {
-	return GetType() == EXPR_AND;
-    }
+  SORT GetSort() const {
+    assert(IsTerm());
+    return SortRegistry::Instance()->GetSort(_name);
+  }
 
-    virtual bool IsOR() {
-	return GetType() == EXPR_OR;
-    }
+  virtual bool IsAND() { return GetType() == EXPR_AND; }
 
-    virtual bool IsAtom() const	{
-	int type = GetType();
-	return type == EXPR_EQUALITY ||
-	    type == EXPR_DISEQUALITY ||
-	    type == EXPR_PREDICATE ||
-	    type == EXPR_FORMULA_VARIABLE ||
-	    type == EXPR_METAVARIABLE ||
-	    type == EXPR_TOP ||
-	    type == EXPR_BOT;
-    }
+  virtual bool IsOR() { return GetType() == EXPR_OR; }
 
-    virtual bool IsTerm() const	{
-	int type = GetType();
-	return type == EXPR_CONSTANT ||
-	    type == EXPR_FUNCTION ||
-	    type == EXPR_INT_NUMERAL ||
-	    type == EXPR_RATIONAL_NUMERAL ||
-	    type == EXPR_VARIABLE ||
-	    type == EXPR_METAVARIABLE ||
-	    type == EXPR_TERM_ITE;
-    }
-	
-    virtual bool IsConnective() const {
-	int type = GetType();
-	return type == EXPR_AND ||
-	    type == EXPR_OR ||
-	    type == EXPR_IMPL ||
-	    type == EXPR_IFF ||
-	    type == EXPR_NOT;
-    }
-     
-    virtual bool IsGround() const {
-	return _type != EXPR_VARIABLE;
-    }
+  virtual bool IsAtom() const {
+    int type = GetType();
+    return type == EXPR_EQUALITY || type == EXPR_DISEQUALITY ||
+           type == EXPR_PREDICATE || type == EXPR_FORMULA_VARIABLE ||
+           type == EXPR_METAVARIABLE || type == EXPR_TOP || type == EXPR_BOT;
+  }
 
-    virtual bool IsMetaGround() const {
-	return _type != EXPR_METAVARIABLE;
-    }
-    //@}	
+  virtual bool IsTerm() const {
+    int type = GetType();
+    return type == EXPR_CONSTANT || type == EXPR_FUNCTION ||
+           type == EXPR_INT_NUMERAL || type == EXPR_RATIONAL_NUMERAL ||
+           type == EXPR_VARIABLE || type == EXPR_METAVARIABLE ||
+           type == EXPR_TERM_ITE;
+  }
 
+  virtual bool IsConnective() const {
+    int type = GetType();
+    return type == EXPR_AND || type == EXPR_OR || type == EXPR_IMPL ||
+           type == EXPR_IFF || type == EXPR_NOT;
+  }
 
-    /**
-     * @name Operands manipulation
-     */
-    //@{
-    typedef std::vector<Expression>::const_iterator operands_iterator;
+  virtual bool IsGround() const { return _type != EXPR_VARIABLE; }
 
-    operands_iterator begin() const {	
-	return GetOperands().begin();	
-    }
+  virtual bool IsMetaGround() const { return _type != EXPR_METAVARIABLE; }
+  //@}
 
-    operands_iterator end() const {	
-	return GetOperands().end();	
-    }
+  /**
+   * @name Operands manipulation
+   */
+  //@{
+  typedef std::vector<Expression>::const_iterator operands_iterator;
 
+  operands_iterator begin() const { return GetOperands().begin(); }
 
-    virtual bool hasOperands() const {	
-	return false;	
-    }
+  operands_iterator end() const { return GetOperands().end(); }
 
-    virtual size_t GetArity() const {	
-	return 0;	
-    }
-	
-    virtual const std::vector<Expression>& GetOperands() const {
-	return dummy_vector;	
-    }
-	
-    virtual ExpressionNode* RemoveOperand(unsigned num) const {	
-	assert(0);
-	throw "Operand manipulation function called on base ExpressionNode class";
-    }
-	
-    virtual ExpressionNode* SetOperand(unsigned num, const Expression& e) const {
-	assert(0);
-	throw "Operand manipulation function called on base ExpressionNode class";
-    }
+  virtual bool hasOperands() const { return false; }
 
-    ExpressionNode* SelectOperands(const std::vector<unsigned>& indices) const {
-	assert(0);
-	throw "Operand manipulation function called on base ExpressionNode class";
-    }
+  virtual size_t GetArity() const { return 0; }
 
-    virtual ExpressionNode* CannonizeOperandsOrder() {
-	return this;
-    }
-    //@}
+  virtual const std::vector<Expression> &GetOperands() const {
+    return dummy_vector;
+  }
 
-    /**
-     * @name Subexpressions manipulation
-     */
-    //@{
-    virtual ExpressionNode* Substitute(const Expression& expression,
-				       const Expression& replacement) {	
-	return this;
-    }
+  virtual ExpressionNode *RemoveOperand(unsigned num) const {
+    assert(0);
+    throw "Operand manipulation function called on base ExpressionNode class";
+  }
 
-    virtual ExpressionNode* Substitute(Position& position,
-				       const Expression& replacement) {	
-	return this;
-    }
+  virtual ExpressionNode *SetOperand(unsigned num, const Expression &e) const {
+    assert(0);
+    throw "Operand manipulation function called on base ExpressionNode class";
+  }
 
-    virtual unsigned GetSize() const {
-	return 1;
-    }
+  ExpressionNode *SelectOperands(const std::vector<unsigned> &indices) const {
+    assert(0);
+    throw "Operand manipulation function called on base ExpressionNode class";
+  }
 
-    virtual unsigned GetDepth() const {
-	return 1;
-    }	
-    //@}
-		
-    /**
-     * @name Comparison
-     */
-    //@{
-    virtual int compare(const ExpressionNode& e) const;
+  virtual ExpressionNode *CannonizeOperandsOrder() { return this; }
+  //@}
 
-    bool operator== (const ExpressionNode& e) const {
-	return compare(e) == 0;
-    }	
+  /**
+   * @name Subexpressions manipulation
+   */
+  //@{
+  virtual ExpressionNode *Substitute(const Expression &expression,
+                                     const Expression &replacement) {
+    return this;
+  }
 
-    bool operator< (const ExpressionNode& e) const {
-	return compare(e)<0;
-    }
+  virtual ExpressionNode *Substitute(Position &position,
+                                     const Expression &replacement) {
+    return this;
+  }
 
-    bool operator> (const ExpressionNode& e) const {
-	return compare(e)>0;
-    }
+  virtual unsigned GetSize() const { return 1; }
 
-    bool operator!= (const ExpressionNode& e) const {	
-	return !(*this==e);	
-    }
-    //*}
+  virtual unsigned GetDepth() const { return 1; }
+  //@}
 
+  /**
+   * @name Comparison
+   */
+  //@{
+  virtual int compare(const ExpressionNode &e) const;
 
-    /** @name Printing
-     */	
-    //@{
-    virtual void Print(OutputFormater* formater, std::ostream& ostr);
-    //@}
+  bool operator==(const ExpressionNode &e) const { return compare(e) == 0; }
 
+  bool operator<(const ExpressionNode &e) const { return compare(e) < 0; }
 
-    virtual const RATIONAL& GetValueRational() const;
-    virtual const INT& GetValue() const;
+  bool operator>(const ExpressionNode &e) const { return compare(e) > 0; }
 
-    /**
-     * @name Union-Find structure
-     */
-    //@{
-    ExpressionNode* GetUnionFindParrent() const {
-	return _union_find_parrent;
-    }
+  bool operator!=(const ExpressionNode &e) const { return !(*this == e); }
+  //*}
 
-    void SetUnionFindParrent(ExpressionNode* parrent) {
-	_union_find_parrent = parrent;
-    }
+  /** @name Printing
+   */
+  //@{
+  virtual void Print(OutputFormater *formater, std::ostream &ostr);
+  //@}
 
-    void ResetUnionFindParrent() {
-	_union_find_parrent = 0;
-    }
+  virtual const RATIONAL &GetValueRational() const;
+  virtual const INT &GetValue() const;
 
- private:
-    ExpressionNode* _union_find_parrent;     
-    //@}
-    
-    
- public:
-    unsigned getIndex() const {
-	return _index;
-    }
+  /**
+   * @name Union-Find structure
+   */
+  //@{
+  ExpressionNode *GetUnionFindParrent() const { return _union_find_parrent; }
 
-    void setIndex(unsigned index) {
-	_index = index;
-    }
- private:
-    unsigned _index;
+  void SetUnionFindParrent(ExpressionNode *parrent) {
+    _union_find_parrent = parrent;
+  }
 
+  void ResetUnionFindParrent() { _union_find_parrent = 0; }
 
- public:
-    bool assigned() const {
-	return _assigned;
-    }
+private:
+  ExpressionNode *_union_find_parrent;
+  //@}
 
-    void setAssigned(bool assigned) {
-	_assigned = assigned;
-    }
- private:
-    bool _assigned;
+public:
+  unsigned getIndex() const { return _index; }
 
+  void setIndex(unsigned index) { _index = index; }
 
- public:
-    Literal getLiteral() const {
-	return _literal;
-    }
+private:
+  unsigned _index;
 
-    void setLiteral(Literal literal) {
-	_literal = literal;
-    }
- private:
-    Literal _literal;
+public:
+  bool assigned() const { return _assigned; }
 
- public:
+  void setAssigned(bool assigned) { _assigned = assigned; }
 
-    /**
-     * @name Other
-     */
-    //@{
-    virtual const ExpressionSet& GetIndices() const {	
-	assert(0);
-	throw "Operand manipulation function called on base ExpressionNode class";
-    }
+private:
+  bool _assigned;
 
-    virtual size_t hashCode() const {	
-	return int_hash_func(_type)*PRIME_HASH + pconstchar_hash_func(_name.c_str()); 
-    }
+public:
+  Literal getLiteral() const { return _literal; }
 
- public:
-    IntType getIntType() const {
-        return _intType;
-    }
+  void setLiteral(Literal literal) { _literal = literal; }
 
-    void setIntType(IntType type) {
-        _intType = type;
-    }
+private:
+  Literal _literal;
 
-//    unsigned getIntWidth() const
-//    {return ((_intType<3) ? _intType : (_intType+1)/8)*8;}
+public:
 
-    unsigned getIntWidth() const
-    {
-return ((_intType<3) ? 1 : ((_intType+1)/8)*8);}
+  /**
+   * @name Other
+   */
+  //@{
+  virtual const ExpressionSet &GetIndices() const {
+    assert(0);
+    throw "Operand manipulation function called on base ExpressionNode class";
+  }
 
+  virtual size_t hashCode() const {
+    return int_hash_func(_type) * PRIME_HASH +
+           pconstchar_hash_func(_name.c_str());
+  }
 
-    bool isSigned() const
-    {return ((_intType%2) == 0);}
+public:
+  IntType getIntType() const { return _intType; }
 
-    bool isRelevant() const
-    {return _relevant;}
+  void setIntType(IntType type) { _intType = type; }
 
-    bool isUnsigned() const
-    {return ((_intType%2) == 1);}
+  //    unsigned getIntWidth() const
+  //    {return ((_intType<3) ? _intType : (_intType+1)/8)*8;}
 
- protected:
+  unsigned getIntWidth() const {
+    return ((_intType < 3) ? 1 : ((_intType + 1) / 8) * 8);
+  }
 
-    static hash<const char*>   pconstchar_hash_func;
-    static hash<int>	    int_hash_func;
-    static hash<long int>	    long_int_hash_func;
-    //@}
+  bool isSigned() const { return ((_intType % 2) == 0); }
 
-    std::string _name;
-    EXPRESSION_TYPE _type;
-    IntType         _intType;
-    bool            _relevant; //ovo je krpljevina i ovome ovde nije mesto
+  bool isRelevant() const { return _relevant; }
+
+  bool isUnsigned() const { return ((_intType % 2) == 1); }
+
+protected:
+
+  static hash<const char *> pconstchar_hash_func;
+  static hash<int> int_hash_func;
+  static hash<long int> long_int_hash_func;
+  //@}
+
+  std::string _name;
+  EXPRESSION_TYPE _type;
+  IntType _intType;
+  bool _relevant; //ovo je krpljevina i ovome ovde nije mesto
 
 };
 
 } //end of namespace
 
 #endif
-

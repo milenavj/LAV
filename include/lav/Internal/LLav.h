@@ -12,8 +12,6 @@
 
 #include "llvm/Analysis/Passes.h"
 
-namespace lav {
-llvm::Pass *createLavPass();
-}
+namespace lav { llvm::Pass *createLavPass(); }
 
 #endif

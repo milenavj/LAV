@@ -22,13 +22,16 @@ CXX.Flags += -fexceptions
 CXX.Flags += -D__GNUCPP__
 CXX.Flags += -Wno-deprecated
 ifeq ($(ENABLE_Z3), 1)
-	CXX.Flags += -fopenmp 
+	CXX.Flags += -fopenmp
 	LIBS += -lrt
 endif
 
 .PHONY:
 
 clean::
-	rm -rf *.o *.d *~ *.a
-	rm -rf Release
-	rm -rf Debug
+	rm -rf *.o *.d *~ *.a 
+	rm -rf Release 
+	rm -rf Debug 
+	rm -rf Release+Asserts
+
+

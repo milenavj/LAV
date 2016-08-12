@@ -12,8 +12,6 @@
 
 #include "llvm/Analysis/Passes.h"
 
-namespace lav {
-llvm::Pass *createFLoopUnrollPass();
-}
+namespace lav { llvm::Pass *createFLoopUnrollPass(); }
 
-#endif   
+#endif

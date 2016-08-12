@@ -13,9 +13,13 @@
 LEVEL=../..
 
 PARALLEL_DIRS=
+USEDLIBS=
 LIBRARYNAME=threads
 BUILD_ARCHIVE=1
 
 include $(LEVEL)/Makefile.common
 
 LIBS += -lpthread
+
+
+

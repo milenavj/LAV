@@ -49,20 +49,19 @@ public:
 
   unsigned int GetRefCount(void);
 
-  virtual bool equals(const Formula& f) const = 0;
+  virtual bool equals(const Formula &f) const = 0;
 
   size_t hashCode() const;
 
-  bool operator == (const Formula& f) const;
-
+  bool operator==(const Formula &f) const;
 
   static unsigned int I, D, NEW, DEL;
 
-  static Formula* makeNot(Formula*);
-  static Formula* makeOr(Formula*, Formula*);
-  static Formula* makeXor(Formula*, Formula*);
-  static Formula* makeAnd(Formula*, Formula*);
-  static Formula* makeEquiv(Formula*, Formula*);
+  static Formula *makeNot(Formula *);
+  static Formula *makeOr(Formula *, Formula *);
+  static Formula *makeXor(Formula *, Formula *);
+  static Formula *makeAnd(Formula *, Formula *);
+  static Formula *makeEquiv(Formula *, Formula *);
 
 protected:
   FORMULA_TYPE type;
@@ -70,9 +69,8 @@ protected:
   unsigned int id;
   size_t hashValue;
 
-  static std::tr1::hash<const char*> pconstchar_hash_func;
+  static std::tr1::hash<const char *> pconstchar_hash_func;
   static std::tr1::hash<unsigned int> int_hash_func;
-
 
   Formula();
 
@@ -90,7 +88,7 @@ public:
 
   bool GetValue(void);
 
-  bool equals(const Formula& f) const;
+  bool equals(const Formula &f) const;
 
   void print(void);
 
@@ -136,7 +134,7 @@ public:
 
   unsigned int GetOrdinal(void);
 
-  bool equals(const Formula& f) const;
+  bool equals(const Formula &f) const;
 
 private:
   unsigned int ordinal;
@@ -156,9 +154,9 @@ public:
 
   void print(void);
 
-  Formula* GetF(void);
+  Formula *GetF(void);
 
-  bool equals(const Formula& f) const;
+  bool equals(const Formula &f) const;
 
 private:
   Formula *F;
@@ -176,10 +174,10 @@ public:
 
   virtual ~FormulaBinary();
 
-  Formula* GetLeftF(void);
-  Formula* GetRightF(void);
+  Formula *GetLeftF(void);
+  Formula *GetRightF(void);
 
-  bool equals(const Formula& f) const;
+  bool equals(const Formula &f) const;
 
   void print(void);
 
@@ -228,7 +226,6 @@ public:
   ~FormulaXor() {}
 
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////	Class FormulaEquiv

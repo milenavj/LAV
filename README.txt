@@ -30,7 +30,7 @@ LAV can use one of the following SMT solvers:
   yices     - Yices SMT solver (http://yices.csl.sri.com)
   boolector - Boolector SMT solver (http://fmv.jku.at/boolector/)
   mathsat   - MathSAT SMT solver (http://mathsat.itc.it/)
-  z3        - Z3 SMT solver (http://research.microsoft.com/en-us/um/redmond/projects/z3/)
+  z3        - Z3 SMT solver (https://github.com/Z3Prover/z3/releases)
 
 
 LLVM and SMT solvers are not part of this distribution (due to
@@ -49,8 +49,8 @@ lav/solvers/<solver>/lib
 
 where <solver> is yices, boolector, mathsat or z3.
 LAV is tested with the following versions of the solvers: 
-boolector-1.1-IA-32, mathsat-4.2.8-linux-x86, yices-1.0.27
-and z3 4.0.
+boolector-1.1-IA-32, boolector-2.2.0, mathsat-4.2.8-linux-x86, yices-1.0.27
+and z3 4.4, z3 4.0
 
 Configure project  
 $./configure --with-llvm=<path/to/llvm> --enable-<solver1> [--enable-<solver2>] [--enable-<solver3>] 

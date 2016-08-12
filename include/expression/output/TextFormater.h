@@ -7,26 +7,20 @@ namespace argo {
 class ExpressionNode;
 class OperatorNode;
 
-class TextFormater : public OutputFormater
-{
+class TextFormater : public OutputFormater {
 public:
-     TextFormater()
-	  : OutputFormater(TEXT)
-     {}
+  TextFormater() : OutputFormater(TEXT) {}
 
-     virtual void PrintExpressionNode(ExpressionNode* _node, std::ostream& ostr);
-     virtual void PrintOperatorNode(OperatorNode* _node, std::ostream& ostr);
+  virtual void PrintExpressionNode(ExpressionNode *_node, std::ostream &ostr);
+  virtual void PrintOperatorNode(OperatorNode *_node, std::ostream &ostr);
 
 protected:
-     TextFormater(FORMATER formater)
-	  : OutputFormater(formater)
-     {}
+  TextFormater(FORMATER formater) : OutputFormater(formater) {}
 
+  void PrintPrefix(std::ostream &ostr, OperatorNode *e);
+  void PrintInfix(std::ostream &ostr, OperatorNode *e);
 
-     void PrintPrefix(std::ostream& ostr, OperatorNode* e);
-     void PrintInfix(std::ostream& ostr,  OperatorNode* e);
-
-     virtual std::string GetSymbol(ExpressionNode* e) const;
+  virtual std::string GetSymbol(ExpressionNode *e) const;
 };
 
 extern TextFormater _text_formater;

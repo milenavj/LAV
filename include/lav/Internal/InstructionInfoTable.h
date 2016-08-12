@@ -16,58 +16,50 @@
 #include "lav/Internal/LTypes.h"
 
 namespace llvm {
-  class Function;
-  class Instruction;
-  class Module; 
-} 
+class Function;
+class Instruction;
+class Module;
+}
 
 namespace lav {
 
-  /* Stores debug information for a Instruction */
-  struct InstructionInfo {
-    unsigned id;
-    cStr &file;
-    unsigned line;
-    unsigned assemblyLine;
+/* Stores debug information for an Instruction */
+struct InstructionInfo {
+  unsigned id;
+  cStr &file;
+  unsigned line;
+  unsigned assemblyLine;
 
-  public:
-    InstructionInfo(unsigned _id,
-                    cStr &_file,
-                    unsigned _line,
-                    unsigned _assemblyLine)
-      : id(_id), 
-        file(_file),
-        line(_line),
-        assemblyLine(_assemblyLine) {
-    }
+public:
+  InstructionInfo(unsigned _id, cStr &_file, unsigned _line,
+                  unsigned _assemblyLine)
+      : id(_id), file(_file), line(_line), assemblyLine(_assemblyLine) {}
+};
+
+class InstructionInfoTable {
+  struct ltstr {
+    bool operator()(cStr *a, cStr *b) const { return *a < *b; }
   };
 
-  class InstructionInfoTable {
-    struct ltstr { 
-      bool operator()(cStr *a, cStr *b) const {
-        return *a<*b;
-      }
-    };
+  std::string dummyString;
+  InstructionInfo dummyInfo;
+  std::map<const llvm::Instruction *, InstructionInfo> infos;
+  std::set<cStr *, ltstr> internedStrings;
 
-    std::string dummyString;
-    InstructionInfo dummyInfo;
-    std::map<const llvm::Instruction*, InstructionInfo> infos;
-    std::set<cStr *, ltstr> internedStrings;
+private:
+  cStr *internString(std::string s);
+  bool getInstructionDebugInfo(const llvm::Instruction *I, cStr *&File,
+                               unsigned &Line);
 
-  private:
-    cStr *internString(std::string s);
-    bool getInstructionDebugInfo(const llvm::Instruction *I,cStr *&File, unsigned &Line);
+public:
+  InstructionInfoTable(llvm::Module *m);
+  ~InstructionInfoTable();
 
-  public:
-    InstructionInfoTable(llvm::Module *m);
-    ~InstructionInfoTable();
-
-    unsigned getMaxID() const;
-    const InstructionInfo &getInfo(const llvm::Instruction*) const;
-    const InstructionInfo &getFunctionInfo(const llvm::Function*) const;
-  };
+  unsigned getMaxID() const;
+  const InstructionInfo &getInfo(const llvm::Instruction *) const;
+  const InstructionInfo &getFunctionInfo(const llvm::Function *) const;
+};
 
 }
 
 #endif
-

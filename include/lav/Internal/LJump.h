@@ -17,50 +17,34 @@
 
 #include "expression/expressions/Expression.h"
 
+namespace llvm { struct BasicBlock; }
 
-namespace llvm
-{ 
-    struct BasicBlock;
-}
-
-namespace lav
-{
+namespace lav {
 class LInstruction;
 class LBlock;
 
-class LJump
-{
+class LJump {
 public:
   LJump() : _Condition(argo::Expression::TOP()), _BB(NULL), _FB(NULL) {}
-  LJump(llvm::BasicBlock* bbt) 
-    : _Condition(argo::Expression::TOP()), 
-      _BB(bbt), 
-      _FB(NULL) 
-      {}
-  LJump( caExp& e, llvm::BasicBlock* bb) 
-    : _Condition(e), 
-      _BB(bb), 
-      _FB(NULL) 
-      {}
-  LJump( caExp& e, llvm::BasicBlock* bb, LBlock* fb) 
-    : _Condition(e), 
-      _BB(bb), 
-      _FB(fb) 
-      {}
+  LJump(llvm::BasicBlock *bbt)
+      : _Condition(argo::Expression::TOP()), _BB(bbt), _FB(NULL) {}
+  LJump(caExp &e, llvm::BasicBlock *bb) : _Condition(e), _BB(bb), _FB(NULL) {}
+  LJump(caExp &e, llvm::BasicBlock *bb, LBlock *fb)
+      : _Condition(e), _BB(bb), _FB(fb) {}
 
-  inline caExp&                  Condition()               const { return _Condition; }
-  inline llvm::BasicBlock*       BB()                      const { return _BB; }
-  inline LBlock*                 FB()                      const { return _FB; }
-  inline void                    SetFB(LBlock* fb)               { _FB = fb; }
+  inline caExp &Condition() const { return _Condition; }
+  inline llvm::BasicBlock *BB() const { return _BB; }
+  inline LBlock *FB() const { return _FB; }
+  inline void SetFB(LBlock *fb) { _FB = fb; }
 
-  std::ostream&                  Print(std::ostream& ostr) const;
-      
+  std::ostream &Print(std::ostream &ostr) const;
+
 private:
-  argo::Expression        _Condition;
-  llvm::BasicBlock*       _BB;
-  LBlock*                 _FB;
+  argo::Expression _Condition;
+  llvm::BasicBlock *_BB;
+  LBlock *_FB;
 };
 
-}//end of namespace
+} //end of namespace
 
 #endif

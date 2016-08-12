@@ -23,6 +23,10 @@ ifeq ($(ENABLE_Z3), 1)
         CXX.Flags += -I$(PROJ_SRC_ROOT)/solvers/z3/include
 endif
 
+ifeq ($(ENABLE_BOOLECTOR_OLD), 1)
+        CXX.Flags += -I$(PROJ_SRC_ROOT)/solvers/boolector_old/include
+endif
+
 ifeq ($(ENABLE_BOOLECTOR), 1)
         CXX.Flags += -I$(PROJ_SRC_ROOT)/solvers/boolector/include
 endif
@@ -34,3 +38,5 @@ endif
 ifeq ($(ENABLE_MATHSAT), 1)
         CXX.Flags += -I$(PROJ_SRC_ROOT)/solvers/mathsat/include
 endif
+
+
