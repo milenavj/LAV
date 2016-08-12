@@ -135,7 +135,7 @@ private:
 
   void FlawedFound(const LInstruction *fi, ERRKIND er);
   bool ProcessStatus(const LInstruction *fi, ERRKIND er, STATUS s);
-  void stopWhenFound(const LInstruction *fi, STATUS s, bool count);
+  int stopWhenFound(const LInstruction *fi, STATUS s, bool count);
 
   aExp GetExitConditions() const;
   aExp GetEntryConditions() const;

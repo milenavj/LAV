@@ -48,12 +48,27 @@
 #include "expression/output/SMTFormater.h"
 #include "expression/expressions/NumeralTypes.h"
 
+#include "lav/Threads/FixedQueue.h"
+#include "lav/Threads/ThreadPool.h"
+using namespace ThreadSafe;
+using namespace Utils;
+
 namespace {
 
 llvm::cl::opt<bool> CalculateBlock(
     "check-block-conds",
     llvm::cl::desc("LAV --- Check in one solver call all conditions inside one "
                    "block (default = false)"),
+    llvm::cl::init(false));
+
+llvm::cl::opt<int> NumberThreads(
+    "number-threads",
+    llvm::cl::desc(
+        "LAV --- Number of threads (default = hardware_concurrency)"),
+    llvm::cl::init(0));
+llvm::cl::opt<bool> EnableParallel(
+    "enable-parallel",
+    llvm::cl::desc("LAV --- Enable parallel solver calls (default = false)"),
     llvm::cl::init(false));
 
 }
@@ -82,7 +97,8 @@ llvm::Timer AddLocalConditionTimer("AddLocalCondition Time");
 llvm::Timer InlineTimer("Inline Time");
 llvm::Timer ConnectCondsTimer("Connect conditions Time");
 llvm::Timer AddPostCondTimer("Add function postcodn Time");
-
+llvm::Timer BindTasksForThreads("Add task functions to queue for threads time");
+llvm::Timer ParallelExecution("Parallel execution time");
 llvm::Timer ffTimer("ff Time");
 
 //////////////////////////////////////////////////////////////
@@ -268,7 +284,8 @@ void LBlock::ConnectFunctionConditions(LInstruction *fi, LFunction *ff) {
         if (Id() == 0) {
           aExp l = AddAddresses(aExp::AND(AllConstraints(), lhs3));
           s = LSolver::callSolver(l, rhs, this, ffi, lc[m].ErrorKind(), true);
-          stopWhenFound(ffi, s, true);
+          if (stopWhenFound(ffi, s, true) == -1)
+            exit(1);
           if (FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED))
             Delete(ffi->GetModelFileName());
         }
@@ -467,9 +484,9 @@ const std::string &LBlock::GetFunctionName() const {
   return _Parent->GetFunctionName();
 }
 
-void LBlock::stopWhenFound(const LInstruction *fi, STATUS s, bool count) {
+int LBlock::stopWhenFound(const LInstruction *fi, STATUS s, bool count) {
   if (!FindFirstFlawed)
-    return;
+    return 0;
 
   if (s == FLAWED ||
       (count && (GetFunctionName() == StartFunction) && (s == UNSAFE))) {
@@ -490,9 +507,9 @@ void LBlock::stopWhenFound(const LInstruction *fi, STATUS s, bool count) {
 
     if (PrintHtml)
       parent->PrintHTMLFooter(sFilename);
-    exit(1);
+    return -1;
   } else
-    return;
+    return 0;
 }
 
 const LBlock *LBlock::GetPredWithId(unsigned id) const {
@@ -539,7 +556,8 @@ void LBlock::ReCalculateConditions(int ex_size) {
         e1, e2, this, _LocalConditions[i].Instruction(),
         _LocalConditions[i].ErrorKind());
 
-    stopWhenFound(_LocalConditions[i].Instruction(), s, true);
+    if (stopWhenFound(_LocalConditions[i].Instruction(), s, true) == -1)
+      exit(1);
     if (FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED))
       Delete(_LocalConditions[i].Instruction()->GetModelFileName());
 
@@ -576,22 +594,94 @@ void LBlock::CalculateConditions() {
 
   aExp cond = AddAddresses(GetTraceGlobFuncCons());
 
-  for (unsigned i = 0; i < _LocalConditions.size(); i++) {
+  if (EnableParallel) {
+    std::cout << "\n\n\n\n\n -----------------BRANISLAVA begin "
+                 "------------------ \n\n\n\n\n";
 
-    if (SkipLocalCondition(_LocalConditions[i]))
-      continue;
+    // napravi funkciju koju ce da izvrsava svaka nit
+    auto maxf =
+        [&](LLocalCondition * localCond, aExp * cond, LBlock * block, int i) {
 
-    aExp e1 = aExp::AND(cond, _LocalConditions[i].LHS());
-    aExp e2 = _LocalConditions[i].RHS();
-    STATUS s =
-        LSolver::callSolver(e1, e2, this, _LocalConditions[i].Instruction(),
-                            _LocalConditions[i].ErrorKind(), true);
+      aExp e1 = aExp::AND(*cond, localCond->LHS());
+      aExp e2 = localCond->RHS();
+      std::cout << "\n\n\n\n\n -----------------Start solver , thread id: "
+                << pthread_self() << " ------------------ \n\n\n\n\n"
+                << std::endl;
 
-    stopWhenFound(_LocalConditions[i].Instruction(), s, true);
-    if (FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED))
-      Delete(_LocalConditions[i].Instruction()->GetModelFileName());
+      STATUS s = LSolver::callSolver(e1, e2, block, localCond->Instruction(),
+                                     localCond->ErrorKind(), true);
 
-    _LocalConditions[i].Status() = s;
+      std::cout << "\n\n\n\n\n -----------------End solver , thread id: "
+                << pthread_self() << "------------------ \n\n\n\n\n"
+                << std::endl;
+
+      //std::cout << FindFirstFlawed << " find first flawed" << std::endl;
+      if (stopWhenFound(localCond->Instruction(), s, true) == -1) {
+        return -1;
+      }
+
+      if (FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED)) {
+        Delete(localCond->Instruction()->GetModelFileName());
+        return -1;
+      }
+
+      localCond->Status() = s;
+      return 0;
+    }
+    ;
+
+    std::vector<std::function<int()> > functions;
+    BindTasksForThreads.startTimer();
+    for (unsigned i = 0; i < _LocalConditions.size(); i++) {
+
+      if (SkipLocalCondition(_LocalConditions[i]))
+        continue;
+
+      // dodaj funkcije koje ce niti da izvrsavaju u red
+      functions.push_back(
+          std::bind(maxf, &_LocalConditions[i], &cond, this, i));
+    }
+    BindTasksForThreads.stopTimer();
+
+    ParallelExecution.startTimer();
+    // napravi thread pool i pokreni ga
+    if (NumberThreads)
+      ThreadPool t {
+        FixedQueue<std::function<int()> >(functions), NumberThreads
+      }
+    ;
+    else ThreadPool t {
+      FixedQueue<std::function<int()> >(functions)
+    }
+    ;
+    ParallelExecution.stopTimer();
+
+    std::cout << "\n\n\n\n\n -----------------BRANISLAVA end "
+                 "------------------ \n\n\n\n\n";
+  } else {
+    std::cout << "\n\n ----------------- BEGIN SEQUENTIAL LAV "
+                 "------------------ \n\n";
+
+    for (unsigned i = 0; i < _LocalConditions.size(); i++) {
+      if (SkipLocalCondition(_LocalConditions[i]))
+        continue;
+
+      aExp e1 = aExp::AND(cond, _LocalConditions[i].LHS());
+      aExp e2 = _LocalConditions[i].RHS();
+      STATUS s =
+          LSolver::callSolver(e1, e2, this, _LocalConditions[i].Instruction(),
+                              _LocalConditions[i].ErrorKind(), true);
+
+      if (stopWhenFound(_LocalConditions[i].Instruction(), s, true) == -1)
+        exit(1);
+
+      if (FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED))
+        Delete(_LocalConditions[i].Instruction()->GetModelFileName());
+
+      _LocalConditions[i].Status() = s;
+    }
+    std::cout
+        << "\n\n ----------------- END SEQUENTIAL LAV ------------------ \n\n";
   }
 
 }
@@ -785,7 +875,8 @@ void LBlock::CalculateConditionsBlock() {
 
   if (s != SAFE && FindFirstFlawed)
     for (unsigned i = 0; i < conds.size(); i++)
-      stopWhenFound(conds[i]->Instruction(), s, true);
+      if (stopWhenFound(conds[i]->Instruction(), s, true) == -1)
+        exit(1);
 
   _ConditionsCalculated = true;
 }
@@ -816,7 +907,8 @@ void LBlock::CalculateConditionsIncremental() {
         e1, e2, this, _LocalConditions[i].Instruction(),
         _LocalConditions[i].ErrorKind());
 
-    stopWhenFound(_LocalConditions[i].Instruction(), s, true);
+    if (stopWhenFound(_LocalConditions[i].Instruction(), s, true) == -1)
+      exit(1);
 
     if (FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED))
       Delete(_LocalConditions[i].Instruction()->GetModelFileName());
@@ -1306,7 +1398,8 @@ void LBlock::FlawedFound(const LInstruction *fi, ERRKIND e) {
   bool reachable = CheckReachability();
   if (reachable) {
     AddLocalConditionTimer.stopTimer();
-    stopWhenFound(fi, FLAWED, false);
+    if (stopWhenFound(fi, FLAWED, false) == -1)
+      exit(1);
     //ovo је dostizno ukoliko nije find-first-flawed
     _LocalConditions.push_back(
         LLocalCondition(aExp::TOP(), aExp::TOP(), fi, e, FLAWED));
@@ -1393,7 +1486,8 @@ void LBlock::AddLocalCondition(caExp &r, LInstruction *fi, ERRKIND e) {
   s = LSolver::callSolver(l, r, this, fi, e, true);
 
   if (Id() == 0)
-    stopWhenFound(fi, s, true);
+    if (stopWhenFound(fi, s, true) == -1)
+      exit(1);
   if (ProcessStatus(fi, e, s) == true)
     return;
 
