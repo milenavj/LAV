@@ -1179,7 +1179,8 @@ LSolver::LSolver() {
 
   switch (solver) {
 #if defined(BOOLECTOR) || defined(BOOLECTOR_OLD)
-  case BoolectorBV: case BoolectorBVEUF:
+  case BoolectorBV:
+  case BoolectorBVEUF:
     _Factory =
         LSolver::ExpFactory(new UrsaMajor::BVExpressionFactoryBoolector());
     _BV = true;
@@ -1447,8 +1448,9 @@ bool LSolver::Ackermannize() {
 }
 
 bool LSolver::HasArrays() {
-  if ((solver == Z3BVACK) || (solver == BoolectorBV) || (solver == BoolectorBVEUF) || (solver == Z3LAACK) ||
-      (solver == Z3BV) || (solver == Z3LA))
+  if ((solver == Z3BVACK) || (solver == BoolectorBV) ||
+      (solver == BoolectorBVEUF) || (solver == Z3LAACK) || (solver == Z3BV) ||
+      (solver == Z3LA))
     return true;
   else
     return false;

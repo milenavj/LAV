@@ -133,7 +133,6 @@ public:
     return s->_expr;
   }
 
-
   virtual ExpressionImp *
   uninterpretedFunction(const Function &fun,
                         const std::vector<const ExpressionImp *> &args) {

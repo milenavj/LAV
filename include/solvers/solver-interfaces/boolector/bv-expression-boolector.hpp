@@ -44,8 +44,8 @@ public:
   }
 
   void reset() {
-     std::cout << "Boolector::reseting..." << std::endl;
-//    _uf_registry.clear();
+    std::cout << "Boolector::reseting..." << std::endl;
+    //    _uf_registry.clear();
     BoolectorInstance::instance().reset();
   }
 
@@ -53,10 +53,9 @@ public:
     return BoolectorInstance::instance().getAssignment(_expr);
   }
 
-
   BoolectorSort translateType(Type t) {
     static BoolectorSort bool_type = boolector_bool_sort(getSolver());
-     BoolectorSort bv_type = boolector_bitvec_sort(getSolver(), t.getWidth());
+    BoolectorSort bv_type = boolector_bitvec_sort(getSolver(), t.getWidth());
     switch (t.getType()) {
     case BOOLEAN: { return bool_type; }
     case BITVECTOR: { return bv_type; }
@@ -64,7 +63,6 @@ public:
       throw "Unsupported type for uninterpreted function";
     }
   }
-
 
   static std::map<std::string, SOLVER_EXPR_TYPE> _uf_registry;
 
@@ -83,7 +81,7 @@ public:
         domain_types[k] = translateType(fun.getArgumentType(k));
       BoolectorSort result_type = translateType(fun.getType());
       bs = boolector_fun_sort(getSolver(), domain_types, n, result_type);
-      f = boolector_uf(getSolver(), bs, fun.getName().c_str()); 
+      f = boolector_uf(getSolver(), bs, fun.getName().c_str());
       _uf_registry[fun.getName()] = f;
       delete[] domain_types;
     } else {
