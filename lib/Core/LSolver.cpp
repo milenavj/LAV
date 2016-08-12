@@ -78,13 +78,10 @@ llvm::cl::opt<SolverType> solver(
         clEnumValN(BoolectorBV, "Boolector-BV-ARR-ACK",
                    "Boolector --- BitVectors & Arrays & Ackermanization"),
 #endif
-/*
-//TODO dodati export za uf u bv-expression-boolector.cpp
 #if defined(BOOLECTOR)
         clEnumValN(BoolectorBVEUF, "Boolector-BV-ARR-EUF",
                    "Boolector --- BitVectors & Arrays "),
 #endif
-*/
 #ifdef Z3
         clEnumValN(Z3LA, "Z3-LA-ARR-EUF", "Z3        --- Linear Arithmetic  & "
                                           "Arrays & Uninterpreted Functions"),

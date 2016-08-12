@@ -57,6 +57,7 @@ void BoolectorInstance::BoolectorInit() {
   boolector_enable_inc_usage(_btor);
 #endif
 #if defined(BOOLECTOR)
+  BVExpressionImpBoolector::_uf_registry.clear();
   boolector_set_opt(_btor, "model_gen", 1);
   boolector_set_opt(_btor, "incremental", 1);
 #endif

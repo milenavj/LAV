@@ -36,6 +36,7 @@ public:
   bool addTempConstraint(SOLVER_EXPR_TYPE expr) {
     _solver_called++;
     boolector_assume(_btor, expr);
+
     return boolector_sat(_btor) == BOOLECTOR_SAT;
   }
 

@@ -78,6 +78,7 @@ void Z3Instance::reset() {
     Z3_pop(_ctx, 1);
   _m = 0;
   _blocking_clause = 0;
+  BVExpressionImpZ3::_uf_registry.clear();
 
 }
 

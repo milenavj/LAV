@@ -44,7 +44,8 @@ public:
   }
 
   void reset() {
-    // std::cout << "Boolector::reseting..." << std::endl;
+     std::cout << "Boolector::reseting..." << std::endl;
+//    _uf_registry.clear();
     BoolectorInstance::instance().reset();
   }
 
@@ -52,11 +53,57 @@ public:
     return BoolectorInstance::instance().getAssignment(_expr);
   }
 
-/*  virtual ExpressionImp *
+
+  BoolectorSort translateType(Type t) {
+    static BoolectorSort bool_type = boolector_bool_sort(getSolver());
+     BoolectorSort bv_type = boolector_bitvec_sort(getSolver(), t.getWidth());
+    switch (t.getType()) {
+    case BOOLEAN: { return bool_type; }
+    case BITVECTOR: { return bv_type; }
+    default:
+      throw "Unsupported type for uninterpreted function";
+    }
+  }
+
+
+  static std::map<std::string, SOLVER_EXPR_TYPE> _uf_registry;
+
+#if defined(BOOLECTOR)
+  virtual ExpressionImp *
   uninterpretedFunction(const Function &fun,
                         const std::vector<const ExpressionImp *> &args) {
     size_t n = args.size();
-  }*/
+
+    BoolectorSort bs;
+    SOLVER_EXPR_TYPE f;
+
+    if (_uf_registry.find(fun.getName()) == _uf_registry.end()) {
+      BoolectorSort *domain_types = new BoolectorSort[n + 1];
+      for (size_t k = 0; k < n; k++)
+        domain_types[k] = translateType(fun.getArgumentType(k));
+      BoolectorSort result_type = translateType(fun.getType());
+      bs = boolector_fun_sort(getSolver(), domain_types, n, result_type);
+      f = boolector_uf(getSolver(), bs, fun.getName().c_str()); 
+      _uf_registry[fun.getName()] = f;
+      delete[] domain_types;
+    } else {
+      f = _uf_registry[fun.getName()];
+    }
+
+    SOLVER_EXPR_TYPE *exps = new SOLVER_EXPR_TYPE[n + 1];
+
+    std::vector<const ExpressionImp *>::const_iterator i;
+    int k;
+    for (i = args.begin(), k = 0; i != args.end(); i++, k++) {
+      exps[k] = solverExprFromUnknown(*i);
+    }
+
+    SOLVER_EXPR_TYPE exp = boolector_apply(getSolver(), exps, n, f);
+    delete[] exps;
+    BoolectorInstance::instance().ExpToRelease(exp);
+    return new BVExpressionImpBoolector(exp);
+  }
+#endif
 
   ExpressionImp *unsignedSymbolic(const std::string &name, size_t width) const {
     SOLVER_EXPR_TYPE exp = boolector_var(getSolver(), width, name.c_str());

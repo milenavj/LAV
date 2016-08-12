@@ -32,6 +32,7 @@ echo "+expected time ~$1" >/dev/stderr
 line
 }
 
+boolectoreuf="test_boolector_bv_arr_euf"
 boolector="test_boolector_bv_arr_ack"
 z3ack="test_z3_bv_arr_ack"
 z3euf="test_z3_bv_arr_euf"
@@ -156,6 +157,10 @@ print $et $directory $z3ack
 et=100
 directory="small_sb"
 print $et $directory $boolector
+
+et=65
+directory="small_sb"
+print $et $directory $boolectoreuf
 
 et=19
 directory="small_sb"

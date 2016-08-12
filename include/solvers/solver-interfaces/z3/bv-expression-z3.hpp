@@ -133,19 +133,15 @@ public:
     return s->_expr;
   }
 
+
   virtual ExpressionImp *
   uninterpretedFunction(const Function &fun,
                         const std::vector<const ExpressionImp *> &args) {
     size_t n = args.size();
 
-    //ako bi bilo static, onda prilikom resetovanja ovde ostane u registru i
-    //onda ili pukne program jer se na adresi z3_func_decl nalazi nesto bezveze
-    //ili ne pukne jer tu bude neka sasvim deseta funkcija, ali svakako bude
-    //neka greska problem je sto ako nema resetovanja izmedju, sta onda???!?? 
-    //isto i za bitvektore ali problem je i ako u jednoj formuli ima njih 
-    //puno, svaki put se pravi nova deklaracija??
-
-    //static
+    //ako se napravi kao u boolectoru da _uf_registry bude static na nivou klase
+    //i da se resetuje kada se resetuje solver, onda se z3 znacajno uspori
+    //iako sve funkcionise po pitanju test primera
     std::map<std::string, Z3_func_decl> _uf_registry;
     Z3_func_decl f;
     if (_uf_registry.find(fun.getName()) == _uf_registry.end()) {
