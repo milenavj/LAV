@@ -1,5 +1,6 @@
 /* include/config.h.  Generated from config.h.in by configure.  */
-/* include/config.h.in.  Generated from autoconf/configure.tmp.ac by autoheader.  */
+/* include/config.h.in.  Generated from autoconf/configure.tmp.ac by autoheader.
+ */
 
 /* BOOLECTOR solver */
 /* #undef BOOLECTOR */
