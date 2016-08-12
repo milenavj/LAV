@@ -1,0 +1,40 @@
+
+expected time ~50 sada je 
+time timeout --k=1 100.00
+TestLAV -test -directory=lavEdu/09/09_1 -test-file=lav_parameters1 -same-options
+
+expected time ~40 sada je 
+time timeout --k=1 80.00
+TestLAV -test -directory=lavEdu/03/03_2 -test-file=lav_parameters2 -same-options
+
+expected time ~25 sada je 
+time timeout --k=1 50.00
+TestLAV -test -directory=lavEdu/04/04_1 -test-file=lav_parameters1 -same-options
+
+expected time ~23 sada je 
+time timeout --k=1 46.00
+TestLAV -test -directory=lavEdu/02/02_1 -test-file=lav_parameters1 -same-options
+
+expected time ~20 sada je 
+time timeout --k=1 40.00
+TestLAV -test -directory=lavEdu/06/06_1 -test-file=lav_parameters1 -same-options
+
+expected time ~15 sada je  44s
+time timeout --k=1 30.00
+TestLAV -test -directory=lavEdu/01 -test-file=lav_parameters -same-options
+
+
+expected time ~13 sada je 1min 44s
+time timeout --k=1 26.00
+TestLAV -test -directory=lavEdu/02/02_2 -test-file=lav_parameters2 -same-options
+
+expected time ~5 sada je 19.8s
+time timeout --k=1 10.00
+TestLAV -test -directory=lavEdu/03/03_1 -test-file=lav_parameters1 -same-options
+
+expected time ~2  sada je 7.55s
+time timeout --k=1 4.00
+TestLAV -test -directory=lavEdu/10 -test-file=lav_parameters -same-options
+
+
+

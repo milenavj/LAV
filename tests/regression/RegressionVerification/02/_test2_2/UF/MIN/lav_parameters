@@ -1,0 +1,2 @@
+LAV -find-first-flawed -solver=Z3-LA-ARR-EUF -check-pointers=false 
+

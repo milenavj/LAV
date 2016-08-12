@@ -1,0 +1,28 @@
+#!/bin/bash
+
+time TestLAV -test -directory=01/_test1_1/AT -test-file=01/_test1_1/lav_parameters -same-options 
+time TestLAV -test -directory=01/_test1_2/AT -test-file=01/_test1_2/lav_parameters -same-options 
+time TestLAV -test -directory=02/_test2_1/UF/AS/AT -test-file=02/_test2_1/UF/AS/lav_parameters -same-options 
+time TestLAV -test -directory=02/_test2_1/UF/MAX/AT -test-file=02/_test2_1/UF/MAX/lav_parameters -same-options 
+time TestLAV -test -directory=02/_test2_1/KEQ/AS/AT -test-file=02/_test2_1/KEQ/AS/lav_parameters -same-options 
+time TestLAV -test -directory=02/_test2_1/KEQ/MAX/AT -test-file=02/_test2_1/KEQ/MAX/lav_parameters -same-options 
+time TestLAV -test -directory=02/_test2_2/UF/MIN/AT -test-file=02/_test2_2/UF/MIN/lav_parameters -same-options 
+time TestLAV -test -directory=02/_test2_2/UF/MAX/AT -test-file=02/_test2_2/UF/MAX/lav_parameters -same-options 
+time TestLAV -test -directory=02/_test2_2/KEQ/MIN/AT -test-file=02/_test2_2/KEQ/MIN/lav_parameters -same-options 
+time TestLAV -test -directory=02/_test2_2/KEQ/MAX/AT -test-file=02/_test2_2/KEQ/MAX/lav_parameters -same-options 
+time TestLAV -test -directory=03/_test3_1/AT -test-file=03/_test3_1/lav_parameters -same-options 
+time TestLAV -test -directory=03/_test3_2/AT -test-file=03/_test3_2/lav_parameters -same-options 
+time TestLAV -test -directory=04/_test3_3/AT -test-file=04/_test3_3/lav_parameters -same-options 
+time TestLAV -test -directory=05/_test3_5/AT -test-file=05/_test3_5/lav_parameters -same-options 
+time TestLAV -test -directory=05/_test3_6/AT -test-file=05/_test3_6/lav_parameters -same-options 
+time TestLAV -test -directory=06/_test3_7/AT -test-file=06/_test3_7/lav_parameters -same-options 
+time TestLAV -test -directory=06/_test3_8/AT -test-file=06/_test3_8/lav_parameters -same-options 
+time TestLAV -test -directory=07/januar_1/AT -test-file=07/januar_1/lav_parameters -same-options 
+time TestLAV -test -directory=08/januar_2/UF/AT -test-file=08/januar_2/UF/lav_parameters -same-options 
+time TestLAV -test -directory=08/januar_2/KEQ/AT -test-file=08/januar_2/KEQ/lav_parameters -same-options 
+time TestLAV -test -directory=11/februar_1/AT -test-file=11/februar_1/lav_parameters -same-options 
+time TestLAV -test -directory=12/februar_2/AT -test-file=12/februar_2/lav_parameters -same-options 
+time TestLAV -test -directory=13/februar_3/AT -test-file=13/februar_3/lav_parameters -same-options 
+time TestLAV -test -directory=14/februar_4/AT -test-file=14/februar_4/lav_parameters -same-options 
+
+

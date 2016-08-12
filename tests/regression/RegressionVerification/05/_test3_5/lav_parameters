@@ -1,0 +1,1 @@
+time LAV -find-first-flawed -solver=Z3-LA-ARR-EUF  -loop-unroll-begin=5 -loop-unroll-end=0 -check-pointers=false
