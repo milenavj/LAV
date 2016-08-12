@@ -16,9 +16,9 @@ extern "C" {
 
 namespace UrsaMajor {
 
-  class Z3Instance {
-  public:
-    thread_local static Z3Instance& instance();
+class Z3Instance {
+public:
+  thread_local static Z3Instance &instance();
 
   ~Z3Instance();
 

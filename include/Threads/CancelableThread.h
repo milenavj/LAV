@@ -5,29 +5,29 @@
 #include <thread>
 #include <functional>
 
-namespace  Utils
-{
-    class CancelableThread
-    {
-    public:
-        using Callable = std::function<void()>;
-    private:
-        std::thread m_worker;
-        bool m_finished;
-    public:
+namespace Utils {
+class CancelableThread {
+public:
+  using Callable = std::function<void()>;
 
-        CancelableThread(Callable f);
-        CancelableThread(CancelableThread &&ct);
-        CancelableThread& operator=(CancelableThread &&ct);
-        virtual ~CancelableThread();
+private:
+  std::thread m_worker;
+  bool m_finished;
 
-        void Cancel();
-        bool IsJoinable() const;
-        void Join();
+public:
 
-    private:
-        static void AllowCancel();
-    };
+  CancelableThread(Callable f);
+  CancelableThread(CancelableThread &&ct);
+  CancelableThread &operator=(CancelableThread &&ct);
+  virtual ~CancelableThread();
+
+  void Cancel();
+  bool IsJoinable() const;
+  void Join();
+
+private:
+  static void AllowCancel();
+};
 }
 
 #endif // CANCELABLETHREAD_H
