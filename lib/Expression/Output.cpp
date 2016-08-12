@@ -6,21 +6,18 @@
 namespace argo {
 
 Output coutput(std::cout);
-Output cerror (std::cerr);
+Output cerror(std::cerr);
 
-
-Output& Output::operator<<(const Expression& e)
-{
-     if (!_suspend)
-	  e.Print(OutputFormater::GetInstance(_formater), _ostr);
-     return *this;
+Output &Output::operator<<(const Expression &e) {
+  if (!_suspend)
+    e.Print(OutputFormater::GetInstance(_formater), _ostr);
+  return *this;
 }
 
-Output& Output::operator<<(ExpressionNode& e)
-{
-     if (!_suspend)
-	  e.Print(OutputFormater::GetInstance(_formater), _ostr);
-     return *this;
+Output &Output::operator<<(ExpressionNode &e) {
+  if (!_suspend)
+    e.Print(OutputFormater::GetInstance(_formater), _ostr);
+  return *this;
 }
 
-}//end of namespace
+} //end of namespace

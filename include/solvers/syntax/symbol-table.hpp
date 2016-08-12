@@ -5,49 +5,36 @@
 
 namespace UrsaMajor {
 
-  template<class T>
-  class SymbolTable {
-  public:
-    typedef std::map<std::string, T> map_type;
-    typedef typename map_type::const_iterator const_iterator;
-    typedef typename map_type::iterator iterator;
-    
-    const_iterator begin() const {
-      return _map.begin();
-    }
+template <class T> class SymbolTable {
+public:
+  typedef std::map<std::string, T> map_type;
+  typedef typename map_type::const_iterator const_iterator;
+  typedef typename map_type::iterator iterator;
 
-    const_iterator end() const {
-      return _map.end();
-    }
+  const_iterator begin() const { return _map.begin(); }
 
-    iterator begin() {
-      return _map.begin();
-    }
+  const_iterator end() const { return _map.end(); }
 
-    iterator end() {
-      return _map.end();
-    }
+  iterator begin() { return _map.begin(); }
 
-    void clear() {
-      _map.erase(_map.begin(), _map.end());
-    }
-    
-    void set(const std::string& var, const T& val) {
-      _map[var] = val;
-    }
+  iterator end() { return _map.end(); }
 
-    T get(const std::string& var) const {
-      typename map_type::const_iterator i = _map.find(var);
-      return i != _map.end() ? i->second : T();
-    }
+  void clear() { _map.erase(_map.begin(), _map.end()); }
 
-    bool contains(const std::string& var) const {
-      typename map_type::const_iterator i = _map.find(var);
-      return i != _map.end();
-    }
+  void set(const std::string &var, const T &val) { _map[var] = val; }
 
-  private:
-    map_type _map;
-  };
+  T get(const std::string &var) const {
+    typename map_type::const_iterator i = _map.find(var);
+    return i != _map.end() ? i->second : T();
+  }
+
+  bool contains(const std::string &var) const {
+    typename map_type::const_iterator i = _map.find(var);
+    return i != _map.end();
+  }
+
+private:
+  map_type _map;
+};
 } // namespace UrsaMajor
 #endif

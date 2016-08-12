@@ -128,6 +128,19 @@ else
        AC_SUBST(ENABLE_BOOLECTOR,[[0]])
 fi
 
+boolector_old=no
+AC_ARG_ENABLE([boolector_old], AC_HELP_STRING([--enable-boolector-old], [enable BOOLECTOR_OLD solver]),
+       [test "x$enableval" = "xyes" &&  boolector_old=yes])
+if test "x${boolector_old}" = "xyes" ; then
+       AC_DEFINE(BOOLECTOR_OLD, 1, [BOOLECTOR_OLD solver])
+       AC_SUBST(ENABLE_BOOLECTOR_OLD,[[1]])
+       echo "-------------------------------"
+       echo "---  BOOLECTOR_OLD enabled  ---"
+       echo "-------------------------------"
+else
+       AC_SUBST(ENABLE_BOOLECTOR_OLD,[[0]])
+fi
+
 mathsat=no
 AC_ARG_ENABLE([mathsat], AC_HELP_STRING([--enable-mathsat], [enable MATHSAT solver]),
        [test "x$enableval" = "xyes" &&  mathsat=yes])

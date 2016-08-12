@@ -10,11 +10,11 @@
 #ifndef TEST_H
 #define TEST_H
 
-#include <string>  
+#include <string>
 
 namespace lav {
-bool TestMode(); 
-bool SameOptions(); 
+bool TestMode();
+bool SameOptions();
 bool Model();
 std::string ModelFile();
 std::string LogFile();
@@ -22,9 +22,10 @@ std::string Directory();
 std::string TestFile();
 std::string LavOptions();
 
-void Test(const char* directoryName, const char* testFileName, const char* lavOptions, bool check, bool sameOptions, const char* modelFile, bool model);
+void Test(const char *directoryName, const char *testFileName,
+          const char *lavOptions, bool check, bool sameOptions,
+          const char *modelFile, bool model);
 
 void termination_handler(int signum);
 }
 #endif
-

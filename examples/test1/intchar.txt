@@ -1,5 +1,0 @@
- line: 7   FLAWED
- line: 8   FLAWED
- line: 9   SAFE 
- line: 10   FLAWED
- line: 13   SAFE 

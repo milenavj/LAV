@@ -17,60 +17,47 @@
 #include "llvm/Support/CommandLine.h"
 
 #include "lav/Internal/LModule.h"
-#include "lav/Threads/Event.h"
 
 using namespace llvm;
 using namespace lav;
-using namespace Utils;
 
 namespace {
 
-
-
 class LavPass : public ModulePass {
 public:
-    static char ID; // Pass identification, replacement for typeid
+  static char ID; // Pass identification, replacement for typeid
 
-    LavPass() : ModulePass(ID) {}
-    
-    virtual bool runOnModule(Module &M);
+  LavPass() : ModulePass(ID) {}
 
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
-      AU.setPreservesAll();
-    }
+  virtual bool runOnModule(Module &M);
+
+  virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+    AU.setPreservesAll();
+  }
+
 private:
 
-  };
+};
 }
 
 char LavPass::ID = 0;
 static RegisterPass<LavPass> X("LavPass", "LavPass analysis");
 
-namespace lav{
+namespace lav {
 // Public interface to the Lav pass
-ModulePass *createLavPass() {
-  return new LavPass();
+ModulePass *createLavPass() { return new LavPass(); }
 }
-}
- 
-bool LavPass::runOnModule(Module &M)
-{
+
+bool LavPass::runOnModule(Module &M) {
 
   Timer PrintingTime("Printing results");
   std::cout << "Generating and testing conditions... " << std::endl;
   LModule LavModule(&M);
   LavModule.Run();
-  std::cout << "Generating and testing conditions... Completed " 
-            << std::endl << std::endl;
-
-
-
-//  std::cout << "Creating event ..." << std::endl;
-//  auto e = Event::Create();
-//  std::cout << "Created event ..." << std::endl;
+  std::cout << "Generating and testing conditions... Completed " << std::endl
+            << std::endl;
 
   std::cout << "Printing results ... " << std::endl;
-
   PrintingTime.startTimer();
   LavModule.PrintResults();
   PrintingTime.stopTimer();

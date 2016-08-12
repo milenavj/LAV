@@ -1,4 +1,6 @@
-boolector-1.1-IA-32
+boolector-1.1-IA-32 (configure option: --enable-boolector-old, should be placed in boolector_old folder)
+boolector-2.2.0     (configure option: --enable-boolector, should be placed in boolector folder)
 mathsat-4.2.8-linux-x86
 yices-1.0.27
-z3 4.0
+z3 4.4 
+z3 4.0 

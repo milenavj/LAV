@@ -16,31 +16,28 @@ extern "C" {
 
 namespace UrsaMajor {
 
+class Z3Instance {
+public:
+  static Z3Instance &instance();
 
-  class Z3Instance {
-  public:
-    static Z3Instance& instance();
+  ~Z3Instance();
 
-    ~Z3Instance();
+  Z3_context getSolver() { return _ctx; }
 
-    Z3_context getSolver() {
-      return _ctx;
-    }
+  bool nextModel(Z3_ast expr);
+  bool addConstraint(Z3_ast expr);
+  bool addTempConstraint(Z3_ast expr);
+  void reset();
+  std::string getAssignment(Z3_ast expr, size_t width);
 
-    bool nextModel(Z3_ast expr);
-    bool addConstraint(Z3_ast expr) ;
-    bool addTempConstraint(Z3_ast expr) ;
-    void reset(); 
-    std::string getAssignment(Z3_ast expr, size_t width);
+private:
 
-  private:
-
-    Z3Instance();
-    Z3_model _m;
-    Z3_context _ctx;
-    Z3_ast _blocking_clause;
-    thread_local static unsigned _pushed;
-  };
+  Z3Instance();
+  Z3_model _m;
+  Z3_context _ctx;
+  Z3_ast _blocking_clause;
+  static unsigned _pushed;
+};
 
 } // namespace UrsaMajor
 

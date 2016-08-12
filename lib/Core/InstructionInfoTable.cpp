@@ -34,7 +34,6 @@
 using namespace llvm;
 using namespace lav;
 
-
 class InstructionToLineAnnotator : public llvm::AssemblyAnnotationWriter {
 public:
   void emitInstructionAnnot(const Instruction *i,
@@ -43,9 +42,10 @@ public:
     os << (uintptr_t) i;
   }
 };
-        
-static void buildInstructionToLineMap(Module *m,
-                                      std::map<const Instruction*, unsigned> &out) {  
+
+static void
+buildInstructionToLineMap(Module *m,
+                          std::map<const Instruction *, unsigned> &out) {
   InstructionToLineAnnotator a;
   std::string str;
   llvm::raw_string_ostream os(str);
@@ -54,15 +54,15 @@ static void buildInstructionToLineMap(Module *m,
   const char *s;
 
   unsigned line = 1;
-  for (s=str.c_str(); *s; s++) {
-    if (*s=='\n') {
+  for (s = str.c_str(); *s; s++) {
+    if (*s == '\n') {
       line++;
-      if (s[1]=='%' && s[2]=='%' && s[3]=='%') {
+      if (s[1] == '%' && s[2] == '%' && s[3] == '%') {
         s += 4;
         char *end;
         unsigned long long value = strtoull(s, &end, 10);
-        if (end!=s) {
-          out.insert(std::make_pair((const Instruction*) value, line));
+        if (end != s) {
+          out.insert(std::make_pair((const Instruction *)value, line));
         }
         s = end;
       }
@@ -82,7 +82,7 @@ static std::string getDSPIPath(DILocation Loc) {
   }
 }
 
-bool InstructionInfoTable::getInstructionDebugInfo(const llvm::Instruction *I, 
+bool InstructionInfoTable::getInstructionDebugInfo(const llvm::Instruction *I,
                                                    const std::string *&File,
                                                    unsigned &Line) {
   if (MDNode *N = I->getMetadata("dbg")) {
@@ -95,38 +95,36 @@ bool InstructionInfoTable::getInstructionDebugInfo(const llvm::Instruction *I,
   return false;
 }
 
-InstructionInfoTable::InstructionInfoTable(Module *m) 
-  : dummyString(""), dummyInfo(0, dummyString, 0, 0) {
+InstructionInfoTable::InstructionInfoTable(Module *m)
+    : dummyString(""), dummyInfo(0, dummyString, 0, 0) {
   unsigned id = 0;
-  std::map<const Instruction*, unsigned> lineTable;
+  std::map<const Instruction *, unsigned> lineTable;
   buildInstructionToLineMap(m, lineTable);
 
-  for (Module::iterator fnIt = m->begin(), fn_ie = m->end(); 
-       fnIt != fn_ie; ++fnIt) {
+  for (Module::iterator fnIt = m->begin(), fn_ie = m->end(); fnIt != fn_ie;
+       ++fnIt) {
     const std::string *initialFile = &dummyString;
     unsigned initialLine = 0;
 
     // It may be better to look for the closest stoppoint to the entry
     // following the CFG, but it is not clear that it ever matters in
     // practice.
-    for (inst_iterator it = inst_begin(fnIt), ie = inst_end(fnIt);
-         it != ie; ++it)
+    for (inst_iterator it = inst_begin(fnIt), ie = inst_end(fnIt); it != ie;
+         ++it)
       if (getInstructionDebugInfo(&*it, initialFile, initialLine))
         break;
-    
-    typedef std::map<BasicBlock*, std::pair<const std::string*,unsigned> > 
-      sourceinfo_ty;
+
+    typedef std::map<BasicBlock *, std::pair<const std::string *, unsigned> >
+        sourceinfo_ty;
     sourceinfo_ty sourceInfo;
-    for (llvm::Function::iterator bbIt = fnIt->begin(), bbie = fnIt->end(); 
+    for (llvm::Function::iterator bbIt = fnIt->begin(), bbie = fnIt->end();
          bbIt != bbie; ++bbIt) {
-      std::pair<sourceinfo_ty::iterator, bool>
-        res = sourceInfo.insert(std::make_pair(bbIt,
-                                               std::make_pair(initialFile,
-                                                              initialLine)));
+      std::pair<sourceinfo_ty::iterator, bool> res = sourceInfo.insert(
+          std::make_pair(bbIt, std::make_pair(initialFile, initialLine)));
       if (!res.second)
         continue;
 
-      std::vector<BasicBlock*> worklist;
+      std::vector<BasicBlock *> worklist;
       worklist.push_back(bbIt);
 
       do {
@@ -137,27 +135,24 @@ InstructionInfoTable::InstructionInfoTable(Module *m)
         assert(si != sourceInfo.end());
         const std::string *file = si->second.first;
         unsigned line = si->second.second;
-        
-        for (BasicBlock::iterator it = bb->begin(), ie = bb->end();
-             it != ie; ++it) {
+
+        for (BasicBlock::iterator it = bb->begin(), ie = bb->end(); it != ie;
+             ++it) {
           Instruction *instr = it;
           unsigned assemblyLine = 0;
-          std::map<const Instruction*, unsigned>::const_iterator ltit = 
-            lineTable.find(instr);
-          if (ltit!=lineTable.end())
+          std::map<const Instruction *, unsigned>::const_iterator ltit =
+              lineTable.find(instr);
+          if (ltit != lineTable.end())
             assemblyLine = ltit->second;
           getInstructionDebugInfo(instr, file, line);
-          infos.insert(std::make_pair(instr,
-                                      InstructionInfo(id++,
-                                                      *file,
-                                                      line,
-                                                      assemblyLine)));        
+          infos.insert(std::make_pair(
+              instr, InstructionInfo(id++, *file, line, assemblyLine)));
         }
-        
-        for (succ_iterator it = succ_begin(bb), ie = succ_end(bb); 
-             it != ie; ++it) {
-          if (sourceInfo.insert(std::make_pair(*it,
-                                               std::make_pair(file, line))).second)
+
+        for (succ_iterator it = succ_begin(bb), ie = succ_end(bb); it != ie;
+             ++it) {
+          if (sourceInfo.insert(std::make_pair(*it, std::make_pair(file, line)))
+                  .second)
             worklist.push_back(*it);
         }
       } while (!worklist.empty());
@@ -167,14 +162,15 @@ InstructionInfoTable::InstructionInfoTable(Module *m)
 
 InstructionInfoTable::~InstructionInfoTable() {
   for (std::set<const std::string *, ltstr>::iterator
-         it = internedStrings.begin(), ie = internedStrings.end();
+           it = internedStrings.begin(),
+           ie = internedStrings.end();
        it != ie; ++it)
     delete *it;
 }
 
 const std::string *InstructionInfoTable::internString(std::string s) {
   std::set<const std::string *, ltstr>::iterator it = internedStrings.find(&s);
-  if (it==internedStrings.end()) {
+  if (it == internedStrings.end()) {
     std::string *interned = new std::string(s);
     internedStrings.insert(interned);
     return interned;
@@ -183,15 +179,13 @@ const std::string *InstructionInfoTable::internString(std::string s) {
   }
 }
 
-unsigned InstructionInfoTable::getMaxID() const {
-  return infos.size();
-}
+unsigned InstructionInfoTable::getMaxID() const { return infos.size(); }
 
 const InstructionInfo &
 InstructionInfoTable::getInfo(const Instruction *inst) const {
-  std::map<const llvm::Instruction*, InstructionInfo>::const_iterator it = 
-    infos.find(inst);
-  if (it==infos.end()) {
+  std::map<const llvm::Instruction *, InstructionInfo>::const_iterator it =
+      infos.find(inst);
+  if (it == infos.end()) {
     return dummyInfo;
   } else {
     return it->second;
@@ -211,13 +205,15 @@ namespace lav {
 
 class InstructionToLineAnnotator : public llvm::AssemblyAnnotationWriter {
 public:
-  void emitInstructionAnnot(const Instruction *i, llvm::formatted_raw_ostream &os) {
+  void emitInstructionAnnot(const Instruction *i,
+                            llvm::formatted_raw_ostream &os) {
     os << "%%%" << (uintptr_t) i;
   }
 };
-        
-static void buildInstructionToLineMap(Module *m,
-                                      std::map<const Instruction*, unsigned> &out) {  
+
+static void
+buildInstructionToLineMap(Module *m,
+                          std::map<const Instruction *, unsigned> &out) {
   InstructionToLineAnnotator a;
   std::string bb = "";
   llvm::raw_string_ostream buffer(bb);
@@ -226,21 +222,20 @@ static void buildInstructionToLineMap(Module *m,
   const char *s;
 
   unsigned line = 1;
-  for (s=str.c_str(); *s; s++) {
-    if (*s=='\n') {
+  for (s = str.c_str(); *s; s++) {
+    if (*s == '\n') {
       line++;
-      if (s[1]=='%' && s[2]=='%' && s[3]=='%') {
+      if (s[1] == '%' && s[2] == '%' && s[3] == '%') {
         s += 4;
         char *end;
         unsigned long long value = strtoull(s, &end, 10);
-        if (end!=s) {
-          out.insert(std::make_pair((const Instruction*) value, line));
+        if (end != s) {
+          out.insert(std::make_pair((const Instruction *)value, line));
         }
         s = end;
       }
     }
   }
 }
-
 
 } //end of namespace

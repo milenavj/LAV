@@ -15,14 +15,14 @@ include $(LLVM_SRC_ROOT)/Makefile.rules
 
 CXX.Flags += -DLLVM_23
 CXX.Flags += -DNDEBUG
-CXX.Flags += -std=c++11
+
 
 #FIXME: ovo je dodato zbog expression-a ... 
 CXX.Flags += -fexceptions
 CXX.Flags += -D__GNUCPP__
 CXX.Flags += -Wno-deprecated
 ifeq ($(ENABLE_Z3), 1)
-	CXX.Flags += -fopenmp 
+	CXX.Flags += -fopenmp
 	LIBS += -lrt
 endif
 
@@ -32,3 +32,5 @@ clean::
 	rm -rf *.o *.d *~ *.a 
 	rm -rf Release 
 	rm -rf Debug 
+	rm -rf Release+Asserts
+

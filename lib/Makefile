@@ -9,6 +9,6 @@
 
 LEVEL=..
 
-PARALLEL_DIRS=Expression Misc Core Transformation Solvers TestLAV Threads
+PARALLEL_DIRS=Expression Misc Core Transformation Solvers TestLAV 
 
 include $(LEVEL)/Makefile.common

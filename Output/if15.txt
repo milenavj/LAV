@@ -1,3 +1,0 @@
- line: 32   FLAWED
- line: 40   FLAWED
- line: 48   SAFE 

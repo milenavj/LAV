@@ -1,4 +1,0 @@
- line: 7   SAFE 
- line: 8   SAFE 
- line: 13   SAFE 
- line: 14   UNSAFE 

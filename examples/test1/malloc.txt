@@ -1,4 +1,0 @@
- line: 10   SAFE 
- line: 12   SAFE 
- line: 12   SAFE 
- line: 13   FLAWED

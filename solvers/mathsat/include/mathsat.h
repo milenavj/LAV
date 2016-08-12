@@ -33,7 +33,9 @@ extern "C" {
 /**
  * \brief MathSAT environment.
  */
-typedef struct msat_env { void *repr; } msat_env;
+typedef struct msat_env {
+  void *repr;
+} msat_env;
 
 /**
  * \brief MathSAT TCC environment.
@@ -42,7 +44,9 @@ typedef struct msat_env { void *repr; } msat_env;
  * BDDs and SMT Solvers" by R.Cavada, A.Cimatti, A.Franzen, K.Kalyanasundaram,
  * M.Roveri and R.K.Shyamasundar for details about a TCC solver.
  */
-typedef struct msat_tcc_env { void *repr; } msat_tcc_env;
+typedef struct msat_tcc_env {
+  void *repr;
+} msat_tcc_env;
 
 /**
  * \brief MathSAT term.
@@ -51,14 +55,18 @@ typedef struct msat_tcc_env { void *repr; } msat_tcc_env;
  * combination of those. It is the basic block of MathSAT abstract syntax
  * trees.
  */
-typedef struct msat_term { void *repr; } msat_term;
+typedef struct msat_term {
+  void *repr;
+} msat_term;
 
 /**
  * \brief MathSAT declaration.
  *
  * Declaration of variables and uninterpreted functions/predicates.
  */
-typedef struct msat_decl { void *repr; } msat_decl;
+typedef struct msat_decl {
+  void *repr;
+} msat_decl;
 
 /**
  * \brief MathSAT model iterator.
@@ -68,8 +76,10 @@ typedef struct msat_decl { void *repr; } msat_decl;
  * Notice that sometimes MathSAT will not assign a model value to every
  * variable/function application in the formula: in this case, the missing
  * terms can be assigned any (legal) value.
- */ 
-typedef struct msat_model_iterator { void *repr; } msat_model_iterator;
+ */
+typedef struct msat_model_iterator {
+  void *repr;
+} msat_model_iterator;
 
 /**
  * \brief MathSAT data types.
@@ -79,14 +89,14 @@ typedef struct msat_model_iterator { void *repr; } msat_model_iterator;
  * NB: MSAT_BV is a set of types, not a single type.
  *     The actual types are MSAT_BV+N, where N is the number of bits
  *     in the bit-vector.
- *     
+ * 
  */
 enum {
-    MSAT_BOOL, /**< Boolean type. */
-    MSAT_U,    /**< Uninterpreted type. This is implicitly treated as INT. */
-    MSAT_INT,  /**< Integer type. */
-    MSAT_REAL, /**< Real (rational) type. */
-    MSAT_BV    /**< Bit-vector type class. */
+  MSAT_BOOL, /**< Boolean type. */
+  MSAT_U,    /**< Uninterpreted type. This is implicitly treated as INT. */
+  MSAT_INT,  /**< Integer type. */
+  MSAT_REAL, /**< Real (rational) type. */
+  MSAT_BV    /**< Bit-vector type class. */
 };
 
 typedef unsigned msat_type;
@@ -96,47 +106,47 @@ typedef unsigned msat_type;
  *
  * Basic theories supported by MathSAT. In addition to these, combinations of
  * MSAT_UF with any of the others is allowed.
- */ 
+ */
 typedef enum {
-    MSAT_UF,    /**< Equality and Uninterpreted Functions. */
-    MSAT_IDL,   /**< Integer Difference Logic. */
-    MSAT_RDL,   /**< Real Difference Logic. */
-    MSAT_LIA,   /**< Integer Linear Arithmetic. */
-    MSAT_LRA,   /**< Real Linear Arithmetic. */
-    MSAT_WORD,  /**< Bit-vectors. */
-    MSAT_UTVPI  /**< Unit-Two-Variable-Per-Inequality Logic
-                 *   (both Integers and Reals). */    
+  MSAT_UF,   /**< Equality and Uninterpreted Functions. */
+  MSAT_IDL,  /**< Integer Difference Logic. */
+  MSAT_RDL,  /**< Real Difference Logic. */
+  MSAT_LIA,  /**< Integer Linear Arithmetic. */
+  MSAT_LRA,  /**< Real Linear Arithmetic. */
+  MSAT_WORD, /**< Bit-vectors. */
+  MSAT_UTVPI /**< Unit-Two-Variable-Per-Inequality Logic
+              *   (both Integers and Reals). */
 } msat_theory;
 
 /**
  * Available methods for handling combined theories.
  */
 typedef enum {
-    MSAT_COMB_NONE, /**< Do not use any theory combination (or pick the
-                     * default combination for the enabled theories). */
-    MSAT_COMB_ACK,  /**< Remove uninterpreted functions/predicates with
-                     * Ackermann's expansion. */
-    MSAT_COMB_DTC   /**< Use Delayed Theory Combination. */
+  MSAT_COMB_NONE,
+  /**< Do not use any theory combination (or pick the
+   * default combination for the enabled theories). */
+  MSAT_COMB_ACK, /**< Remove uninterpreted functions/predicates with
+                  * Ackermann's expansion. */
+  MSAT_COMB_DTC /**< Use Delayed Theory Combination. */
 } msat_theory_combination;
 
 /**
  * MathSAT result.
- */ 
+ */
 typedef enum {
-    MSAT_UNKNOWN = -1, /**< Unknown. */
-    MSAT_UNSAT,        /**< Unsatisfiable. */
-    MSAT_SAT           /**< Satisfiable. */
+  MSAT_UNKNOWN = -1, /**< Unknown. */
+  MSAT_UNSAT,        /**< Unsatisfiable. */
+  MSAT_SAT           /**< Satisfiable. */
 } msat_result;
 
 /**
  * MathSAT truth value.
  */
 typedef enum {
-    MSAT_UNDEF = -1,  /**< Undefined/unknown. */
-    MSAT_FALSE,       /**< False. */
-    MSAT_TRUE         /**< True. */
+  MSAT_UNDEF = -1, /**< Undefined/unknown. */
+  MSAT_FALSE,      /**< False. */
+  MSAT_TRUE        /**< True. */
 } msat_truth_value;
-
 
 /**
  * \brief Callback function to be notified about models found by ::msat_all_sat
@@ -150,7 +160,6 @@ typedef enum {
  */
 typedef void (*msat_all_sat_model_callback)(msat_term *model, int size,
                                             void *user_data);
-
 
 #ifndef SWIG /* avoid exposing macros when wrapping with SWIG */
 
@@ -185,12 +194,11 @@ typedef void (*msat_all_sat_model_callback)(msat_term *model, int size,
 
 #endif /* SWIG */
 
-
 /**
  * \brief Gets the current MathSAT version.
  * \return A version string, with version information about MathSAT, the GMP
  *         library and the compiler used.
- */ 
+ */
 const char *msat_get_version(void);
 
 /**
@@ -198,9 +206,7 @@ const char *msat_get_version(void);
  */
 void msat_set_verbosity(int level);
 
-
 /*@}*/ /* end of datatypes and special values group */
-
 
 /**
  * \name Environment creation
@@ -243,7 +249,7 @@ void msat_reset_env(msat_env e);
 /**
  * \brief Destroys an environment.
  * \param e The environment to destroy.
- */ 
+ */
 void msat_destroy_env(msat_env e);
 
 /**
@@ -389,7 +395,7 @@ msat_term msat_make_equal(msat_env e, msat_term t1, msat_term t2);
  * \brief Returns an atom representing (t1 < t2).
  *
  * The arguments must have the same type. The exception is for integer
- * numbers, which can be casted to ::MSAT_REAL if necessary. 
+ * numbers, which can be casted to ::MSAT_REAL if necessary.
  * 
  * \param e The environment of the definition
  * \param t1 The first argument. Must be of type ::MSAT_REAL or ::MSAT_INT
@@ -403,7 +409,7 @@ msat_term msat_make_lt(msat_env e, msat_term t1, msat_term t2);
  * \brief Returns an atom representing (t1 > t2).
  *
  * The arguments must have the same type. The exception is for integer
- * numbers, which can be casted to ::MSAT_REAL if necessary. 
+ * numbers, which can be casted to ::MSAT_REAL if necessary.
  * 
  * \param e The environment of the definition
  * \param t1 The first argument. Must be of type ::MSAT_REAL or ::MSAT_INT
@@ -417,7 +423,7 @@ msat_term msat_make_gt(msat_env e, msat_term t1, msat_term t2);
  * \brief Returns an atom representing (t1 <= t2).
  *
  * The arguments must have the same type. The exception is for integer
- * numbers, which can be casted to ::MSAT_REAL if necessary. 
+ * numbers, which can be casted to ::MSAT_REAL if necessary.
  * 
  * \param e The environment of the definition
  * \param t1 The first argument. Must be of type ::MSAT_REAL or ::MSAT_INT
@@ -431,7 +437,7 @@ msat_term msat_make_leq(msat_env e, msat_term t1, msat_term t2);
  * \brief Returns an atom representing (t1 >= t2).
  *
  * The arguments must have the same type. The exception is for integer
- * numbers, which can be casted to ::MSAT_REAL if necessary. 
+ * numbers, which can be casted to ::MSAT_REAL if necessary.
  * 
  * \param e The environment of the definition
  * \param t1 The first argument. Must be of type ::MSAT_REAL or ::MSAT_INT
@@ -445,7 +451,7 @@ msat_term msat_make_geq(msat_env e, msat_term t1, msat_term t2);
  * \brief Returns an expression representing (t1 + t2).
  *
  * The arguments must have the same type. The exception is for integer
- * numbers, which can be casted to ::MSAT_REAL if necessary. 
+ * numbers, which can be casted to ::MSAT_REAL if necessary.
  * 
  * \param e The environment of the definition
  * \param t1 The first argument. Must be of type ::MSAT_REAL or ::MSAT_INT
@@ -459,7 +465,7 @@ msat_term msat_make_plus(msat_env e, msat_term t1, msat_term t2);
  * \brief Returns an expression representing (t1 - t2).
  *
  * The arguments must have the same type. The exception is for integer
- * numbers, which can be casted to ::MSAT_REAL if necessary. 
+ * numbers, which can be casted to ::MSAT_REAL if necessary.
  * 
  * \param e The environment of the definition
  * \param t1 The first argument. Must be of type ::MSAT_REAL or ::MSAT_INT
@@ -564,8 +570,8 @@ msat_term msat_make_bv_concat(msat_env e, msat_term t1, msat_term t2);
  * \return The term t[msb:lsb], or a t s.t. ::MSAT_ERROR_TERM(t) is true
  *         in case of errors.
  */
-msat_term msat_make_bv_select(msat_env e, msat_term t,
-                              const unsigned msb, const unsigned lsb);
+msat_term msat_make_bv_select(msat_env e, msat_term t, const unsigned msb,
+                              const unsigned lsb);
 
 /**
  * \brief Returns a term representing the bit-wise OR of t1 and t2.
@@ -962,7 +968,6 @@ msat_term msat_from_foci(msat_env e, const char *data);
  */
 msat_term msat_from_foci_file(msat_env e, FILE *f);
 
-
 /**
  * \brief Converts the given \a term to msat format
  *
@@ -971,7 +976,7 @@ msat_term msat_from_foci_file(msat_env e, FILE *f);
  * \return a string in msat format for the formula represented by \a term,
  *         or NULL in case of errors. If not NULL, the returned string is
  *         allocated with malloc, and must be free'd by the user.
- */ 
+ */
 char *msat_to_msat(msat_env e, msat_term term);
 
 /**
@@ -982,7 +987,7 @@ char *msat_to_msat(msat_env e, msat_term term);
  * \return a string in SMT-LIB format for the formula represented by \a term,
  *         or NULL in case of errors. If not NULL, the returned string is
  *         allocated with malloc, and must be free'd by the user.
- */ 
+ */
 char *msat_to_smtlib(msat_env e, msat_term term);
 
 /*@}*/ /* end of term creation group */
@@ -999,21 +1004,21 @@ char *msat_to_smtlib(msat_env e, msat_term term);
  * which \a t was defined. Therefore, it can be used to test two terms for
  * equality, as well as a hash value.
  *
- * \param t A term. 
+ * \param t A term.
  * \return a unique (within the defining env) numeric identifier
  */
 int msat_term_id(msat_term t);
 
 /**
  * \brief Returns the arity of \a t
- * \param t A term. 
+ * \param t A term.
  * \return The number of arguments of \a t
  */
 int msat_term_arity(msat_term t);
 
 /**
  * \brief Returns the nth argument of \a t
- * \param t A term. 
+ * \param t A term.
  * \param n The index of the argument. Must be lower than the arity of \a t
  * \return The nth argument of arguments of \a t
  */
@@ -1021,35 +1026,35 @@ msat_term msat_term_get_arg(msat_term t, int n);
 
 /**
  * \brief Returns the type of \a t
- * \param t A term. 
+ * \param t A term.
  * \return The type of \a t
  */
 msat_type msat_term_get_type(msat_term t);
 
 /**
  * \brief Checks whether \a t is the TRUE term
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is TRUE
  */
 int msat_term_is_true(msat_term t);
 
 /**
  * \brief Checks whether \a t is the FALSE term
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is FALSE
  */
 int msat_term_is_false(msat_term t);
 
 /**
  * \brief Checks whether \a t is a boolean variable
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a variable of type ::MSAT_BOOL
  */
 int msat_term_is_boolean_var(msat_term t);
 
 /**
  * \brief Checks whether \a t is an atom
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is an atom, i.e. either a boolean variable or
  *         a relation between terms
  */
@@ -1057,329 +1062,329 @@ int msat_term_is_atom(msat_term t);
 
 /**
  * \brief Checks whether \a t is a number
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a number
  */
 int msat_term_is_number(msat_term t);
 
 /**
  * \brief Checks whether \a t is an AND
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is an AND
  */
 int msat_term_is_and(msat_term t);
 
 /**
  * \brief Checks whether \a t is an OR
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is an OR
  */
 int msat_term_is_or(msat_term t);
 
 /**
  * \brief Checks whether \a t is a NOT
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a NOT
  */
 int msat_term_is_not(msat_term t);
 
 /**
  * \brief Checks whether \a t is an equivalence between boolean terms
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is an IFF
  */
 int msat_term_is_iff(msat_term t);
 
 /**
  * \brief Checks whether \a t is an implication
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is an implication
  */
 int msat_term_is_implies(msat_term t);
 
 /**
  * \brief Checks whether \a t is an XOR
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is an XOR
  */
 int msat_term_is_xor(msat_term t);
 
 /**
  * \brief Checks whether \a t is a boolean if-then-else
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a boolean if-then-else
  */
 int msat_term_is_bool_ite(msat_term t);
 
 /**
  * \brief Checks whether \a t is a term if-then-else
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a term if-then-else
  */
 int msat_term_is_term_ite(msat_term t);
 
 /**
  * \brief Checks whether \a t is a variable
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a variable
  */
 int msat_term_is_variable(msat_term t);
 
 /**
  * \brief Checks whether \a t is an uninterpreted function call
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a uif call
  */
 int msat_term_is_uif(msat_term t);
 
 /**
  * \brief Checks whether \a t is an equality
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is an equality atom
  */
 int msat_term_is_equal(msat_term t);
 
 /**
  * \brief Checks whether \a t is a (t1 < t2) atom
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a (t1 < t2) atom
  */
 int msat_term_is_lt(msat_term t);
 
 /**
  * \brief Checks whether \a t is a (t1 <= t2) atom
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a (t1 <= t2) atom
  */
 int msat_term_is_leq(msat_term t);
 
 /**
  * \brief Checks whether \a t is a (t1 > t2) atom
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a (t1 > t2) atom
  */
 int msat_term_is_gt(msat_term t);
 
 /**
  * \brief Checks whether \a t is a (t1 >= t2) atom
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a (t1 >= t2) atom
  */
 int msat_term_is_geq(msat_term t);
 
 /**
  * \brief Checks whether \a t is a (t1 + t2) expression
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a (t1 + t2) expression
  */
 int msat_term_is_plus(msat_term t);
 
 /**
  * \brief Checks whether \a t is a (t1 - t2) expression
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a (t1 - t2) expression
  */
 int msat_term_is_minus(msat_term t);
 
 /**
  * \brief Checks whether \a t is a (t1 * t2) expression
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a (t1 * t2) expression
  */
 int msat_term_is_times(msat_term t);
 
 /**
  * \brief Checks whether \a t is a (- t1) expression
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a (- t1) expression
  */
 int msat_term_is_negate(msat_term t);
 
 /**
  * \brief Checks whether \a t is a concatenation
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a concatenation
  */
 int msat_term_is_bv_concat(msat_term t);
 
 /**
  * \brief Checks whether \a t is a selection
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a selection
  */
 int msat_term_is_bv_select(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-wise or
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-wise or
  */
 int msat_term_is_bv_or(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-wise xor
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-wise xor
  */
 int msat_term_is_bv_xor(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-wise and
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-wise and
  */
 int msat_term_is_bv_and(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-wise not
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-wise not
  */
 int msat_term_is_bv_not(msat_term t);
 
 /**
  * \brief Checks whether \a t is a logical shift left
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a logical shift left
  */
 int msat_term_is_bv_lsl(msat_term t);
 
 /**
  * \brief Checks whether \a t is a logical shift right
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a logical shift right
  */
 int msat_term_is_bv_lsr(msat_term t);
 
 /**
  * \brief Checks whether \a t is an arithmetic shift right
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is an arithmetic shift right
  */
 int msat_term_is_bv_asr(msat_term t);
 
 /**
  * \brief Checks whether \a t is a zero extension
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a zero enxtension
  */
 int msat_term_is_bv_zext(msat_term t);
 
 /**
  * \brief Checks whether \a t is a sign extension
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a sign extension
  */
 int msat_term_is_bv_sext(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-vector addition
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-vector addition
  */
 int msat_term_is_bv_plus(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-vector subtraction
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-vector subtraction
  */
 int msat_term_is_bv_minus(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-vector multiplication
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-vector multiplication
  */
 int msat_term_is_bv_times(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-vector unsigned division
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-vector unsigned division
  */
 int msat_term_is_bv_udiv(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-vector unsigned remainder
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-vector unsigned remainder
  */
 int msat_term_is_bv_urem(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-vector signed division
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-vector signed division
  */
 int msat_term_is_bv_sdiv(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-vector signed remainder
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-vector signed remainder
  */
 int msat_term_is_bv_srem(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-vector signed modulo
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-vector signed modulo
  */
 int msat_term_is_bv_smod(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-vector unsigned <
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-vector unsigned <
  */
 int msat_term_is_bv_ult(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-vector unsigned <=
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-vector unsigned <=
  */
 int msat_term_is_bv_uleq(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-vector unsigned >
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-vector unsigned >
  */
 int msat_term_is_bv_ugt(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-vector unsigned >=
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-vector unsigned >=
  */
 int msat_term_is_bv_ugeq(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-vector signed <
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-vector signed <
  */
 int msat_term_is_bv_slt(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-vector signed <=
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-vector signed <=
  */
 int msat_term_is_bv_sleq(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-vector signed >
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-vector signed >
  */
 int msat_term_is_bv_sgt(msat_term t);
 
 /**
  * \brief Checks whether \a t is a bit-vector signed >=
- * \param t A term. 
+ * \param t A term.
  * \return nonzero if \a t is a bit-vector signed >=
  */
 int msat_term_is_bv_sgeq(msat_term t);
@@ -1588,7 +1593,7 @@ int msat_all_sat(msat_env e, msat_term *important, int num_important,
  *
  * If the last call to ::msat_solve returned a ::MSAT_SAT result, a model
  * for the formula is built. This function can be used to retrieve the model
- * values for variables and uninterpreted function instances. 
+ * values for variables and uninterpreted function instances.
  *
  * \param e The environment in use
  * \param term The variable or function call of interest. If \a term is not a
@@ -1650,13 +1655,12 @@ int msat_get_theory_lemmas(msat_env e, msat_term **out);
  *
  * In order for this to work, interpolation support must be enabled in the
  * environment (by calling ::msat_init_interpolation).
- *        
+ * 
  * \param e The environment in which to operate.
  * \return An unsatisfiable core of the problem, or a term t s.t.
  *         MSAT_ERROR_TERM(t) is true in case of errors.
  */
 msat_term msat_get_unsat_core(msat_env e);
-
 
 /*@}*/ /* end of Problem solving group */
 
@@ -1671,7 +1675,7 @@ msat_term msat_get_unsat_core(msat_env e);
  * 
  * \param e The environment which will provide terms to this TCC env.
  * \param non_chrono_backtracking If nonzero, allow non-chronological
- *        backtracking (a.k.a. backjumping) 
+ *        backtracking (a.k.a. backjumping)
  * \return A new TCC environment.
  */
 msat_tcc_env msat_create_tcc_env(msat_env e, int non_chrono_backtracking);
@@ -1679,7 +1683,7 @@ msat_tcc_env msat_create_tcc_env(msat_env e, int non_chrono_backtracking);
 /**
  * \brief Destroys a TCC environment.
  * \param e The TCC environment to destroy.
- */ 
+ */
 void msat_destroy_tcc_env(msat_tcc_env e);
 
 /**
@@ -1764,7 +1768,7 @@ void msat_tcc_undo_all(msat_tcc_env e);
  *                consistency.
  * \return ::MSAT_UNSAT if the TCC env is known to be inconsistent, ::MSAT_SAT
  *         otherwise.
- */ 
+ */
 msat_result msat_tcc_check(msat_tcc_env e, int approx, msat_term *to_undo);
 
 /**
@@ -1795,14 +1799,13 @@ msat_truth_value msat_tcc_get_value(msat_tcc_env e, msat_term atom);
  */
 int msat_tcc_get_reason(msat_tcc_env e, msat_term atom, msat_term *reason);
 
-
 /**
  * \brief Checks whether there is any literal whose value is implied by the
  *        current assumptions (see ::msat_tcc_assume).
  *
  * \param e The TCC env.
  * \return The number of implied literals, or -1 on error.
- */ 
+ */
 int msat_tcc_has_implied(msat_tcc_env e);
 
 /**
@@ -1812,7 +1815,7 @@ int msat_tcc_has_implied(msat_tcc_env e);
  * \param e The TCC env.
  * \param implied An array to store the implied literals. If not NULL, it is
  *        assumed that it is long enough to contain all the values (see
- *        ::msat_tcc_has_implied). 
+ *        ::msat_tcc_has_implied).
  * \return The number of implied literals, or -1 on error.
  */
 int msat_tcc_get_implied(msat_tcc_env e, msat_term *implied);
@@ -1854,8 +1857,6 @@ msat_result msat_tcc_solve(msat_tcc_env e, msat_term *to_undo);
  */
 int msat_tcc_all_sat(msat_tcc_env e, msat_term *important, int num_important,
                      msat_all_sat_model_callback func, void *user_data);
-
-
 
 /*@}*/ /* end of TCC interface group */
 
@@ -1901,7 +1902,7 @@ int msat_create_itp_group(msat_env e);
  * \param group The group. Must have been previously created with
  *        ::msat_create_itp_group.
  * \return zero on success, nonzero on error.
- */ 
+ */
 int msat_set_itp_group(msat_env e, int group);
 
 /**

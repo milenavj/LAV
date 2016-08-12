@@ -13,24 +13,22 @@
 #include "lav/Internal/LTypes.h"
 
 #include <vector>
-namespace lav{
+namespace lav {
 
-class LConstraints
-{
+class LConstraints {
 public:
-  inline void Add          (caExp& e) {_Constraints.push_back(e);}
-  inline void clear        () {_Constraints.clear();}
-  aExp        Constraint    () const;
-  void        Print        () const;
-  void AddConstraint       (caExp& e, unsigned left, unsigned right);
-  void AddAddressConstraint(long long& currentAddress, caExp& e, int inc);
+  inline void Add(caExp &e) { _Constraints.push_back(e); }
+  inline void clear() { _Constraints.clear(); }
+  aExp Constraint() const;
+  void Print() const;
+  void AddConstraint(caExp &e, unsigned left, unsigned right);
+  void AddAddressConstraint(long long &currentAddress, caExp &e, int inc);
 
-private: 
+private:
   std::vector<aExp> _Constraints;
 
 };
 
 }
-
 
 #endif

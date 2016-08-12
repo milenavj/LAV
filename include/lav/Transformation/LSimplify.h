@@ -12,8 +12,6 @@
 
 #include "llvm/Analysis/Passes.h"
 
-namespace lav {
-llvm::Pass *createFCFGSimplificationPass();
-}  
+namespace lav { llvm::Pass *createFCFGSimplificationPass(); }
 
 #endif

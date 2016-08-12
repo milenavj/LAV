@@ -13,7 +13,7 @@
 LEVEL=../..
 
 PARALLEL_DIRS=
-USEDLIBS = misc.a expression.a solvers.a threads.a
+USEDLIBS = misc.a expression.a solvers.a
 LIBRARYNAME=core
 BUILD_ARCHIVE=1
 
@@ -21,6 +21,10 @@ include $(LEVEL)/Makefile.common
 
 ifeq ($(ENABLE_Z3), 1)
         CXX.Flags += -I$(PROJ_SRC_ROOT)/solvers/z3/include
+endif
+
+ifeq ($(ENABLE_BOOLECTOR_OLD), 1)
+        CXX.Flags += -I$(PROJ_SRC_ROOT)/solvers/boolector_old/include
 endif
 
 ifeq ($(ENABLE_BOOLECTOR), 1)
@@ -34,3 +38,5 @@ endif
 ifeq ($(ENABLE_MATHSAT), 1)
         CXX.Flags += -I$(PROJ_SRC_ROOT)/solvers/mathsat/include
 endif
+
+

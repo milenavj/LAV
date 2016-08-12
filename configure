@@ -612,6 +612,7 @@ RANLIB
 ENABLE_Z3
 ENABLE_MATHSAT
 ENABLE_BOOLECTOR
+ENABLE_BOOLECTOR_OLD
 ENABLE_YICES
 CPP
 ac_ct_CC
@@ -670,6 +671,7 @@ enable_option_checking
 with_llvm
 enable_yices
 enable_boolector
+enable_boolector_old
 enable_mathsat
 enable_z3
 '
@@ -1299,6 +1301,7 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-yices          enable YICES solver
   --enable-boolector      enable BOOLECTOR solver
+  --enable-boolector-old  enable BOOLECTOR_OLD solver
   --enable-mathsat        enable MATHSAT solver
   --enable-z3             enable Z3 solver
 
@@ -3833,6 +3836,28 @@ else
        ENABLE_BOOLECTOR=0
 
 fi
+
+boolector_old=no
+# Check whether --enable-boolector-old was given.
+if test "${enable_boolector_old+set}" = set; then :
+  enableval=$enable_boolector_old; test "x$enableval" = "xyes" &&  boolector_old=yes
+fi
+
+if test "x${boolector_old}" = "xyes" ; then
+
+$as_echo "#define BOOLECTOR_OLD 1" >>confdefs.h
+
+       ENABLE_BOOLECTOR_OLD=1
+
+       echo "-------------------------------"
+       echo "---  BOOLECTOR_OLD enabled  ---"
+       echo "-------------------------------"
+else
+       ENABLE_BOOLECTOR_OLD=0
+
+fi
+
+
 
 mathsat=no
 # Check whether --enable-mathsat was given.

@@ -1,4 +1,5 @@
-//===-- InlineAll.cpp -----------------------------------------------------------===//
+//===-- InlineAll.cpp
+//-----------------------------------------------------------===//
 //
 //                     The LAV Software Verification Tool
 //
@@ -7,8 +8,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-
-#define DEBUG_TYPE "inline" 
+#define DEBUG_TYPE "inline"
 #include "llvm/IR/CallingConv.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
@@ -24,70 +24,70 @@
 
 using namespace llvm;
 
-
-
 namespace {
 
-  // AllInliner only inlines all functions .
+// AllInliner only inlines all functions .
 //  class VISIBILITY_HIDDEN AllInliner : public Inliner {
-    class AllInliner : public Inliner {
-    // Functions that are never inlined
-    SmallPtrSet<const Function*, 16> NeverInline; 
-    llvm::InlineCost CA;
-    static const int tresh = 1000000000;
-  public:
-    // Use extremely high threshold. 
-    //fixmeT true ili false???
-    AllInliner(int Threshold) : Inliner(ID, Threshold, true), CA(InlineCost::get(100,Threshold)) {}
+class AllInliner : public Inliner {
+  // Functions that are never inlined
+  SmallPtrSet<const Function *, 16> NeverInline;
+  llvm::InlineCost CA;
+  static const int tresh = 1000000000;
 
-    // Use extremely high threshold. 
-    AllInliner() : Inliner(ID, tresh, true), CA(InlineCost::get(100,tresh)) {}
-    static char ID; // Pass identification, replacement for typeid
+public:
+  // Use extremely high threshold.
+  //fixmeT true ili false???
+  AllInliner(int Threshold)
+      : Inliner(ID, Threshold, true), CA(InlineCost::get(100, Threshold)) {}
 
-//    InlineCost getInlineCost(CallSite CS) {
-//      return CA.getInlineCost(CS, NeverInline);
-//}
- 
-//fixmeT
-    InlineCost getInlineCost(CallSite CS) {
-      return InlineCost::get(CA.getCost(),getInlineThreshold(CS));
-    }
+  // Use extremely high threshold.
+  AllInliner() : Inliner(ID, tresh, true), CA(InlineCost::get(100, tresh)) {}
+  static char ID; // Pass identification, replacement for typeid
 
-//fixmeT
-//    float getInlineFudgeFactor(CallSite CS) {
-//      return CA.getInlineFudgeFactor(CS);
-//    }
+  //    InlineCost getInlineCost(CallSite CS) {
+  //      return CA.getInlineCost(CS, NeverInline);
+  //}
 
-//fixmeT
-    void resetCachedCostInfo(Function *Caller) {
-//      return 
-//		CA.resetCachedCostInfo(Caller);
-    }
-//fixmeT isto je hidden
-/*    virtual bool doFinalization(CallGraph &CG) { 
-      return removeDeadFunctions(CG, &NeverInline); 
-    }*/
-//fixmeT /home/novi/llvm/llvm-3.3.src/include/llvm/Pass.h:110:16: warning: ‘virtual bool llvm::Pass::doInitialization(llvm::Module&)’ was hidden [-Woverloaded-virtual]
+  //fixmeT
+  InlineCost getInlineCost(CallSite CS) {
+    return InlineCost::get(CA.getCost(), getInlineThreshold(CS));
+  }
 
-//    virtual bool doInitialization(CallGraph &CG);
-  };
+  //fixmeT
+  //    float getInlineFudgeFactor(CallSite CS) {
+  //      return CA.getInlineFudgeFactor(CS);
+  //    }
+
+  //fixmeT
+  void resetCachedCostInfo(Function *Caller) {
+    //      return
+    //		CA.resetCachedCostInfo(Caller);
+  }
+  //fixmeT isto je hidden
+  /*    virtual bool doFinalization(CallGraph &CG) {
+        return removeDeadFunctions(CG, &NeverInline);
+      }*/
+  //fixmeT /home/novi/llvm/llvm-3.3.src/include/llvm/Pass.h:110:16: warning:
+  //‘virtual bool llvm::Pass::doInitialization(llvm::Module&)’ was hidden
+  //[-Woverloaded-virtual]
+
+  //    virtual bool doInitialization(CallGraph &CG);
+};
 }
 
 char AllInliner::ID = 0;
-static RegisterPass<AllInliner>
-X("all-inline", "Inliner for functions");
+static RegisterPass<AllInliner> X("all-inline", "Inliner for functions");
 
-namespace lav{
+namespace lav {
 Pass *createAllInlinerPass() { return new AllInliner(); }
 Pass *createAllInlinerPass(int Threshold) { return new AllInliner(Threshold); }
 }
 
-
-// doInitialization - Initializes the vector of functions that have not 
+// doInitialization - Initializes the vector of functions that have not
 // been annotated with the "always inline" attribute.
 /*bool AllInliner::doInitialization(CallGraph &CG) {
   Module &M = CG.getModule();
- 
+
   for (Module::iterator I = M.begin(), E = M.end();
        I != E; ++I)
     if (!I->isDeclaration() && I->hasFnAttribute(Attribute::NoInline))

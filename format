@@ -1,0 +1,9 @@
+#!/bin/bash
+
+#if a subdirecotry is specfied, formats all files in that subdirectory
+#if a subdirectory is not specified, formats all files in the current directory 
+for f in $(find $1 -name '*.h' -or -name '*.hpp' -or -name '*.cpp' -or -name '*.c'); 
+    do echo "clang-format -i $f"
+    clang-format -i $f; 
+    done
+

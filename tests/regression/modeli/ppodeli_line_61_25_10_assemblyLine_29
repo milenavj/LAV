@@ -1,17 +1,19 @@
 function: main
 error: division_by_zero
-61: 25: 10: i = 1, j = 0, k = 5, l = 0, 
-59: i = 1, j = 0, k = 5, l = 0, 
-58: i = 0, j = 0, k = 5, l = 0, 
-54: i = 0, j = 0, k = 5, l = 0, 
-53: i = 0, j = 0, k = 5, l = 1, 
-50: i = 0, j = 0, k = 5, l = 1, 
-49: i = 0, j = 0, k = 5, l = 2, 
-46: i = 0, j = 0, k = 5, l = 2, 
-45: i = 0, j = 0, k = 5, l = 0, 
-42: i = 0, j = 0, k = 5, l = 3, 
-40: i = 0, j = 0, k = 5, l = 3, 
-38: i = 0, j = 0, k = 5, l = 3, 
+61: 25: 10: i = 4, j = 0, k = 5, l = 0, 
+58: i = 4, j = 0, k = 5, l = 0, 
+54: i = 4, j = 0, k = 5, l = 0, 
+53: i = 4, j = 0, k = 5, l = 1, 
+50: i = 4, j = 0, k = 5, l = 1, 
+49: i = 4, j = 0, k = 5, l = 2, 
+46: i = 4, j = 0, k = 5, l = 2, 
+45: i = 4, j = 0, k = 5, l = 0, 
+43: i = 4, j = 0, k = 5, l = 3, 
+42: i = 3, j = 0, k = 5, l = 3, 
+41: i = 3, j = 0, k = 5, l = 3, 
+40: i = 2, j = 0, k = 5, l = 3, 
+39: i = 2, j = 0, k = 5, l = 3, 
+38: i = 1, j = 0, k = 5, l = 3, 
 Function podeli is called at line no. 61
 In function podeli the trace is 
 25: 
@@ -50,5 +52,5 @@ In function podeli the trace is
 Function ppodeli is called at line no. 25
 In function ppodeli the trace is 
 61: 25: 10: 
-8: 
+8: r = 0, 
 

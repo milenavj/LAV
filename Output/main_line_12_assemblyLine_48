@@ -1,3 +1,0 @@
-function: main
-error: division_by_zero
-12: a = 3, add = 3, b = 0, c = -1, div = -1, div1 = -1, div2 = 1, div3 = -1, div4 = 3, div6 = 0, mul = -3, mul5 = 1, sub = 1, 

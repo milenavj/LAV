@@ -152,7 +152,8 @@ et=13
 directory="test1"
 print $et $directory $z3ack
 
-et=38
+#bilo je 38, sa novim boolectorom je oko 100
+et=100
 directory="small_sb"
 print $et $directory $boolector
 
@@ -421,4 +422,12 @@ print $et $directory $tf "-same-options"
 
 summary "17min 25s"
 
+fi
+
+
+if [[ $1 == [Rr][eE][Gg][Vv] ]] ; then
+et=200 
+cd RegressionVerification
+./runVerification
+cd ..
 fi

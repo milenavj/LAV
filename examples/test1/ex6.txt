@@ -1,7 +1,0 @@
- line: 5   UNSAFE 
- line: 7   UNSAFE 
- line: 15  line: 5   SAFE 
- line: 15  line: 7   SAFE 
- line: 16  line: 5   SAFE 
- line: 16  line: 7   SAFE 
- line: 18   SAFE 

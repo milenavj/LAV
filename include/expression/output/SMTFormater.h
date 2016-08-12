@@ -5,19 +5,16 @@
 
 namespace argo {
 
-class SMTFormater : public OutputFormater
-{
+class SMTFormater : public OutputFormater {
 public:
-     SMTFormater()
-	  : OutputFormater(SMT)
-     {}
+  SMTFormater() : OutputFormater(SMT) {}
 
-     virtual void PrintExpressionNode(ExpressionNode* _node, std::ostream& ostr);
-     virtual void PrintOperatorNode(OperatorNode* _node, std::ostream& ostr);
+  virtual void PrintExpressionNode(ExpressionNode *_node, std::ostream &ostr);
+  virtual void PrintOperatorNode(OperatorNode *_node, std::ostream &ostr);
 
 private:
-     std::string GetSymbol(ExpressionNode* e) const;
-     void PrintPrefix(std::ostream& ostr, OperatorNode* e);
+  std::string GetSymbol(ExpressionNode *e) const;
+  void PrintPrefix(std::ostream &ostr, OperatorNode *e);
 };
 
 extern SMTFormater _smt_formater;
