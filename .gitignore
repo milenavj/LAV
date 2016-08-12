@@ -1,6 +1,7 @@
 
 **/Release+Asserts/
 /solvers
+/examples
 
 config.status
 Makefile.config

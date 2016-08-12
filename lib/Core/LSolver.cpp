@@ -55,6 +55,7 @@ namespace {
 
 enum SolverType {
   BoolectorBV,
+  BoolectorBVEUF,
   Z3BV,
   Z3BVACK,
   Z3LA,
@@ -77,6 +78,13 @@ llvm::cl::opt<SolverType> solver(
         clEnumValN(BoolectorBV, "Boolector-BV-ARR-ACK",
                    "Boolector --- BitVectors & Arrays & Ackermanization"),
 #endif
+/*
+//TODO dodati export za uf u bv-expression-boolector.cpp
+#if defined(BOOLECTOR)
+        clEnumValN(BoolectorBVEUF, "Boolector-BV-ARR-EUF",
+                   "Boolector --- BitVectors & Arrays "),
+#endif
+*/
 #ifdef Z3
         clEnumValN(Z3LA, "Z3-LA-ARR-EUF", "Z3        --- Linear Arithmetic  & "
                                           "Arrays & Uninterpreted Functions"),
@@ -169,7 +177,7 @@ bool LSolver::isMathSAT() {
     return false;
 }
 bool LSolver::isBoolector() {
-  if (solver == BoolectorBV)
+  if (solver == BoolectorBV || solver == BoolectorBVEUF)
     return true;
   else
     return false;
@@ -1174,7 +1182,7 @@ LSolver::LSolver() {
 
   switch (solver) {
 #if defined(BOOLECTOR) || defined(BOOLECTOR_OLD)
-  case BoolectorBV:
+  case BoolectorBV: case BoolectorBVEUF:
     _Factory =
         LSolver::ExpFactory(new UrsaMajor::BVExpressionFactoryBoolector());
     _BV = true;
@@ -1415,6 +1423,7 @@ void LSolver::Prepare(caExp &a, caExp &b, aExp &abs_a, aExp &abs_b,
   case YicesBV:
   case MSLA:
   case MSBV:
+  case BoolectorBVEUF:
     PrepareNoAck(a, b, abs_a, abs_b, abs_neg_b);
     break;
   case BoolectorBV:
@@ -1441,7 +1450,7 @@ bool LSolver::Ackermannize() {
 }
 
 bool LSolver::HasArrays() {
-  if ((solver == Z3BVACK) || (solver == BoolectorBV) || (solver == Z3LAACK) ||
+  if ((solver == Z3BVACK) || (solver == BoolectorBV) || (solver == BoolectorBVEUF) || (solver == Z3LAACK) ||
       (solver == Z3BV) || (solver == Z3LA))
     return true;
   else

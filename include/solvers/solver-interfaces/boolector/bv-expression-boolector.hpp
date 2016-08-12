@@ -52,6 +52,12 @@ public:
     return BoolectorInstance::instance().getAssignment(_expr);
   }
 
+/*  virtual ExpressionImp *
+  uninterpretedFunction(const Function &fun,
+                        const std::vector<const ExpressionImp *> &args) {
+    size_t n = args.size();
+  }*/
+
   ExpressionImp *unsignedSymbolic(const std::string &name, size_t width) const {
     SOLVER_EXPR_TYPE exp = boolector_var(getSolver(), width, name.c_str());
     BoolectorInstance::instance().ExpToRelease(exp);
