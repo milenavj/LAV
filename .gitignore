@@ -3,6 +3,8 @@
 /solvers
 
 config.status
+Makefile.config
+include/config.h
 
 **/*.log
 **/*.o
