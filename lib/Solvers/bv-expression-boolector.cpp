@@ -1,6 +1,6 @@
-#if defined(BOOLECTOR) || defined(BOOLECTOR_OLD)
-
 #include "config.h"
+
+#if defined(BOOLECTOR) || defined(BOOLECTOR_OLD)
 
 #include "solvers/solver-interfaces/boolector/bv-expression-boolector.hpp"
 
