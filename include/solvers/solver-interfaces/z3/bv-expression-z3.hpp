@@ -140,15 +140,6 @@ public:
                         const std::vector<const ExpressionImp *> &args) {
     size_t n = args.size();
 
-    //ako bi bilo static, onda prilikom resetovanja ovde ostane u registru i
-    //onda ili pukne program jer se na adresi z3_func_decl nalazi nesto bezveze
-    //ili ne pukne jer tu bude neka sasvim deseta funkcija, ali svakako bude
-    //neka greska problem je sto ako nema resetovanja izmedju, sta onda???!??
-    //isto i za bitvektore ali problem je i ako u jednoj formuli ima njih
-    //puno, svaki put se pravi nova deklaracija??
-
-    //static
-    //    std::map<std::string, Z3_func_decl> _uf_registry;
     Z3_func_decl f;
     if (_uf_registry.find(fun.getName()) == _uf_registry.end()) {
       Z3_sort *domain_types = new Z3_sort[n + 1];
