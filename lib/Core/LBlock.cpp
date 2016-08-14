@@ -50,6 +50,7 @@
 
 #include "lav/Threads/FixedQueue.h"
 #include "lav/Threads/ThreadPool.h"
+
 using namespace ThreadSafe;
 using namespace Utils;
 
@@ -60,7 +61,6 @@ llvm::cl::opt<bool> CalculateBlock(
     llvm::cl::desc("LAV --- Check in one solver call all conditions inside one "
                    "block (default = false)"),
     llvm::cl::init(false));
-
 llvm::cl::opt<int> NumberThreads(
     "number-threads",
     llvm::cl::desc(
@@ -118,6 +118,8 @@ std::ostream &LLocalCondition::Print(std::ostream &ostr) const {
     ostr << "UNREACHABLE";
   else if (_Status == UNCHECKED)
     ostr << "UNCHECKED";
+  else if (_Status == BLOCK_UNKNOWN)
+    ostr << "BLOCK_UNKNOWN";
   else
     ostr << "???";
   ostr << std::endl;
@@ -249,7 +251,6 @@ void LBlock::ConnectFunctionConditions(LInstruction *fi, LFunction *ff) {
     for (unsigned m = 0; m < lc.size(); m++) {
 
       //proveravaju se oni uslovi koji nisu safe
-
       //    if((lc[m].Status()==UNSAFE) || (lc[m].Status()==UNCHECKED) ||
       // (lc[m].Status()==ERROR)) {
       if ((lc[m].Status() == UNSAFE) || (lc[m].Status() == ERROR)) {
@@ -261,7 +262,7 @@ void LBlock::ConnectFunctionConditions(LInstruction *fi, LFunction *ff) {
           b = 0;
         }
 
-        //FIXME ovde dodati mehanizam inkrementalnog dodavanja blokova funkcije
+        //TODO ovde dodati mehanizam inkrementalnog dodavanja blokova funkcije
         //u dokazivac
         aExp lhs2 = RenameExpressionVariables(lc[m].LHS(), ff->GetContext(),
                                               ff->GetFunctionName());
@@ -273,8 +274,6 @@ void LBlock::ConnectFunctionConditions(LInstruction *fi, LFunction *ff) {
         aExp lhs = aExp::AND(_State.Constraints(), lhs3);
         //pitanje je da li ovaj konstruktor kopije radi kako treba
         LInstruction *ffi = new LInstruction(*(lc[m].Instruction()));
-        //      ffi->Stack().push_back(fi);
-        //      ffi->Contexts().push_back(ff->GetContext());
         ffi->AddIntoStack(fi, ff->GetContext());
 
         //ovo je pitanje da li je bolje ovako
@@ -291,9 +290,9 @@ void LBlock::ConnectFunctionConditions(LInstruction *fi, LFunction *ff) {
         }
 
         //FIXME proveriti da li se ovde mozda ne dodaju funkcijske adrese i zato
-        //nastane greska posle!!!!!!!!
+        //nastane greska posle
         LLocalCondition newlc(lhs, rhs, ffi, lc[m].ErrorKind(), s);
-        //      LLocalCondition newlc(aExp::AND(lhs,
+        // LLocalCondition newlc(aExp::AND(lhs,
         // ff->GetFunctionConstraints()), rhs, ffi, lc[m].ErrorKind(), s);
         _LocalConditions.push_back(newlc);
       }
@@ -333,7 +332,7 @@ void LBlock::CalculateAssume() {
 
 }
 
-//FIXME
+// TODO
 // ovo bi verovatno moglo inteligentnije jer se ovako gubi mnogo informacija bez
 // potrebe - trebalo bi obeleziti samo sta ucestvuje u assume i to prespajati,
 // a ostalo nedirati
@@ -374,11 +373,11 @@ void LBlock::ChangeInitStore() {
     if (isAddress(iter->second.Value()->GetName())) {
       continue;
     }
-    //ne znam zasto sam ovo dodala???
+    //ne znam zasto sam ovo dodala
     if (isMalloc(iter->second.Value()->GetName())) {
       continue;
     }
-    //ne znam zasto sam ovo dodala???
+    //ne znam zasto sam ovo dodala
     if (isMalloc2(iter->second.Value()->GetName())) {
       continue;
     }
@@ -431,10 +430,10 @@ void LBlock::ChangeInitStore() {
 }
 
 bool LBlock::IsEntryBlock() const {
-  //FIXME uraditi smisleniju provery
-  if (_BBlock->hasName() && _BBlock->getName() == "entry")
+  if (&(GetParentFunction()->GetLLVMFunction()->getEntryBlock()) == _BBlock)
     return true;
-
+  //  if (_BBlock->hasName() && _BBlock->getName() == "entry")
+  //    return true;
   return false;
 }
 
@@ -490,14 +489,12 @@ int LBlock::stopWhenFound(const LInstruction *fi, STATUS s, bool count) {
 
   if (s == FLAWED ||
       (count && (GetFunctionName() == StartFunction) && (s == UNSAFE))) {
+
     std::string sFilename =
         OutputFolder + "/" + ExtractFileName(InputFile) + ".html";
-
     const LModule *parent = NULL;
-
     if (PrintHtml) {
-
-      const LModule *parent = GetParentModule();
+      parent = GetParentModule();
       const LFunction *function = GetParentFunction();
       parent->PrintHTMLHeader(sFilename);
       function->PrintHTMLHeader(sFilename);
@@ -539,8 +536,7 @@ void LBlock::ReCalculateConditions(int ex_size) {
   }
 
   //dodaje se uslovi ulaska u blok, ovo se dodaje samo temporary, bice dodato
-  //onda kada
-  //ovaj blok postane nekome prethodnik
+  //onda kada ovaj blok postane nekome prethodnik
   aExp e = AddAddresses(BlockEntry());
 
   for (unsigned i = ex_size; i < _LocalConditions.size(); i++) {
@@ -717,6 +713,9 @@ bool LBlock::QuickCalculate() {
   }
   if (!_DescriptionsCalculated)
     CalculateDescriptions();
+
+  //ako nema uslova i nema ni jedan blok posle ovoga, posao je zavrsen
+  //nema potrebe dodavati u solver prethodnike
   if ((_LocalConditions.size() == 0) && (_Jumps.size() == 0)) {
     _ConditionsCalculated = true;
     return true;
@@ -725,22 +724,16 @@ bool LBlock::QuickCalculate() {
   //ako imamo prethodnika koji nije u dokazivacu dodamo ga
   AddPredsConditionsIncremental();
 
-  //nije jasno zasto je ovo ovde a ne dole kao i kakve veze ima jumps.size zasto
-  //bez toga ne moze, a ne moze npr ovde:
+  //nije jasno zasto je bilo potrebno dodati prethodnike i u ovom slucaju
+  //tj zasto nije ostavljeno da se prethodnici dodaju kasnije
+  //tj zasto addpredscondinc ne ide posle ovog ifa, nego mora da ide pre
+  //ali bez tog dodavanja prethodnika ne moze, a ne moze npr ovde:
   //TestLAV -test -directory=lavEdu/04/04_3 -test-file=lav_parameters3
   //-same-options
-  //Error: CheckFiles 3: File name test3_3.c
-  //ExpectedOutput
-  // line: 7   UNSAFE
-  //LavOutput
-  //Error: CheckFiles 4: File name: test3_3.c
   if ((_LocalConditions.size() == 0)) {
     _ConditionsCalculated = true;
     return true;
   }
-
-  //ako imamo prethodnika koji nije u dokazivacu dodamo ga
-  //  AddPredsConditionsIncremental();
 
   if (SkipInsideLoop && !(HasMerged()))
     if (IsInsideLoop() && DoNotCalculate()) {
@@ -760,11 +753,10 @@ void LBlock::UpdateAddresses() {
 }
 
 void LBlock::UpdateAndSetAddresses() {
-  //moglo bi da se dodaju samo or-ovi da se nebi stvaralo djubre tipe 1=1 i 5=5
-  //i slicno
-  //adrese ne bi morale da se dodaju da je uvek jednakost, ali moze za malloc da
-  //bude or i onda
-  //to mora da se doda jer to ne moze da se zameni
+  //moglo bi da se dodaju samo or-ovi da se ne bi stvaralo djubre tipe 1=1 i 5=5
+  //i slicno adrese ne bi morale da se dodaju da je uvek jednakost, ali
+  //moze za malloc da bude or i onda to mora da se doda
+  //jer to ne moze da se zameni
   UpdateAddresses();
   LSolver::instance().SetAddresses(_Addresses);
 }
@@ -856,6 +848,8 @@ aExp LBlock::BlockEntry() const {
   return aExp::AND(GetEntryConditions(), Active());
 }
 
+//ako u istom bloku postoji vise koje su unsafe, on ce pronaci
+//samo jednu, a ostale ce verovatno biti obelezene kao safe
 void LBlock::CalculateConditionsBlock() {
   if (QuickCalculate())
     return;
@@ -875,7 +869,8 @@ void LBlock::CalculateConditionsBlock() {
 
   if (s != SAFE && FindFirstFlawed)
     for (unsigned i = 0; i < conds.size(); i++)
-      if (stopWhenFound(conds[i]->Instruction(), s, true) == -1)
+      if (stopWhenFound(conds[i]->Instruction(), conds[i]->Status(), true) ==
+          -1)
         exit(1);
 
   _ConditionsCalculated = true;
@@ -888,8 +883,6 @@ void LBlock::CalculateConditionsIncremental() {
     return;
   }
 
-  //std::cout<<"_LocalConditions.size()=" << _LocalConditions.size() <<
-  //std::endl;
   if (QuickCalculate())
     return;
 
@@ -920,7 +913,7 @@ void LBlock::CalculateConditionsIncremental() {
 
 }
 
-//izracunavaju se relevantne informacije za stor i uslovi za pojedine
+//izracunavaju se relevantne informacije za store i uslovi za pojedine
 //instrukcije
 void LBlock::SetState() {
 

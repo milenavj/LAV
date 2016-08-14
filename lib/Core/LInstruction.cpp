@@ -189,15 +189,17 @@ void LInstruction::PrintFlawedFoundHTML(std::ostream &f, STATUS s) const {
   if (s == SAFE)
     f << "<font color = \"#008080\">SAFE </font>";
   else if (s == FLAWED)
-    f << "<font color = red>FLAWED</font>";
+    f << "<font color = red> FLAWED </font>";
   else if (s == UNSAFE)
-    f << "<font color = brown>UNSAFE </font>";
+    f << "<font color = brown> UNSAFE </font>";
   else if (s == ERROR)
-    f << "<font color = red>ERROR </font>";
+    f << "<font color = red> ERROR </font>";
   else if (s == UNREACHABLE)
-    f << "<font color = orange>UNREACHABLE </font>";
+    f << "<font color = orange> UNREACHABLE </font>";
   else if (s == UNCHECKED)
-    f << "<font color = blue> UNCHECKED</font>";
+    f << "<font color = blue> UNCHECKED </font>";
+  else if (s == BLOCK_UNKNOWN)
+    f << "<font color = blue> BLOCK_UNKNOWN </font>";
   else
     f << "???";
   f << "</tt> </font ><br>" << std::endl;

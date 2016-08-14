@@ -20,7 +20,8 @@ typedef enum status {
   SAFE,
   UNSAFE,
   FLAWED,
-  UNREACHABLE
+  UNREACHABLE,
+  BLOCK_UNKNOWN
 } STATUS;
 typedef enum errkind {
   OTHER,

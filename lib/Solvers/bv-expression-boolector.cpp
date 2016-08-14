@@ -1,11 +1,11 @@
 #include "config.h"
 
-#ifdef BOOLECTOR
-
 #include "solvers/solver-interfaces/boolector/bv-expression-boolector.hpp"
 
 namespace UrsaMajor {
-std::map<std::string, SOLVER_EXPR_TYPE> BVExpressionImpBoolector::_uf_registry;
-} // namespace UrsaMajor
 
+#ifdef BOOLECTOR
+std::map<std::string, SOLVER_EXPR_TYPE> BVExpressionImpBoolector::_uf_registry;
 #endif
+
+} // namespace UrsaMajor

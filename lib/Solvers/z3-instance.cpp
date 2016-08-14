@@ -106,12 +106,11 @@ std::string display_symbol(Z3_context c, Z3_symbol s) {
 std::string display_ast(Z3_context c, Z3_ast v) {
   switch (Z3_get_ast_kind(c, v)) {
   case Z3_NUMERAL_AST: {
-    /*        Z3_sort t;
-            fprintf(out, Z3_get_numeral_string(c, v));
-            t = Z3_get_sort(c, v);
-            fprintf(out, ":");
-            display_sort(c, out, t);
-            */
+    /* Z3_sort t;
+       fprintf(out, Z3_get_numeral_string(c, v));
+       t = Z3_get_sort(c, v);
+       fprintf(out, ":");
+       display_sort(c, out, t); */
     return Z3_get_numeral_string(c, v);
     break;
   }
@@ -138,19 +137,14 @@ std::string display_ast(Z3_context c, Z3_ast v) {
     }
     return s;
   }
-  case Z3_QUANTIFIER_AST: {
-    return "quantifier";
-    ;
-  }
+  case Z3_QUANTIFIER_AST: { return "quantifier"; }
   default:
     return "unknown";
-    ;
   }
   return "#unknown";
 }
 
 std::string Z3Instance::getAssignment(Z3_ast expr, size_t width) {
-
   Z3_ast v = expr;
   Z3_eval(_ctx, _m, expr, &v);
   return display_ast(_ctx, v);
@@ -168,11 +162,9 @@ void error_handler(Z3_context c, Z3_error_code e) {
 
 Z3_context mk_context_custom(Z3_config cfg, Z3_error_handler err) {
   Z3_context ctx;
-
   Z3_set_param_value(cfg, "MODEL", "true");
   ctx = Z3_mk_context(cfg);
   Z3_set_error_handler(ctx, err);
-
   return ctx;
 }
 

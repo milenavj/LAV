@@ -53,6 +53,7 @@ public:
     return BoolectorInstance::instance().getAssignment(_expr);
   }
 
+#if defined(BOOLECTOR)
   BoolectorSort translateType(Type t) {
     static BoolectorSort bool_type = boolector_bool_sort(getSolver());
     BoolectorSort bv_type = boolector_bitvec_sort(getSolver(), t.getWidth());
@@ -66,12 +67,10 @@ public:
 
   static std::map<std::string, SOLVER_EXPR_TYPE> _uf_registry;
 
-#if defined(BOOLECTOR)
   virtual ExpressionImp *
   uninterpretedFunction(const Function &fun,
                         const std::vector<const ExpressionImp *> &args) {
     size_t n = args.size();
-
     BoolectorSort bs;
     SOLVER_EXPR_TYPE f;
 
@@ -89,7 +88,6 @@ public:
     }
 
     SOLVER_EXPR_TYPE *exps = new SOLVER_EXPR_TYPE[n + 1];
-
     std::vector<const ExpressionImp *>::const_iterator i;
     int k;
     for (i = args.begin(), k = 0; i != args.end(); i++, k++) {

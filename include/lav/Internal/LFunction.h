@@ -47,6 +47,7 @@ public:
   inline std::map<std::string, unsigned> &Addresses() { return _Addresses; }
   inline const std::vector<LBlock *> &GetBlocks() const { return _Blocks; }
   inline const llvm::Function *GetLLVMFunction() const { return _Function; }
+  inline llvm::Function *GetLLVMFunction() { return _Function; }
   inline const LModule *GetParentModule() const { return _Parent; }
   inline LModule *GetParentModule() { return _Parent; }
   inline const std::vector<llvm::Instruction *> &GetReturnInstructions() const {

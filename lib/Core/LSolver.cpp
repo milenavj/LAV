@@ -79,8 +79,9 @@ llvm::cl::opt<SolverType> solver(
                    "Boolector --- BitVectors & Arrays & Ackermanization"),
 #endif
 #if defined(BOOLECTOR)
-        clEnumValN(BoolectorBVEUF, "Boolector-BV-ARR-EUF",
-                   "Boolector --- BitVectors & Arrays "),
+        clEnumValN(
+            BoolectorBVEUF, "Boolector-BV-ARR-EUF",
+            "Boolector --- BitVectors & Arrays & Uninterpreted Functions"),
 #endif
 #ifdef Z3
         clEnumValN(Z3LA, "Z3-LA-ARR-EUF", "Z3        --- Linear Arithmetic  & "
@@ -310,12 +311,10 @@ int binarystring2signed(cStr &s) {
   return val;
 }
 
+//TODO prebacti negde drugde
 bool isTransformation(cStr &s) { return StartsWith(s, TRANSFORMATION); }
-
 bool isActive(cStr &s) { return StartsWith(s, ACTIVEBLOCK); }
-
 std::string cut(cStr &s, cStr &begin) { return s.substr(begin.size()); }
-
 std::string cutend(cStr &s, cStr &end) {
 
   if ((s.size() - end.size() - 1) > 0)
@@ -358,6 +357,7 @@ void LSolver::GetTransform(stUrsaExp &symbolTable, vStr &transforamtions) {
   }
 }
 
+//TODO prebaciti u dugu klasu
 void WriteHint(std::ostream &ostr, ERRKIND ErrKind) {
   ostr << std::endl;
   ostr << "-------------------------" << std::endl;
@@ -389,6 +389,7 @@ void WriteHint(std::ostream &ostr, ERRKIND ErrKind) {
 
 }
 
+//TODO prebaciti u klasu LBlock
 void WriteHeader(std::ostream &ostr, const LBlock *fb, ERRKIND erKind) {
   ostr << "function: " << fb->GetFunctionName() << std::endl
        << "error: " << sErrorKind(erKind) << std::endl;
@@ -397,6 +398,7 @@ void WriteHeader(std::ostream &ostr, const LBlock *fb, ERRKIND erKind) {
 
 void WriteLines(std::ostream &ostr, const LBlock *fb);
 
+//TODO prebaciti u klasu LInstruction
 void WriteLines(std::ostream &ostr, const LInstruction *fi) {
   if (fi == NULL)
     return;
@@ -405,6 +407,7 @@ void WriteLines(std::ostream &ostr, const LInstruction *fi) {
     ostr << v[j] << ": ";
 }
 
+//TODO prebaciti u klasu LBlock
 void WriteLines(std::ostream &ostr, const LBlock *fb) {
   if (fb == NULL)
     return;
@@ -413,6 +416,7 @@ void WriteLines(std::ostream &ostr, const LBlock *fb) {
     ostr << v[j] << ": ";
 }
 
+//TODO prebaciti u klasu LBlock, mozda
 void LSolver::WriteBlockInfo(std::ostream &ostr, stUrsaExp &symbolTable,
                              const LBlock *fb, const LInstruction *fi,
                              std::string s) {
@@ -447,10 +451,10 @@ void LSolver::WriteTrace(std::ostream &f, std::vector<unsigned> &prvi,
     WriteMergedBlocks(f, fb_tekuci, symbolTable, fb_limit);
     //Ovde bi trebalo odstampati vrednosti na kraju bloka, problem je ako
     //su tu mergovani drugi blokovi i onda se stampa vrednost na kraju
-    // svih tih blokova a ne na kraju ovog jednog bloka
+    //svih tih blokova a ne na kraju ovog jednog bloka
     //krpljenje da se ne ispise nikakva vrednost, opet je bolje nego da se
     //ispise pogresna vrednost, treba nesto smisliti
-    //    WriteBlockInfo(f, symbolTable, fb_tekuci);
+    //  WriteBlockInfo(f, symbolTable, fb_tekuci);
     WriteLines(f, fb_tekuci);
     bool nadjen = false;
     for (unsigned i = 0; i < drugi.size(); i++)
@@ -514,6 +518,7 @@ std::string contextString(const LInstruction *fi, unsigned context) {
           std::string(CONTEXT) + ItoS(context));
 }
 
+//TODO prebaciti u klasu LBlock
 void LSolver::WriteMergedBlocks(std::ostream &f, const LBlock *fb,
                                 stUrsaExp &symbolTable,
                                 const LBlock *fb_limit) {
@@ -532,7 +537,7 @@ void LSolver::WriteMergedBlocks(std::ostream &f, const LBlock *fb,
           continue;
         }
         if (!nadjen)
-          continue; //write 4
+          continue;
         WriteBlockInfo(f, symbolTable, merged[i]);
       } else
         WriteBlockInfo(f, symbolTable, merged[i]);
@@ -827,9 +832,7 @@ UrsaExp LSolver::ExportExpressionBV(caExp &e, stUrsaExp &symbolTable) {
         UrsaExp eu0 = UrsaExp::integerGround(0, width);
         return operands[0].ite(eu1, eu0, width);
       }
-
     }
-
     return operands[0].zext(e[1].GetValue().get_si());
   }
 
@@ -868,7 +871,7 @@ UrsaExp LSolver::ExportExpressionBV(caExp &e, stUrsaExp &symbolTable) {
     std::vector<UrsaMajor::TypedId> args;
     for (unsigned i = 0; i < operands.size(); i++) {
       //FIXME
-      //      args.push_back(UrsaMajor::TypedId(UrsaMajor::Type(BITVECTOR,
+      // args.push_back(UrsaMajor::TypedId(UrsaMajor::Type(BITVECTOR,
       // e[i].getIntWidth()), ItoS(i)));
       args.push_back(
           UrsaMajor::TypedId(UrsaMajor::Type(BITVECTOR, fint_type), ItoS(i)));
@@ -954,9 +957,7 @@ UrsaExp LSolver::GetAbstractASS(caExp &e) {
 
 UrsaExp LSolver::GetAbstractLA(caExp &e) {
   if (_AbstractLA.find(e) == _AbstractLA.end()) {
-    //FIXME ovo moze da bude nula e.getintwidth --- proveriti
     UrsaExp um = UrsaExp::signedSymbolic(GetNextVariable(), e.getIntWidth());
-    //  UrsaExp um = UrsaExp::signedSymbolic(GetNextVariable(), fint_type);
     _AbstractLA.insert(std::pair<aExp, UrsaExp>(e, um));
     return um;
   } else
@@ -971,8 +972,7 @@ UrsaExp LSolver::ExportExpressionLA(caExp &e, stUrsaExp &symbolTable) {
   if (e.IsBOT())
     return UrsaExp::booleanGround(false);
 
-  if (e.IsNumeral()) //FIXME ovo je bezveze
-      {
+  if (e.IsNumeral()) { //FIXME ovo je bezveze
     if (e.getIntWidth() == 1 && e.GetValue().get_si() == 0)
       return UrsaExp::booleanGround(false);
     if (e.getIntWidth() == 1 && e.GetValue().get_si() != 0)
@@ -1098,13 +1098,12 @@ UrsaExp LSolver::ExportExpressionLA(caExp &e, stUrsaExp &symbolTable) {
     return eu;
   }
 
-  //ovo ne sme da se izbrise ako nema euf jer je onda potrebna akermanizacija
-  //koja za ove funkcije nepostoji
-  /*  if (e.isMul() || e.isSdiv() || e.isUdiv() || e.isSrem()
-          || e.isUrem() || e.isBitAnd() || e.isBitOr() || e.isBitXor()
-          || e.isShiftL() || e.islShiftR() || e.isaShiftR())
-          return GetAbstractLA(e);
-  */
+  if (solver == Z3LAACK || solver == YicesLAACK || solver == MSLAACK) {
+    if (e.isMul() || e.isSdiv() || e.isUdiv() || e.isSrem() || e.isUrem() ||
+        e.isBitAnd() || e.isBitOr() || e.isBitXor() || e.isShiftL() ||
+        e.islShiftR() || e.isaShiftR())
+      return GetAbstractLA(e);
+  }
 
   if (e.isExtract()) {
     if (e[0].IsNumeral())
@@ -1137,26 +1136,23 @@ UrsaExp LSolver::ExportExpressionLA(caExp &e, stUrsaExp &symbolTable) {
         return operands[0].ite(eu1, eu0, width);
       }
     }
-
     return operands[0]; //ovo moze da pravi problem kod z3
   }
 
   if (e.IsFunction()) {
     std::vector<UrsaMajor::TypedId> args;
-    for (unsigned i = 0; i < operands.size(); i++) {
-      //FIXME
-      args.push_back(
-          UrsaMajor::TypedId(UrsaMajor::Type(UNSIGNED, fint_type), ItoS(i)));
+    for (unsigned i = 0; i < e.GetArity(); i++) {
+      args.push_back(UrsaMajor::TypedId(
+          UrsaMajor::Type(UNSIGNED, e[i].getIntWidth()), ItoS(i)));
     }
 
-    //FIXME
-    UrsaMajor::Function f(UrsaMajor::Type(UNSIGNED, fint_type), e.GetName(),
-                          args, 0);
+    UrsaMajor::Function f(UrsaMajor::Type(UNSIGNED, e.getIntWidth()),
+                          e.GetName(), args, 0);
     UrsaExp uf = UrsaExp::uninterpretedFunction(f, operands);
     return uf;
   }
   //ovde ne bi trebalo da moze da se dodje
-  assert(0);
+  assert(0 && "ExportExpressionLA!");
   return UrsaExp::booleanGround(true);
 
 }
@@ -1492,9 +1488,9 @@ bool LSolver::GetOut(SOLVERCONTEXT c, bool satnegb) {
   if (light)
     return true;
   //ako ne pratim unreachable, onda nam je sve jedno da li je safe
-  //ili unreachable
-  //ako pratimo unreachable, onda cemo uraditi i drugu proveru da bi znali da
-  //li je stvarno safe ili je mozda unreachable
+  //ili unreachable ako pratimo unreachable, onda cemo uraditi i
+  //drugu proveru da bi znali da li je stvarno safe ili je
+  //mozda unreachable
   if (!unreachable) {
     if (satnegb == false)
       return true;
@@ -1813,7 +1809,7 @@ STATUS LSolver::callSolverBlock(caExp &f, std::vector<LLocalCondition *> &conds,
       continue;
     }
     if (s == "0")
-      conds[i]->Status() = SAFE;
+      conds[i]->Status() = BLOCK_UNKNOWN;
     if (s == "1")
       conds[i]->Status() = UNSAFE;
   }
@@ -1955,7 +1951,6 @@ STATUS LSolver::callSolverIncremental(caExp &a, caExp &b, const LBlock *fb,
       return SAFE;
   }
 
-  std::cout << "Export(ab, exported_anb, ls, rs, impls)" << std::endl;
   if (Export(ab, exported_ab, ls, rs, impls) == false)
     return ERROR;
 
