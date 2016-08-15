@@ -73,7 +73,7 @@ public:
   void PrintHTMLHeader(cStr &sFilename) const;
 
   void Run();
-  void CalculateParallel();
+  void CalculateAllConditions();
   void AddFixedAddresses(LFunction *ff);
 
   aExp GetPostcondition();

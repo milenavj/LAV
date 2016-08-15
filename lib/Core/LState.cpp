@@ -52,9 +52,6 @@ extern llvm::cl::opt<bool> CheckAssert;
 
 namespace lav {
 
-llvm::cl::opt<bool> urm("urm", llvm::cl::desc("LAV --- urm (default=false)"),
-                        llvm::cl::init(false));
-
 llvm::Timer Branching("Branching time --- call solver light");
 
 static argo::SMTFormater SMTF;
@@ -256,12 +253,7 @@ void LState::ProcessFChange(LInstruction *fi, llvm::Function *f,
 void LState::ProcessFEnd(LInstruction *fi, llvm::Function *f,
                          unsigned numArgs) {
   aExp e = aExp::NOT(GetParentBlock()->Active());
-  //      aExp cond = aExp::NOT(aExp::Equality(ExpNumZeroInt,ExpNumZeroInt));
   aExp cond = ExpPropVar;
-  if (urm) {
-    GetParentBlock()->AddLocalCondition(cond, fi, OTHER);
-    //        _Constraints.Add(aExp::Equality(ExpNumZeroInt, ExpNumZeroInt));
-  }
   _Constraints.Add(e);
 }
 
@@ -283,8 +275,6 @@ void LState::ProcessFInc(LInstruction *fi, llvm::Function *f,
                      false);
     const aExp *curr_value = GetValue(name);
     _Constraints.Add(aExp::sge(e1, *curr_value));
-    if (urm)
-      _Constraints.Add(aExp::Equality(e1, aExp::add(*curr_value, k)));
     _Store.ChangeValue(name, new aExp(e1));
 
   }
@@ -2158,11 +2148,10 @@ void LState::Update(LInstruction *fi) {
 //ne moze zbog gettargetdata da se jednostavno izbaci iz bloka u common
 //FIXME pola toga je zbrljano ili preskoceno!!!
 aExp LState::evalConstantExpr(llvm::ConstantExpr *ce) {
-  std::cout << std::endl << std::endl << std::endl << std::endl << std::endl
-            << std::endl << std::endl << std::endl << std::endl << std::endl
-            << "evalConstantExpr ---------------------------------------"
-            << std::endl;
-  //std::cout << std::endl << "!!!!!!!!!!!!!!!ovde moze da je greska123:
+  /*  std::cout << std::endl << std::endl << std::endl << std::endl << std::endl
+              << std::endl << std::endl << std::endl << std::endl << std::endl
+              << "evalConstantExpr ---------------------------------------"
+              << std::endl;*/
   //evalConstantExpr \n" << *ce << std::endl ;
 
   //aExp op1=ExpZero, op2 = ExpZero, op3 = ExpZero;
@@ -2239,8 +2228,9 @@ aExp LState::evalConstantExpr(llvm::ConstantExpr *ce) {
     return PtrToInt(op1);
 
   case llvm::Instruction::GetElementPtr: {
-    std::cout << std::endl << std::endl << "evalConstantExpr ---- GetElementPtr"
-              << std::endl;
+    //    std::cout << std::endl << std::endl << "evalConstantExpr ----
+    // GetElementPtr"
+    //              << std::endl;
 
     //FIXME ovo je krpljevina i jako je sumnjivo
     if (llvm::dyn_cast<llvm::GlobalValue>(ce->getOperand(0)))
@@ -2346,7 +2336,7 @@ aExp LState::evalConstant(llvm::Constant *c) {
   aExp e = ExpNumZeroInt;
   if (c == NULL)
     return e;
-  llvm::outs() << "evalConstant " << *c << '\n';
+  //  llvm::outs() << "evalConstant " << *c << '\n';
   //_Store.Print(std::cout);
   if (llvm::ConstantExpr *ce = llvm::dyn_cast<llvm::ConstantExpr>(c)) {
     return evalConstantExpr(ce);

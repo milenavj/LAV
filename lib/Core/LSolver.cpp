@@ -146,6 +146,7 @@ namespace lav {
 static argo::SMTFormater SMTF;
 
 llvm::Timer IncrementalTime("Incremental Solving");
+llvm::Timer BlockIncrementalTime("Block Incremental Solving");
 llvm::Timer NonIncrementalTime("Non Incremental Solving");
 llvm::Timer AckermannizeTimer("Ackermannization");
 llvm::Timer GlobalAckermannizationTimer("Global Ackermannization");
@@ -1737,8 +1738,8 @@ Ako je formula zadovoljiva, onda je (not p1 or not p2 or not p3) tacno, recimo
 not p1 je tacno (ti pitas model za sva tri: p1, p2, p3), pa prva komanda nije
 safe. Ako je jos neki od not p2, not p3 tacno, onda ni ta komanda nije safe.*/
 
-STATUS LSolver::callSolverBlock(caExp &f, std::vector<LLocalCondition *> &conds,
-                                const LBlock *fb) {
+STATUS LSolver::callSolverBlock(caExp &f,
+                                std::vector<LLocalCondition *> &conds) {
 
   //    std::cout << "---------------"<< std::endl;
   //    std::cout << "callSolverBLOCK"<< std::endl;
@@ -1782,9 +1783,9 @@ STATUS LSolver::callSolverBlock(caExp &f, std::vector<LLocalCondition *> &conds,
     return ERROR;
 
   //proverava se negacija uslova ispravnosti
-  IncrementalTime.startTimer();
+  BlockIncrementalTime.startTimer();
   bool satSafety = AddTempConstraint(exported_cond);
-  IncrementalTime.stopTimer();
+  BlockIncrementalTime.stopTimer();
 
   //negacija uslova ispravnosti je nezadovoljiva sve komane su safe
   if (satSafety == false) {

@@ -158,9 +158,9 @@ et=100
 directory="small_sb"
 print $et $directory $boolector
 
-et=65
-directory="small_sb"
-print $et $directory $boolectoreuf
+#et=65
+#directory="small_sb"
+#print $et $directory $boolectoreuf
 
 et=19
 directory="small_sb"

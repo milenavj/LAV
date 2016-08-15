@@ -87,6 +87,8 @@ public:
   aExp GetGlobFuncCons() const;
   aExp Active() const;
   bool IsEntryBlock() const;
+  void AddPostconditionToSolver();
+  void GetAllConditions(std::vector<LLocalCondition *> &conds);
 
   std::ostream &Print(std::ostream &ostr) const;
   std::ostream &PrintHTML(std::ostream &ostr) const;
@@ -112,6 +114,7 @@ public:
 
   aExp AddAddresses(const aExp &e);
   void UpdateAndSetAddresses();
+  int stopWhenFound(const LInstruction *fi, STATUS s, bool count) const;
 
 private:
 
@@ -135,7 +138,6 @@ private:
 
   void FlawedFound(const LInstruction *fi, ERRKIND er);
   bool ProcessStatus(const LInstruction *fi, ERRKIND er, STATUS s);
-  int stopWhenFound(const LInstruction *fi, STATUS s, bool count);
 
   aExp GetExitConditions() const;
   aExp GetEntryConditions() const;

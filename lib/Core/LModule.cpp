@@ -285,7 +285,6 @@ void LModule::init() {
 
         if (llvm::dyn_cast<llvm::PointerType>(t)) {
           //Ako je alociran pointer njegovi left i right se postavljaju na nulu
-          std::cout << "module::init 2" << std::endl;
           _GlobalConstraints.AddConstraint(e, 0, 0);
           //FIXME ako je pointer inicijalizovan
           //FIXME nedostaje pomeraj*1000
@@ -304,7 +303,6 @@ void LModule::init() {
             //unsigned size =
             //GetParentModule()->GetTargetData()->getTypeStoreSize(t);
             unsigned size = GetTargetData()->getTypeAllocSize(t);
-            std::cout << "module::init 1" << std::endl;
             _GlobalConstraints.AddConstraint(e, 0, size);
 
             /*moze da se desi da je u okviru funkcije ovde vec

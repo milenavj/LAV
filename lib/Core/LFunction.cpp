@@ -14,6 +14,7 @@
 #include "lav/Internal/LCommon.h"
 #include "lav/Internal/LExpressionTransformation.h"
 #include "lav/Internal/LConstraints.h"
+#include "lav/Internal/LInstruction.h"
 
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Function.h"
@@ -30,6 +31,22 @@
 #include "llvm/IR/GlobalVariable.h"
 
 #include "expression/output/SMTFormater.h"
+
+extern llvm::cl::opt<bool> FindFirstFlawed;
+
+namespace {
+llvm::cl::opt<bool> CalculateAll(
+    "check-function-conds",
+    llvm::cl::desc("LAV --- Check in one solver call all conditions inside one "
+                   "function (default = false)"),
+    llvm::cl::init(false));
+
+llvm::cl::opt<bool> CalculateBlock(
+    "check-block-conds",
+    llvm::cl::desc("LAV --- Check in one solver call all conditions inside one "
+                   "block (default = false)"),
+    llvm::cl::init(false));
+}
 
 namespace lav {
 static argo::SMTFormater SMTF;
@@ -134,7 +151,6 @@ bool LFunction::AddAllocationFixedAddress(llvm::AllocaInst *ai,
   return false;
 }
 
-//void LFunction::AddReferenceConstraint(llvm::AllocationInst *ai)
 void LFunction::AddReferenceConstraint(llvm::AllocaInst *ai) {
   //  if(_References.find(GetOperandName(ai)) != _References.end())
   //  {
@@ -149,7 +165,7 @@ void LFunction::AddReferenceConstraint(llvm::AllocaInst *ai) {
   // ako je unija char[10], int ovo vrati 12
   unsigned size = GetParentModule()->GetTargetData()->getTypeAllocSize(t);
   argo::Expression a = ExpAddress(GetFunctionName(), GetOperandName(ai));
-  std::cout << "function::AddReferenceConstraint" << std::endl;
+  //  std::cout << "function::AddReferenceConstraint" << std::endl;
   FunctionConstraints().AddConstraint(a, 0, size);
   //  }
 }
@@ -196,8 +212,6 @@ void LFunction::AddLocalVariables(std::vector<std::string> &variables,
 
     bool isUsed = isUsedOutsideOfDefiningBlock(&*II);
     if (!isUsed) {
-      //        if(llvm::AllocationInst *ai =
-      // llvm::dyn_cast<llvm::AllocationInst>(&*II))
       if (llvm::AllocaInst *ai = llvm::dyn_cast<llvm::AllocaInst>(&*II)) {
         if (_References.find(GetOperandName(ai)) != _References.end()) {
           AddReferenceConstraint(ai);
@@ -209,8 +223,6 @@ void LFunction::AddLocalVariables(std::vector<std::string> &variables,
 
     if (isUsed) {
       //FIXME: sta se desava za malloc - proveriti
-      //if (llvm::AllocationInst *ai =
-      //llvm::dyn_cast<llvm::AllocationInst>(&*II))
       if (llvm::AllocaInst *ai = llvm::dyn_cast<llvm::AllocaInst>(&*II)) {
         if (_References.find(GetOperandName(ai)) != _References.end()) {
           AddReferenceConstraint(ai);
@@ -360,6 +372,7 @@ void LFunction::AddReferences(llvm::Instruction *instr, unsigned op) {
 //FIXME glupo je da funckija postavlja global constraints - to bi trebao da radi
 //modul!
 void LFunction::SetReferences() {
+
   //za koje sve promenljive se uzima referenca
   for (llvm::inst_iterator II = inst_begin(_Function), E = inst_end(_Function);
        II != E; ++II) {
@@ -367,14 +380,12 @@ void LFunction::SetReferences() {
 
     if (instr->getOpcode() == llvm::Instruction::GetElementPtr &&
         instr->getOperand(0)->hasName()) {
-      //        llvm::AllocationInst* ai =
-      // llvm::dyn_cast<llvm::AllocationInst>(instr->getOperand(0));
       llvm::AllocaInst *ai =
           llvm::dyn_cast<llvm::AllocaInst>(instr->getOperand(0));
       if (ai) {
         if (instr->getOperand(0)->getType() != ai->getAllocatedType()) {
-          //FIXME zbog ovog moze dva puta da se doda ogranicenje za istu adresu
-          AddReferenceConstraint(ai);
+          //          AddReferenceConstraint(ai);
+          AddReferences(instr, 0);
         }
       }
     }
@@ -511,6 +522,39 @@ std::ostream &LFunction::Print(std::ostream &ostr) const {
   return ostr;
 }
 
+void LFunction::CalculateAllConditions() {
+  if (_ConditionsCalculated)
+    return;
+
+  if (!_DescriptionsCalculated)
+    CalculateDescriptions();
+
+  LSolver::instance().reset();
+  LSolver::instance().AddIntoSolver(GetParentModule()->GetGlobalConstraints());
+  LSolver::instance().AddIntoSolver(GetFunctionConstraints());
+  LSolver::instance().AddIntoSolver(_Blocks[0]->Active());
+
+  std::vector<LLocalCondition *> conds;
+  for (unsigned i = 0; i < _Blocks.size(); i++) {
+    _Blocks[i]->AddPostconditionToSolver();
+    _Blocks[i]->GetAllConditions(conds);
+  }
+  _Blocks[_Blocks.size() - 1]->UpdateAndSetAddresses();
+
+  aExp F = aExp::TOP();
+  STATUS s = LSolver::instance().callSolverBlock(F, conds);
+
+  if (s != SAFE && FindFirstFlawed)
+    for (unsigned i = 0; i < conds.size(); i++)
+      if (conds[i]->Instruction()->GetParentBlock()->stopWhenFound(
+              conds[i]->Instruction(), conds[i]->Status(), true) == -1)
+        exit(1);
+
+  _ConditionsCalculated = true;
+  LSolver::instance().reset();
+
+}
+
 void LFunction::CalculateConditions() {
 
   if (_ConditionsCalculated)
@@ -518,32 +562,29 @@ void LFunction::CalculateConditions() {
 
   if (!_DescriptionsCalculated)
     CalculateDescriptions();
+
   LSolver::instance().reset();
-  if (_Blocks.size() > 7) {
+
+  if (CalculateAll)
+    CalculateAllConditions();
+  else if (CalculateBlock) {
+    LSolver::instance().AddIntoSolver(
+        GetParentModule()->GetGlobalConstraints());
+    LSolver::instance().AddIntoSolver(GetFunctionConstraints());
+    for (unsigned i = 0; i < _Blocks.size(); i++)
+      _Blocks[i]->CalculateConditionsBlock();
+  } else if (_Blocks.size() > 7) {
     LSolver::instance().AddIntoSolver(
         GetParentModule()->GetGlobalConstraints());
     LSolver::instance().AddIntoSolver(GetFunctionConstraints());
     for (unsigned i = 0; i < _Blocks.size(); i++)
       _Blocks[i]->CalculateConditionsIncremental();
   } else {
-
     for (unsigned i = 0; i < _Blocks.size(); i++)
       _Blocks[i]->CalculateConditions();
   }
   _ConditionsCalculated = true;
   LSolver::instance().reset();
-}
-
-void LFunction::CalculateParallel() {
-
-  LSolver::instance().AddIntoSolver(GetParentModule()->GetGlobalConstraints());
-  LSolver::instance().AddIntoSolver(GetFunctionConstraints());
-
-  for (unsigned i = 0; i < _Blocks.size(); i++) {
-    _Blocks[i]->CalculateDescriptions();
-    _Blocks[i]->CalculateConditionsIncremental();
-  }
-
 }
 
 unsigned LFunction::GetLoopMax(unsigned loop) {
@@ -570,21 +611,7 @@ void LFunction::Run() {
 
   CalculateDescriptions();
 
-  //!@#$ovo otkomentarisati
   CalculateConditions();
-
-  //ovo sada je izmena:
-  /*if(_Blocks.size() <= 7)
-  {
-  CalculateDescriptions();
-  CalculateConditions();
-  }
-  else
-  {
-  //ovde je problem sa solverom koji bi trebalo pozivati malo lokalno malo
-  globalno
-  CalculateParallel();
-  }*/
 }
 
 void LFunction::CalculateDescriptions() {

@@ -56,11 +56,6 @@ using namespace Utils;
 
 namespace {
 
-llvm::cl::opt<bool> CalculateBlock(
-    "check-block-conds",
-    llvm::cl::desc("LAV --- Check in one solver call all conditions inside one "
-                   "block (default = false)"),
-    llvm::cl::init(false));
 llvm::cl::opt<int> NumberThreads(
     "number-threads",
     llvm::cl::desc(
@@ -483,7 +478,7 @@ const std::string &LBlock::GetFunctionName() const {
   return _Parent->GetFunctionName();
 }
 
-int LBlock::stopWhenFound(const LInstruction *fi, STATUS s, bool count) {
+int LBlock::stopWhenFound(const LInstruction *fi, STATUS s, bool count) const {
   if (!FindFirstFlawed)
     return 0;
 
@@ -848,14 +843,7 @@ aExp LBlock::BlockEntry() const {
   return aExp::AND(GetEntryConditions(), Active());
 }
 
-//ako u istom bloku postoji vise koje su unsafe, on ce pronaci
-//samo jednu, a ostale ce verovatno biti obelezene kao safe
-void LBlock::CalculateConditionsBlock() {
-  if (QuickCalculate())
-    return;
-
-  aExp F = AddAddresses(BlockEntry());
-  std::vector<LLocalCondition *> conds;
+void LBlock::GetAllConditions(std::vector<LLocalCondition *> &conds) {
   for (unsigned i = 0; i < _LocalConditions.size(); i++) {
     //ovde bi mozda trebalo one koji se ne racunaju pobrisati da se ne cuvaju
     //i ne prave guzvu bezveze
@@ -864,8 +852,18 @@ void LBlock::CalculateConditionsBlock() {
     }
     conds.push_back(&_LocalConditions[i]);
   }
+}
 
-  STATUS s = LSolver::instance().callSolverBlock(F, conds, this);
+//ako u istom bloku postoji vise koje su unsafe, on ce pronaci
+//samo jednu, a ostale ce verovatno biti obelezene kao safe
+void LBlock::CalculateConditionsBlock() {
+  if (QuickCalculate())
+    return;
+
+  aExp F = AddAddresses(BlockEntry());
+  std::vector<LLocalCondition *> conds;
+  GetAllConditions(conds);
+  STATUS s = LSolver::instance().callSolverBlock(F, conds);
 
   if (s != SAFE && FindFirstFlawed)
     for (unsigned i = 0; i < conds.size(); i++)
@@ -877,11 +875,6 @@ void LBlock::CalculateConditionsBlock() {
 }
 
 void LBlock::CalculateConditionsIncremental() {
-
-  if (CalculateBlock && _LocalConditions.size() > 1) {
-    CalculateConditionsBlock();
-    return;
-  }
 
   if (QuickCalculate())
     return;
@@ -1062,7 +1055,7 @@ void LBlock::TryMerge() {
     }
 
     aExp addconstr = fb->_State.Constraints();
-    std::cout << "block::tryMerge" << std::endl;
+    //    std::cout << "block::tryMerge" << std::endl;
 
     fb->_State.AddConstraint(_State.GetStateConstraint());
     for (unsigned k = 0; k < _LocalConditions.size(); k++) {
@@ -1279,6 +1272,13 @@ void LBlock::AddNewPreds(vpBlock &preds, LBlock *p) const {
     if (b)
       preds.push_back(p->_Preds[k]);
   }
+}
+
+void LBlock::AddPostconditionToSolver() {
+  if (_PostconditionInSolver)
+    return;
+  LSolver::instance().AddIntoSolver(Postcondition());
+  _PostconditionInSolver = true;
 }
 
 void LBlock::AddPredsConditionsIncremental() {

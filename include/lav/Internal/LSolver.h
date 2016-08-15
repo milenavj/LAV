@@ -52,8 +52,7 @@ public:
                            bool m = false, SOLVERCONTEXT c = NORMAL);
   static STATUS GetStatus(SATISFIABILITY sat1, SATISFIABILITY sat2);
 
-  STATUS callSolverBlock(caExp &f, std::vector<LLocalCondition *> &ci,
-                         const LBlock *fb);
+  STATUS callSolverBlock(caExp &f, std::vector<LLocalCondition *> &ci);
   STATUS callSolverIncremental(caExp &a, caExp &b, const LBlock *fb,
                                const LInstruction *fi, ERRKIND erKind);
   STATUS AddIntoSolver(caExp &cond);
