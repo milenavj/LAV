@@ -637,6 +637,7 @@ bool LastIteration(Loop *L, LoopInfo *LI, int It,
           //za grananje umesto br
           if (BIHeader == NULL) {
             llvm::outs() << *NewHeader;
+            llvm::errs() << *NewHeader;
             return false;
           }
           //      DodajObelezje(*BB, NewHeader, brRazmotavanja+1);
@@ -755,36 +756,42 @@ bool LastIteration(Loop *L, LoopInfo *LI, int It,
                   BasicBlock *succ2;
                   if (L->contains(BI0->getSuccessor(0)))
                     succ2 = BI0->getSuccessor(0);
-                  else
+                  else if (L->contains(BI0->getSuccessor(1)))
                     succ2 = BI0->getSuccessor(1);
-
-                  ValueToValueMapTy VMap4;
-                  BasicBlock *newSucc2 =
-                      CloneBasicBlock(succ2, VMap4, "." + Twine(It + 1));
-                  succ2->getParent()->getBasicBlockList().push_back(newSucc2);
-
-                  //      DodajObelezje(*BB, newSucc2, brRazmotavanja+1);
-                  //!      L->addBasicBlockToLoop(newSucc2, LI->getBase());
-
-                  BranchInst *BI2 = GetBI(newSucc2);
-                  if (BI2 == NULL)
-                    return false;
-
-                  LastValueMapDodatak[succ2] = newSucc2;
-                  VMap4[succ2] = newSucc2;
-
-                  if (L->contains(BI0->getSuccessor(0)))
-                    BI0->setSuccessor(0, newSucc2);
                   else
-                    BI0->setSuccessor(1, newSucc2);
+                    succ2 = NULL;
+                  if (succ2) {
+                    ValueToValueMapTy VMap4;
+                    BasicBlock *newSucc2 =
+                        CloneBasicBlock(succ2, VMap4, "." + Twine(It + 1));
+                    succ2->getParent()->getBasicBlockList().push_back(newSucc2);
 
-                  AddToMapDstSrc(LastValueMapDodatak, VMap4);
-                  NewBlocksDodatak.push_back(newSucc2);
-                  LastValueMapDodatak[succ2] = newSucc2;
+                    //      DodajObelezje(*BB, newSucc2, brRazmotavanja+1);
+                    //!      L->addBasicBlockToLoop(newSucc2, LI->getBase());
 
-                  // Add phi entries for newly created values to all exit
-                  // blocks.
-                  PhiExitBlocks(succ2, newSucc2, L, VMap4);
+                    BranchInst *BI2 = GetBI(newSucc2);
+                    if (BI2 == NULL) {
+                      llvm::errs() << *newSucc2;
+                      std::cerr << "\nuh3" << std::endl;
+                      return false;
+                    }
+
+                    LastValueMapDodatak[succ2] = newSucc2;
+                    VMap4[succ2] = newSucc2;
+
+                    if (L->contains(BI0->getSuccessor(0)))
+                      BI0->setSuccessor(0, newSucc2);
+                    else
+                      BI0->setSuccessor(1, newSucc2);
+
+                    AddToMapDstSrc(LastValueMapDodatak, VMap4);
+                    NewBlocksDodatak.push_back(newSucc2);
+                    LastValueMapDodatak[succ2] = newSucc2;
+
+                    // Add phi entries for newly created values to all exit
+                    // blocks.
+                    PhiExitBlocks(succ2, newSucc2, L, VMap4);
+                  }
                 }
 
                 if (succ1 == LatchBlock)

@@ -1748,12 +1748,14 @@ STATUS LSolver::callSolverBlock(caExp &f,
 
   if (conds.size() == 0)
     return SAFE;
-  if (conds.size() == 1)
-    return callSolverIncremental(aExp::AND(f, conds[0]->LHS()), conds[0]->RHS(),
-                                 conds[0]->Instruction()->GetParentBlock(),
-                                 conds[0]->Instruction(),
-                                 conds[0]->ErrorKind());
-
+  if (conds.size() == 1) {
+    STATUS s =
+        callSolverIncremental(aExp::AND(f, conds[0]->LHS()), conds[0]->RHS(),
+                              conds[0]->Instruction()->GetParentBlock(),
+                              conds[0]->Instruction(), conds[0]->ErrorKind());
+    conds[0]->Status() = s;
+    return s;
+  }
   if (FinalAddIntoSolver() == false)
     return ERROR;
 
