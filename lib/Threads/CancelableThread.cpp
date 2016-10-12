@@ -70,10 +70,8 @@ void CancelableThread::Cancel() {
 bool CancelableThread::IsJoinable() const { return m_worker.joinable(); }
 
 void CancelableThread::Join() {
-  if (!IsJoinable())
-    throw runtime_error { "Thread not joinable" }
-  ;
-  m_worker.join();
+  if (IsJoinable())
+  	m_worker.join();
 }
 
 void CancelableThread::AllowCancel() {
