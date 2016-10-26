@@ -17,7 +17,7 @@ namespace UrsaMajor {
 
 class Z3Instance {
 public:
-  thread_local static Z3Instance &instance();
+  static Z3Instance &instance();
   ~Z3Instance();
   Z3_context getSolver() { return _ctx; }
   bool nextModel(Z3_ast expr);

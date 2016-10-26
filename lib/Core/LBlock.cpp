@@ -51,8 +51,7 @@
 #include "lav/Threads/FixedQueue.h"
 #include "lav/Threads/ThreadPool.h"
 
-using namespace ThreadSafe;
-using namespace Utils;
+using namespace Threads;
 
 namespace {
 
@@ -585,71 +584,71 @@ void LBlock::CalculateConditions() {
 
   aExp cond = AddAddresses(GetTraceGlobFuncCons());
 
-  if (EnableParallel) {
+  if (EnableParallel) 
+  {
     std::cout << "\n\n\n\n\n -----------------BRANISLAVA begin "
                  "------------------ \n\n\n\n\n";
 
     // napravi funkciju koju ce da izvrsava svaka nit
-    auto maxf =
-        [&](LLocalCondition * localCond, aExp * cond, LBlock * block, int i) {
+    auto maxf = [&](LLocalCondition * localCond, aExp * cond, LBlock * block, int i) 
+	{
+    	aExp e1 = aExp::AND(*cond, localCond->LHS());
+    	aExp e2 = localCond->RHS();
+    	std::cout << "\n\n\n\n\n -----------------Start solver , thread id: "
+              << pthread_self() << " ------------------ \n\n\n\n\n"
+               << std::endl;
 
-      aExp e1 = aExp::AND(*cond, localCond->LHS());
-      aExp e2 = localCond->RHS();
-      std::cout << "\n\n\n\n\n -----------------Start solver , thread id: "
-                << pthread_self() << " ------------------ \n\n\n\n\n"
-                << std::endl;
-
-      STATUS s = LSolver::callSolver(e1, e2, block, localCond->Instruction(),
-                                     localCond->ErrorKind(), true);
-
-      std::cout << "\n\n\n\n\n -----------------End solver , thread id: "
-                << pthread_self() << "------------------ \n\n\n\n\n"
-                << std::endl;
-
-      //std::cout << FindFirstFlawed << " find first flawed" << std::endl;
-      if (stopWhenFound(localCond->Instruction(), s, true) == -1) {
-        return -1;
-      }
-
-      if (FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED)) {
-        Delete(localCond->Instruction()->GetModelFileName());
-        return -1;
-      }
-
-      localCond->Status() = s;
-      return 0;
-    }
-    ;
+	    STATUS s = LSolver::callSolver(e1, e2, block, localCond->Instruction(),
+	                                   localCond->ErrorKind(), true);
+	
+	    std::cout << "\n\n\n\n\n -----------------End solver , thread id: "
+	              << pthread_self() << "------------------ \n\n\n\n\n"
+	              << std::endl;
+	
+	    //std::cout << FindFirstFlawed << " find first flawed" << std::endl;
+	    if (stopWhenFound(localCond->Instruction(), s, true) == -1)
+	    	return -1;
+	
+	    if (FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED))
+		{
+	    	Delete(localCond->Instruction()->GetModelFileName());
+	    	return -1;
+	    }
+	
+	    localCond->Status() = s;
+	    return 0;
+    };
 
     std::vector<std::function<int()> > functions;
     BindTasksForThreads.startTimer();
-    for (unsigned i = 0; i < _LocalConditions.size(); i++) {
-
-      if (SkipLocalCondition(_LocalConditions[i]))
+    for (unsigned i = 0; i < _LocalConditions.size(); i++) 
+	{
+	  if (SkipLocalCondition(_LocalConditions[i]))
         continue;
 
-      // dodaj funkcije koje ce niti da izvrsavaju u red
-      functions.push_back(
-          std::bind(maxf, &_LocalConditions[i], &cond, this, i));
+      	// dodaj funkcije koje ce niti da izvrsavaju u red
+      	functions.push_back(std::bind(maxf, &_LocalConditions[i], &cond, this, i));
     }
+
     BindTasksForThreads.stopTimer();
 
     ParallelExecution.startTimer();
-    // napravi thread pool i pokreni ga
+    
+	ThreadPool t;
+	// napravi thread pool i pokreni ga
     if (NumberThreads)
-      ThreadPool t {
-        FixedQueue<std::function<int()> >(functions), NumberThreads
-      }
-    ;
-    else ThreadPool t {
-      FixedQueue<std::function<int()> >(functions)
-    }
-    ;
+		t.Init(std::move(functions) ,NumberThreads);
+	else 
+		t.Init(std::move(functions));
+	t.Work();	
+
     ParallelExecution.stopTimer();
 
     std::cout << "\n\n\n\n\n -----------------BRANISLAVA end "
                  "------------------ \n\n\n\n\n";
-  } else {
+  } 
+  else 
+  {
     std::cout << "\n\n ----------------- BEGIN SEQUENTIAL LAV "
                  "------------------ \n\n";
 

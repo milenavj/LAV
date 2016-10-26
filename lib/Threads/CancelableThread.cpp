@@ -1,93 +1,81 @@
 #include "lav/Threads/CancelableThread.h"
 
-// STL headers
+// STL zaglavlja
 #include <utility>
 #include <stdexcept>
 #include <cstring>
 #include <cerrno>
 #include <string>
 
+// Ostala zaglavlja
 #include <pthread.h>
 
-using namespace std;
-using namespace Utils;
+using namespace Threads;
 
-CancelableThread::CancelableThread(Callable f) : m_worker {
-  [ = ]() {
-    AllowCancel();
-    f();
-  }
-}
-, m_finished { false }
+CancelableThread::CancelableThread(Callable f)
+	:m_worker{
+		[=] () {
+			AllowCancel();
+			f();
+		}
+	},
+	m_finished{false}
 {}
 
-CancelableThread::CancelableThread(CancelableThread &&ct) : m_worker {
-  move(ct.m_worker)
-}
-, m_finished { ct.m_finished }
+CancelableThread::CancelableThread(CancelableThread &&ct)
+	:m_worker{std::move(ct.m_worker)}, m_finished{ct.m_finished}
 {}
 
-CancelableThread &CancelableThread::operator=(CancelableThread &&ct) {
-  if (&ct != this) {
-    m_worker = move(ct.m_worker);
-    m_finished = ct.m_finished;
-  }
-  return *this;
+CancelableThread& CancelableThread::operator=(CancelableThread &&ct)
+{
+	if(&ct != this)
+	{
+		m_worker = std::move(ct.m_worker);
+		m_finished = ct.m_finished;
+	}
+	return *this;
 }
 
-CancelableThread::~CancelableThread() { Cancel(); }
+CancelableThread::~CancelableThread() { }
 
-void CancelableThread::Cancel() {
-// Check if we can use POSIX threads
-#ifndef __unix__
-  static_assert(false, "POSIX threads not available!");
-#endif
-
-  if (!m_finished) {
-    // Get pthread id
-    pthread_t tid = m_worker.native_handle();
-
-    if (tid) {
-      // We cancel thread or ignore error if we cannot find it cause it already
-      // finished
-      int pthreadErrno;
-      if ((pthreadErrno = pthread_cancel(tid)) != 0 && pthreadErrno != ESRCH)
-        throw runtime_error {
-          string { "Thread cancelation failed. Error: " }
-          +::strerror(pthreadErrno)
-        }
-      ;
-
-      // We join it
-      m_worker.join();
-    }
-
-    // After cancelation thread is finished
-    m_finished = true;
-  }
+std::thread& CancelableThread::GetHandle()
+{
+    return m_worker;
 }
 
-bool CancelableThread::IsJoinable() const { return m_worker.joinable(); }
+void CancelableThread::Cancel()
+{
+	// Ukoliko nit nije zavrsila mozemo je cancel-ovati
+	if(!m_finished)
+	{
+		// Uzimamo sistemski id niti
+		pthread_t tid = m_worker.native_handle();
 
-void CancelableThread::Join() {
-  if (IsJoinable())
-  	m_worker.join();
+		// Ukoliko mozemo da nadjemo tu nit, otkazujemo je
+		// inace ukoliko ne postoji id to znaci da se zavrsila
+		if(tid)
+		{
+			int pthreadErrno;
+
+			if((pthreadErrno = pthread_cancel(tid)) != 0 && pthreadErrno != ESRCH)
+			{
+				throw std::runtime_error{ std::string{"Threads::Greska prilikom cancel-ovanja niti. --- "} + ::strerror(pthreadErrno)};
+
+			}
+		}
+
+		m_finished = true;
+	}
 }
 
-void CancelableThread::AllowCancel() {
-  // Enable thread cancelation
-  if (pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, nullptr) != 0)
-    throw runtime_error {
-      string { "Enabling thread cancelation failed. Error: " }
-      +::strerror(errno)
-    }
-  ;
-  // Set thread to be cancelable at any time
-  if (pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, nullptr) != 0)
-    throw runtime_error {
-      string { "Setting thread to be cancelable at any time failed. Error: " }
-      +::strerror(errno)
-    }
-  ;
+
+void  CancelableThread::AllowCancel()
+{
+	// Dozvoljavamo niti da bude cancel-ovana
+	if(pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, nullptr) != 0)
+		throw std::runtime_error{ std::string{"Threads::Greska, nismo uspeli da dozvolimo niti da bude cancel-ovana. --- "} + ::strerror(errno)};
+
+	if(pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, nullptr) != 0)
+		throw std::runtime_error{ std::string{"Threads::Greska, nismo uspeli da dozvolimo niti da bude cancel-ovana. --- "} + ::strerror(errno)};
 
 }
