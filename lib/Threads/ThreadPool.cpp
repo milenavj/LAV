@@ -142,9 +142,9 @@ void ThreadPool::StartControlThread()
 void ThreadPool::Work()
 {
 	StartWorkerThreads();
+	JoinWorkerThreads();
+	
 	StartControlThread();
-
-   	JoinWorkerThreads();
 	JoinControlThread();
 }
 
