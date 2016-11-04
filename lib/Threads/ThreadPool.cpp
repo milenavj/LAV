@@ -164,7 +164,6 @@ void ThreadPool::Work()
     else
         JoinWorkerThreads();
 	JoinControlThread();
-
 }
 
 ThreadPool::Result ThreadPool::GetResult()
