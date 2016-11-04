@@ -145,13 +145,13 @@ namespace lav {
 
 thread_local static argo::SMTFormater SMTF;
 
-llvm::Timer IncrementalTime("Incremental Solving");
-llvm::Timer BlockIncrementalTime("Block Incremental Solving");
-llvm::Timer NonIncrementalTime("Non Incremental Solving");
-llvm::Timer AckermannizeTimer("Ackermannization");
-llvm::Timer GlobalAckermannizationTimer("Global Ackermannization");
-llvm::Timer NonIncrementalPreparationTime("NonIncrementalPreparation Time");
-llvm::Timer ResetTime("ResetTime");
+//llvm::Timer IncrementalTime("Incremental Solving");
+//llvm::Timer BlockIncrementalTime("Block Incremental Solving");
+//llvm::Timer NonIncrementalTime("Non Incremental Solving");
+//llvm::Timer AckermannizeTimer("Ackermannization");
+//llvm::Timer GlobalAckermannizationTimer("Global Ackermannization");
+//llvm::Timer NonIncrementalPreparationTime("NonIncrementalPreparation Time");
+//llvm::Timer ResetTime("ResetTime");
 
 bool LSolver::isZ3() {
   if ((solver == Z3LA) || (solver == Z3LAACK) || (solver == Z3BVACK) ||
@@ -214,9 +214,9 @@ void LSolver::resetSolver() {
 }
 
 void LSolver::reset() {
-  ResetTime.startTimer();
+//  ResetTime.startTimer();
   resetSolver();
-  ResetTime.stopTimer();
+//  ResetTime.stopTimer();
   _Addresses.clear();
   _SymbolTable.clear();
   _Lefts.clear();
@@ -1173,7 +1173,6 @@ STATUS LSolver::GetStatus(SATISFIABILITY sat1, SATISFIABILITY sat2) {
 }
 
 LSolver::LSolver() {
-
   switch (solver) {
 #if defined(BOOLECTOR) || defined(BOOLECTOR_OLD)
   case BoolectorBV:
@@ -1223,15 +1222,20 @@ LSolver::LSolver() {
     break;
 #endif
 
-  //FIXME sta ako nije definisan boolector treba neki drugi postaviti
   default:
     ;
 #if defined(BOOLECTOR) || defined(BOOLECTOR_OLD)
     _Factory =
         LSolver::ExpFactory(new UrsaMajor::BVExpressionFactoryBoolector());
     _BV = true;
+    break;
 #endif
-
+#if (!defined(BOOLECTOR) && !defined(BOOLECTOR_OLD) && defined(Z3))
+    _Factory =
+        LSolver::ExpFactory(new UrsaMajor::BVExpressionFactoryZ3());
+    _BV = true;
+    break;
+#endif
   }
 
   _ExpToAddIntoSolver = aExp::TOP();
@@ -1254,9 +1258,9 @@ void LSolver::PrepareNoAck(caExp &a, caExp &b, aExp &abs_a, aExp &abs_b,
 void LSolver::PrepareAck(caExp &a, caExp &b, aExp &abs_a, aExp &abs_b,
                          aExp &abs_neg_b, saExp &ls, saExp &rs) {
   aExp r_a = a, r_b = b;
-  AckermannizeTimer.startTimer();
+//  AckermannizeTimer.startTimer();
   LAckermannization::Ackermannize(r_a, r_b, ls, rs);
-  AckermannizeTimer.stopTimer();
+//  AckermannizeTimer.stopTimer();
 
   abs_a = r_a;
   abs_b = r_b;
@@ -1984,7 +1988,7 @@ bool LSolver::TryExportExpression(caExp &a, UrsaExp &exported_a,
 //Ovo je po default-u
 #if defined(BOOLECTOR) || defined(BOOLECTOR_OLD)
 thread_local LSolver::ExpFactory LSolver::_Factory =
-    LSolver::ExpFactory(new UrsaMajor::BVExpressionFactoryZ3());
+    LSolver::ExpFactory(new UrsaMajor::BVExpressionFactoryBoolector());
 #endif
 
 #if (!defined(BOOLECTOR) && !defined(BOOLECTOR_OLD) && defined(Z3))

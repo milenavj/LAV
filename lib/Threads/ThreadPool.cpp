@@ -45,6 +45,7 @@ ThreadPool& ThreadPool::operator=(ThreadPool &&oth)
 ThreadPool::~ThreadPool()
     {
 		JoinControlThread();
+        JoinWorkerThreads();
 	}
 
 
@@ -102,9 +103,6 @@ void ThreadPool::StartWorkerThreads()
 
         for(auto i=0U; i<m_num_threads; i++)
             m_threads.emplace_back(f);
-
-
-
     }
 
 void ThreadPool::StartControlThread()
@@ -158,12 +156,13 @@ void ThreadPool::StartControlThread()
 void ThreadPool::Work()
 {
 	StartWorkerThreads();
-	StartControlThread();
-    if(FindFirstFlawed)
+    if(FindFirstFlawed) {
         DetachWorkerThreads();
+        StartControlThread();
+	    JoinControlThread();
+    }
     else
         JoinWorkerThreads();
-	JoinControlThread();
 }
 
 ThreadPool::Result ThreadPool::GetResult()

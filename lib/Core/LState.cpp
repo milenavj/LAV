@@ -52,7 +52,7 @@ extern llvm::cl::opt<bool> CheckAssert;
 
 namespace lav {
 
-llvm::Timer Branching("Branching time --- call solver light");
+//llvm::Timer Branching("Branching time --- call solver light");
 
 static argo::SMTFormater SMTF;
 
@@ -1762,9 +1762,9 @@ void LState::Update(LInstruction *fi) {
   //    break;
   //  }
   case llvm::Instruction::Br: {
-    Branching.startTimer();
+//    Branching.startTimer();
     ProcessBr(fi);
-    Branching.stopTimer();
+//    Branching.stopTimer();
 
     break;
   }

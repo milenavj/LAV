@@ -37,9 +37,9 @@ public:
   }
 
   bool addTempConstraint() {
-    std::cout << "addTempConstraint Z3::searching..." << std::endl;
+//    std::cout << "addTempConstraint Z3::searching..." << std::endl;
     bool b = Z3Instance::instance().addTempConstraint(_expr);
-    std::cout << "addTempConstraint Z3::searching...Finished" << std::endl;
+//    std::cout << "addTempConstraint Z3::searching...Finished" << std::endl;
     return b;
   }
 

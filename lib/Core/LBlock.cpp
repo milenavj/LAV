@@ -87,13 +87,13 @@ static argo::SMTFormater SMTF;
 //llvm::Timer SetJumpsTimer("SetJumps Time");
 //llvm::Timer ChangeInitStoreTimer("ChangeInitStore Time");
 //llvm::Timer UpdateStoreTimer("UpdateStore Time");
-llvm::Timer AddLocalConditionTimer("AddLocalCondition Time");
-llvm::Timer InlineTimer("Inline Time");
-llvm::Timer ConnectCondsTimer("Connect conditions Time");
-llvm::Timer AddPostCondTimer("Add function postcodn Time");
-llvm::Timer BindTasksForThreads("Add task functions to queue for threads time");
-llvm::Timer ParallelExecution("Parallel execution time");
-llvm::Timer ffTimer("ff Time");
+//llvm::Timer AddLocalConditionTimer("AddLocalCondition Time");
+//llvm::Timer InlineTimer("Inline Time");
+//llvm::Timer ConnectCondsTimer("Connect conditions Time");
+//llvm::Timer AddPostCondTimer("Add function postcodn Time");
+//llvm::Timer BindTasksForThreads("Add task functions to queue for threads time");
+//llvm::Timer ParallelExecution("Parallel execution time");
+//llvm::Timer ffTimer("ff Time");
 
 //////////////////////////////////////////////////////////////
 // LLocalCondition
@@ -599,7 +599,7 @@ void LBlock::CalculateConditions() {
               << pthread_self() << " ------------------ \n\n\n\n\n"
                << std::endl;
 
-	    STATUS s = LSolver::callSolver(e1, e2, block, localCond->Instruction(),
+	    STATUS s = LSolver::instance().callSolver(e1, e2, block, localCond->Instruction(),
 	                                   localCond->ErrorKind(), true);
 	
 	    std::cout << "\n\n\n\n\n -----------------End solver , thread id: "

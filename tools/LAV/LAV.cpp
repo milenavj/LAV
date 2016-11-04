@@ -72,9 +72,9 @@ int main(int argc, char **argv) {
   CheckTimeOut(argc, argv);
 
   // Load the bytecode...
-  Timer LoadingTime("Loading the bytecode");
+//  Timer LoadingTime("Loading the bytecode");
   std::cout << std::endl << "Loading the bytecode..." << std::endl;
-  LoadingTime.startTimer();
+//  LoadingTime.startTimer();
   std::string ErrorMsg;
 
   Module *mainModule = 0;
@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
   if (!mainModule)
     lav::exit_error((std::string) "error loading program '%s': %s" +
                     InputFile.c_str() + ErrorMsg.c_str());
-  LoadingTime.stopTimer();
+//  LoadingTime.stopTimer();
 
   std::cout << "Loading the bytecode... Completed " << std::endl << std::endl;
 
@@ -130,6 +130,7 @@ int main(int argc, char **argv) {
 
   BufferPtr.take();
   std::cout << "Finished " << std::endl << std::endl;
+
   return 0;
 }
 
