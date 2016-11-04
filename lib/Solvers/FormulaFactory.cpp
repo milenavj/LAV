@@ -7,7 +7,7 @@ namespace UrsaMajor {
 ////	Class FormulaFactory
 ////////////////////////////////////////////////////////////////////////////////
 
-FormulaFactory *FormulaFactory::formulaFactory = 0;
+thread_local FormulaFactory *FormulaFactory::formulaFactory = 0;
 
 // ----------------------------------------------------------------------------
 

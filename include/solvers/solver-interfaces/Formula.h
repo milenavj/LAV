@@ -55,7 +55,7 @@ public:
 
   bool operator==(const Formula &f) const;
 
-  static unsigned int I, D, NEW, DEL;
+  thread_local static unsigned int I, D, NEW, DEL;
 
   static Formula *makeNot(Formula *);
   static Formula *makeOr(Formula *, Formula *);
@@ -69,8 +69,8 @@ protected:
   unsigned int id;
   size_t hashValue;
 
-  static std::tr1::hash<const char *> pconstchar_hash_func;
-  static std::tr1::hash<unsigned int> int_hash_func;
+  thread_local static std::tr1::hash<const char *> pconstchar_hash_func;
+  thread_local static std::tr1::hash<unsigned int> int_hash_func;
 
   Formula();
 

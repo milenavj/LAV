@@ -4,11 +4,12 @@
 
 namespace UrsaMajor {
 
-unsigned int Formula::NEW = 0, Formula::DEL = 0;
+thread_local unsigned int Formula::NEW = 0;
+thread_local unsigned int Formula::DEL = 0;
 using std::tr1::hash;
 
-hash<const char *> Formula::pconstchar_hash_func;
-hash<unsigned int> Formula::int_hash_func;
+thread_local std::tr1::hash<const char *> Formula::pconstchar_hash_func;
+thread_local std::tr1::hash<unsigned int> Formula::int_hash_func;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////	Class Formula

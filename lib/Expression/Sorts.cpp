@@ -1,3 +1,3 @@
 #include "expression/expressions/Sorts.h"
 
-namespace argo { SortRegistry *SortRegistry::_instance = 0; }
+namespace argo { thread_local SortRegistry *SortRegistry::_instance = 0; }

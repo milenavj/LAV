@@ -8,7 +8,7 @@ namespace UrsaMajor {
 ////	Class FormulaVector
 ////////////////////////////////////////////////////////////////////////////////
 
-unsigned int FormulaVector::m_iPropositionalVarCounter;
+thread_local unsigned int FormulaVector::m_iPropositionalVarCounter;
 
 // -------------------------------------------------------------------
 

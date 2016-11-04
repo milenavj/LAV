@@ -41,7 +41,7 @@ class LSolver {
 public:
 
   static LSolver &instance() {
-    static LSolver _instance;
+    thread_local static LSolver _instance;
     return _instance;
   }
 
@@ -143,15 +143,15 @@ private:
                          std::set<aExp> &rs);
 
 private:
-  static ExpFactory _Factory;
-  static bool _BV;
+  thread_local static ExpFactory _Factory;
+  thread_local static bool _BV;
   stUrsaExp _SymbolTable;
 
   std::set<aExp> _Lefts;
   std::set<aExp> _Rights;
   std::map<aExp, aExp> _Acks;
-  static std::map<std::string, long> _Addresses;
-  static std::map<aExp, UrsaExp> _AbstractLA;
+  thread_local static std::map<std::string, long> _Addresses;
+  thread_local static std::map<aExp, UrsaExp> _AbstractLA;
   aExp _ExpInSolver;
   aExp _ExpToAddIntoSolver;
 };

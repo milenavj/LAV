@@ -143,7 +143,7 @@ llvm::cl::opt<bool>
 
 namespace lav {
 
-static argo::SMTFormater SMTF;
+thread_local static argo::SMTFormater SMTF;
 
 llvm::Timer IncrementalTime("Incremental Solving");
 llvm::Timer BlockIncrementalTime("Block Incremental Solving");
@@ -1263,8 +1263,8 @@ void LSolver::PrepareAck(caExp &a, caExp &b, aExp &abs_a, aExp &abs_b,
   abs_neg_b = aExp::NOT(abs_b);
 }
 
-std::map<std::string, long> LSolver::_Addresses;
-std::map<aExp, UrsaExp> LSolver::_AbstractLA;
+thread_local std::map<std::string, long> LSolver::_Addresses;
+thread_local std::map<aExp, UrsaExp> LSolver::_AbstractLA;
 
 UrsaExp LSolver::AbstrAck(caExp &e, stUrsaExp &symbolTable, cStr &abs) {
   if (abs == LEFT)
@@ -1513,7 +1513,7 @@ STATUS LSolver::callSolver(caExp &a, caExp &b, const LBlock *fb,
   //            << std::endl;
   //  PrintAB(a, b);
 
-  NonIncrementalPreparationTime.startTimer();
+//  NonIncrementalPreparationTime.startTimer();
   saExp ls;
   saExp rs;
 
@@ -1539,21 +1539,21 @@ STATUS LSolver::callSolver(caExp &a, caExp &b, const LBlock *fb,
   if (Ackermannize())
     AckImplications(ls, rs, exported_a, symbolTable);
 
-  NonIncrementalPreparationTime.stopTimer();
-  NonIncrementalTime.startTimer();
+//  NonIncrementalPreparationTime.stopTimer();
+//  NonIncrementalTime.startTimer();
 
   AddConstraint(exported_a);
   bool satnegb = AddTempConstraint(exported_neg_b);
-  NonIncrementalTime.stopTimer();
+//  NonIncrementalTime.stopTimer();
 
   if (m && (c == NORMAL) && (satnegb == true) && Model) {
     GetModel(symbolTable, fb, fi, erKind);
   }
 
   if (GetOut(c, satnegb)) {
-    ResetTime.startTimer();
+//    ResetTime.startTimer();
     resetSolver();
-    ResetTime.stopTimer();
+ //   ResetTime.stopTimer();
     if (satnegb == false)
       return SAFE;
     else
@@ -1564,13 +1564,13 @@ STATUS LSolver::callSolver(caExp &a, caExp &b, const LBlock *fb,
   if (!exported)
     return ERROR;
 
-  NonIncrementalTime.startTimer();
+//  NonIncrementalTime.startTimer();
   bool satb = AddTempConstraint(exported_b);
-  NonIncrementalTime.stopTimer();
+//  NonIncrementalTime.stopTimer();
 
-  ResetTime.startTimer();
+//  ResetTime.startTimer();
   resetSolver();
-  ResetTime.stopTimer();
+//  ResetTime.stopTimer();
 
   return GetStatus(((satnegb == true) ? SAT : UNSAT),
                    ((satb == true) ? SAT : UNSAT));
@@ -1785,9 +1785,9 @@ STATUS LSolver::callSolverBlock(caExp &f,
     return ERROR;
 
   //proverava se negacija uslova ispravnosti
-  BlockIncrementalTime.startTimer();
+//  BlockIncrementalTime.startTimer();
   bool satSafety = AddTempConstraint(exported_cond);
-  BlockIncrementalTime.stopTimer();
+//  BlockIncrementalTime.stopTimer();
 
   //negacija uslova ispravnosti je nezadovoljiva sve komane su safe
   if (satSafety == false) {
@@ -1828,10 +1828,10 @@ bool LSolver::FinalAddIntoSolver() {
   aExp abs_cond;
   if (Ackermannize()) {
     //ovim se dobije flattened abs_cond
-    GlobalAckermannizationTimer.startTimer();
+//    GlobalAckermannizationTimer.startTimer();
     LAckermannization::GlobalAckermannization(_ExpToAddIntoSolver, abs_cond, ls,
                                               rs, _Acks);
-    GlobalAckermannizationTimer.stopTimer();
+//    GlobalAckermannizationTimer.stopTimer();
   } else {
     //NOVO
     saExp eqs;
@@ -1858,9 +1858,9 @@ bool LSolver::FinalAddIntoSolver() {
     SetUnion(_Rights, rs);
   }
 
-  IncrementalTime.startTimer();
+//  IncrementalTime.startTimer();
   AddConstraint(exported_cond);
-  IncrementalTime.stopTimer();
+//  IncrementalTime.stopTimer();
 
   return true; //uspelo dodavanje
 }
@@ -1933,9 +1933,9 @@ STATUS LSolver::callSolverIncremental(caExp &a, caExp &b, const LBlock *fb,
     return ERROR;
 
   //proverava se negacija uslova ispravnosti
-  IncrementalTime.startTimer();
+//  IncrementalTime.startTimer();
   bool satnegb = AddTempConstraint(exported_anegb);
-  IncrementalTime.stopTimer();
+//  IncrementalTime.stopTimer();
 
   //negacija uslova ispravnosti je nezadovoljiva komanda je safe
   if (satnegb == false && !unreachable) {
@@ -1957,9 +1957,9 @@ STATUS LSolver::callSolverIncremental(caExp &a, caExp &b, const LBlock *fb,
   if (Export(ab, exported_ab, ls, rs, impls) == false)
     return ERROR;
 
-  IncrementalTime.startTimer();
+//  IncrementalTime.startTimer();
   bool satb = AddTempConstraint(exported_ab);
-  IncrementalTime.stopTimer();
+//  IncrementalTime.stopTimer();
 
   return GetStatus(((satnegb == true) ? SAT : UNSAT),
                    ((satb == true) ? SAT : UNSAT));
@@ -1983,33 +1983,33 @@ bool LSolver::TryExportExpression(caExp &a, UrsaExp &exported_a,
 
 //Ovo je po default-u
 #if defined(BOOLECTOR) || defined(BOOLECTOR_OLD)
-LSolver::ExpFactory LSolver::_Factory =
-    LSolver::ExpFactory(new UrsaMajor::BVExpressionFactoryBoolector());
+thread_local LSolver::ExpFactory LSolver::_Factory =
+    LSolver::ExpFactory(new UrsaMajor::BVExpressionFactoryZ3());
 #endif
 
 #if (!defined(BOOLECTOR) && !defined(BOOLECTOR_OLD) && defined(Z3))
-LSolver::ExpFactory LSolver::_Factory =
+thread_local LSolver::ExpFactory LSolver::_Factory =
     LSolver::ExpFactory(new UrsaMajor::BVExpressionFactoryZ3());
 #endif
 
 #if (!defined(BOOLECTOR) && !defined(BOOLECTOR_OLD) && !defined(Z3) &&         \
      defined(YICES))
-LSolver::ExpFactory LSolver::_Factory =
+thread_local LSolver::ExpFactory LSolver::_Factory =
     LSolver::ExpFactory(new UrsaMajor::BVExpressionFactoryYices());
 #endif
 
 #if (!defined(BOOLECTOR) && !defined(BOOLECTOR_OLD) && !defined(Z3) &&         \
      !defined(YICES) && defined(MATHSAT))
-LSolver::ExpFactory LSolver::_Factory =
+thread_local LSolver::ExpFactory LSolver::_Factory =
     LSolver::ExpFactory(new UrsaMajor::BVExpressionFactoryMathSAT());
 #endif
 
 #if (!defined(BOOLECTOR) && !defined(BOOLECTOR_OLD) && !defined(Z3) &&         \
      !defined(YICES) && !defined(MATHSAT))
-LSolver::ExpFactory LSolver::_Factory = LSolver::ExpFactory(0);
+thread_local LSolver::ExpFactory LSolver::_Factory = LSolver::ExpFactory(0);
 #endif
 
-bool LSolver::_BV = true;
+thread_local bool LSolver::_BV = true;
 
 //ovim se ne dodaje stvarno vec se samo pamti sta treba da se doda
 STATUS LSolver::AddIntoSolver(caExp &cond) {
@@ -2021,9 +2021,9 @@ void LSolver::PrepareAckIncremental(caExp &a, caExp &b, aExp &abs_a,
                                     aExp &abs_b, aExp &abs_neg_b, saExp &ls,
                                     saExp &rs) {
 
-  GlobalAckermannizationTimer.startTimer();
+//  GlobalAckermannizationTimer.startTimer();
   LAckermannization::GlobalAckermannization(a, b, abs_a, abs_b, ls, rs, _Acks);
-  GlobalAckermannizationTimer.stopTimer();
+//  GlobalAckermannizationTimer.stopTimer();
 
   abs_neg_b = aExp::NOT(abs_b);
 

@@ -33,6 +33,7 @@ namespace Threads
 		void StartWorkerThreads();
 		void StartControlThread();
 		void JoinWorkerThreads();
+		void DetachWorkerThreads();
 		void JoinControlThread();
 		void ShutDown();
 		Result GetResult();

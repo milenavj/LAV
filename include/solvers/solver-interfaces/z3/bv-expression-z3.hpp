@@ -67,8 +67,8 @@ public:
   }
 
   Z3_sort translateType(Type t) {
-    static Z3_sort unsigned_type = Z3_mk_int_sort(getSolver());
-    static Z3_sort bool_type = Z3_mk_bool_sort(getSolver());
+    thread_local static Z3_sort unsigned_type = Z3_mk_int_sort(getSolver());
+    thread_local static Z3_sort bool_type = Z3_mk_bool_sort(getSolver());
     Z3_sort bv_type = Z3_mk_bv_sort(getSolver(), t.getWidth());
     switch (t.getType()) {
     case UNSIGNED:
@@ -133,7 +133,7 @@ public:
     return s->_expr;
   }
 
-  static std::map<std::string, Z3_func_decl> _uf_registry;
+  thread_local static std::map<std::string, Z3_func_decl> _uf_registry;
 
   virtual ExpressionImp *
   uninterpretedFunction(const Function &fun,

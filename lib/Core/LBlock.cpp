@@ -54,7 +54,7 @@
 using namespace Threads;
 
 namespace {
-
+ 
 llvm::cl::opt<int> NumberThreads(
     "number-threads",
     llvm::cl::desc(
@@ -573,6 +573,7 @@ bool LBlock::CheckReachability() {
   return (_Reachable == BLOCK_REACHABLE);
 }
 
+
 void LBlock::CalculateConditions() {
 
   if (_ConditionsCalculated)
@@ -608,6 +609,7 @@ void LBlock::CalculateConditions() {
 	    //std::cout << FindFirstFlawed << " find first flawed" << std::endl;
 	    if (stopWhenFound(localCond->Instruction(), s, true) == -1)
 	    	return -1;
+//            exit(1);
 	
 	    if (FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED))
 		{
@@ -620,7 +622,7 @@ void LBlock::CalculateConditions() {
     };
 
     std::vector<std::function<int()> > functions;
-    BindTasksForThreads.startTimer();
+//    BindTasksForThreads.startTimer();
     for (unsigned i = 0; i < _LocalConditions.size(); i++) 
 	{
 	  if (SkipLocalCondition(_LocalConditions[i]))
@@ -630,19 +632,22 @@ void LBlock::CalculateConditions() {
       	functions.push_back(std::bind(maxf, &_LocalConditions[i], &cond, this, i));
     }
 
-    BindTasksForThreads.stopTimer();
+//    BindTasksForThreads.stopTimer();
 
-    ParallelExecution.startTimer();
-    
+//    ParallelExecution.startTimer();
+
+
+
 	ThreadPool t;
 	// napravi thread pool i pokreni ga
     if (NumberThreads)
 		t.Init(std::move(functions) ,NumberThreads);
 	else 
 		t.Init(std::move(functions));
+
 	t.Work();	
 
-    ParallelExecution.stopTimer();
+//    ParallelExecution.stopTimer();
 
     std::cout << "\n\n\n\n\n -----------------BRANISLAVA end "
                  "------------------ \n\n\n\n\n";
@@ -1389,7 +1394,7 @@ void LBlock::FlawedFound(const LInstruction *fi, ERRKIND e) {
   //bool reachable =true; //= CheckReachability();
   bool reachable = CheckReachability();
   if (reachable) {
-    AddLocalConditionTimer.stopTimer();
+//    AddLocalConditionTimer.stopTimer();
     if (stopWhenFound(fi, FLAWED, false) == -1)
       exit(1);
     //ovo је dostizno ukoliko nije find-first-flawed
@@ -1421,7 +1426,7 @@ void LBlock::FlawedFound(const LInstruction *fi, ERRKIND e) {
     _Preds.clear();
     _LocalConditions.clear();
     RecalculatePostcondition();
-    AddLocalConditionTimer.stopTimer();
+//    AddLocalConditionTimer.stopTimer();
     return;
   }
 }
@@ -1435,7 +1440,7 @@ bool LBlock::ProcessStatus(const LInstruction *fi, ERRKIND e, STATUS s) {
   if (s == SAFE) {
     aExp t = aExp::TOP();
     _LocalConditions.push_back(LLocalCondition(t, t, fi, e, s));
-    AddLocalConditionTimer.stopTimer();
+//    AddLocalConditionTimer.stopTimer();
     return true;
   }
 
@@ -1445,12 +1450,12 @@ bool LBlock::ProcessStatus(const LInstruction *fi, ERRKIND e, STATUS s) {
 //ovo bi sve moglo da se pojednostavi
 void LBlock::AddLocalCondition(caExp &r, LInstruction *fi, ERRKIND e) {
   STATUS s;
-  AddLocalConditionTimer.startTimer();
+//  AddLocalConditionTimer.startTimer();
 
   if (IsUnreachableBlock()) {
     //        _LocalConditions.push_back(LLocalCondition(aExp::TOP(),aExp::TOP(),fi,
     // e, UNREACHABLE));
-    AddLocalConditionTimer.stopTimer();
+//    AddLocalConditionTimer.stopTimer();
     return;
   }
 
@@ -1462,7 +1467,7 @@ void LBlock::AddLocalCondition(caExp &r, LInstruction *fi, ERRKIND e) {
       _LocalConditions.push_back(
           LLocalCondition(_State.Constraints(), r, fi, e, UNCHECKED));
 
-      AddLocalConditionTimer.stopTimer();
+//      AddLocalConditionTimer.stopTimer();
       return;
     }
   }
@@ -1497,7 +1502,7 @@ void LBlock::AddLocalCondition(caExp &r, LInstruction *fi, ERRKIND e) {
   //    parent->Print("tekuciIzlaz.txt");
   //    }
 
-  AddLocalConditionTimer.stopTimer();
+//  AddLocalConditionTimer.stopTimer();
 }
 
 void LBlock::AddLocalConditionZeroDisequality(caExp &e, LInstruction *fi) {

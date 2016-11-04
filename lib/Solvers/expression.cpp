@@ -248,7 +248,7 @@ std::ostream &operator<<(std::ostream &ostr, const Expression &e) {
   return ostr;
 }
 
-ExpressionFactory *Expression::_factory = 0;
+thread_local ExpressionFactory *Expression::_factory = 0;
 
 ExpressionFactory::~ExpressionFactory() { delete _expr; }
 

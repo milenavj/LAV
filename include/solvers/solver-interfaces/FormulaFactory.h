@@ -38,7 +38,7 @@ private:
   typedef unordered_set<Formula *, hash_Formula, equal_to_Formula>
       FormulaPointerSet;
   FormulaPointerSet existingFormulas;
-  static FormulaFactory *formulaFactory;
+  thread_local static FormulaFactory *formulaFactory;
 
 public:
 

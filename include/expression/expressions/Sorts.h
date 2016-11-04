@@ -92,18 +92,18 @@ public:
 
 private:
   static std::map<std::string, std::vector<SORT> > &registry() {
-    static std::map<std::string, std::vector<SORT> > _registry;
+    thread_local static std::map<std::string, std::vector<SORT> > _registry;
     return _registry;
   }
 
   static Names &names() {
-    static Names _names("i_");
+    thread_local static Names _names("i_");
     return _names;
   }
 
   SortRegistry() {}
 
-  static SortRegistry *_instance;
+  thread_local static SortRegistry *_instance;
 
 };
 

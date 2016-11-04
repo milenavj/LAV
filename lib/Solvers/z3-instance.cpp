@@ -11,7 +11,7 @@ Z3_context mk_context();
 thread_local unsigned Z3Instance::_pushed = 0;
 
 Z3Instance &Z3Instance::instance() {
-  static Z3Instance _instance;
+  thread_local static Z3Instance _instance;
   return _instance;
 }
 

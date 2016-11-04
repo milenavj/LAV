@@ -105,7 +105,7 @@ private:
   }
 
   std::tr1::shared_ptr<ExpressionImp> _imp;
-  static ExpressionFactory *_factory;
+  thread_local static ExpressionFactory *_factory;
   friend class ExpressionFactory;
 
 };

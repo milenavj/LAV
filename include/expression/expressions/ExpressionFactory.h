@@ -25,6 +25,7 @@ public:
     return ExpressionFactory::_expression_factory;
   }
 
+  ~ExpressionFactory() {std::cout << "~ExpressionFactory" << std::endl;}
   ExpressionNode *Get(ExpressionNode *expr_node);
   void Remove(ExpressionNode *expression);
 
@@ -64,7 +65,7 @@ private:
   ExpressionNodePointerSet _existing_nodes;
 
   //Singleton instance
-  static ExpressionFactory *_expression_factory;
+  thread_local static ExpressionFactory *_expression_factory;
 
 };
 } //end of namespace
@@ -78,13 +79,17 @@ private:
 
 namespace argo {
 inline void ExpressionFactory::Remove(ExpressionNode *expression) {
-  //     coutput<<"Removing : "<<*expression<<endl;
+if((expression != 0) && (_existing_nodes.find(expression) != _existing_nodes.end()))  {
+//     coutput<<"Removing : "<<*expression<<endl;
 
   assert(expression != 0);
   assert(_existing_nodes.find(expression) != _existing_nodes.end());
 
   _existing_nodes.erase(expression);
   delete expression;
+}
+else return;
+
 }
 
 #if defined(__GNUCPP__)

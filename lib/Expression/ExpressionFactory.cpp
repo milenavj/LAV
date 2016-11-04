@@ -4,7 +4,7 @@
 
 namespace argo {
 
-ExpressionFactory *ExpressionFactory::_expression_factory = 0;
+thread_local ExpressionFactory *ExpressionFactory::_expression_factory = 0;
 std::vector<Expression> dummy_vector;
 }
 #include "expression/output/Output.h"
@@ -25,12 +25,12 @@ ExpressionNode *ExpressionFactory::Get(ExpressionNode *expr_node) {
   }
 }
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
 void ExpressionFactory::dump() {
   ExpressionNodePointerSet::const_iterator i, iend = _existing_nodes.end();
   for (i = _existing_nodes.begin(); i != iend; i++)
     coutput << *(*i) << endl;
 }
-#endif
+//#endif
 
 } // end of namespace

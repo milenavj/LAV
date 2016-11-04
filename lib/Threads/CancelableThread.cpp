@@ -6,6 +6,7 @@
 #include <cstring>
 #include <cerrno>
 #include <string>
+#include <iostream>
 
 // Ostala zaglavlja
 #include <pthread.h>
@@ -55,6 +56,7 @@ void CancelableThread::Cancel()
 		// inace ukoliko ne postoji id to znaci da se zavrsila
 		if(tid)
 		{
+std::cout << "OTKAZUJEMO NIT " << tid<<std::endl;
 			int pthreadErrno;
 
 			if((pthreadErrno = pthread_cancel(tid)) != 0 && pthreadErrno != ESRCH)

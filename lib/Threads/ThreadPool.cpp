@@ -7,10 +7,13 @@
 #include <thread>
 #include <vector>
 #include <algorithm>
-#include <functional>
-#include <memory>
+#include <functional>  
+#include <memory> 
 
 using namespace Threads;
+
+#include "llvm/Support/CommandLine.h"
+extern llvm::cl::opt<bool> FindFirstFlawed;
 
 ThreadPool::ThreadPool()
 	{}
@@ -24,8 +27,7 @@ ThreadPool::ThreadPool(std::vector<std::function<int()>> &&tasks, uint64_t num_t
 ThreadPool::ThreadPool(ThreadPool &&tp)
     :m_tasksPtr{std::move(tp.m_tasksPtr)},
  	 m_threads{std::move(tp.m_threads)}, 
-	 m_num_tasks{tp.m_num_tasks}, 
-	 m_num_threads{tp.m_num_threads}
+	 m_num_tasks{tp.m_num_tasks}
     {}
 
 ThreadPool& ThreadPool::operator=(ThreadPool &&oth)
@@ -57,6 +59,12 @@ void ThreadPool::JoinWorkerThreads()
 	    for(auto i=0U; i < m_num_threads; i++)
            if(m_threads[i].GetHandle().joinable())
 	 			m_threads[i].GetHandle().join();
+   	}
+
+void ThreadPool::DetachWorkerThreads()
+    {
+        for(auto i=0U ; i < m_num_threads; i++)
+            m_threads[i].GetHandle().detach();
    	}
 
 void ThreadPool::Init(std::vector<std::function<int()>> &&tasks, uint64_t num_threads)
@@ -94,6 +102,9 @@ void ThreadPool::StartWorkerThreads()
 
         for(auto i=0U; i<m_num_threads; i++)
             m_threads.emplace_back(f);
+
+
+
     }
 
 void ThreadPool::StartControlThread()
@@ -107,28 +118,33 @@ void ThreadPool::StartControlThread()
 	
 	       uint64_t num_finished_tasks = 0;
 	       int cancel = 0;
-	       while(num_finished_tasks < m_num_threads && !cancel)
-	       {
+	       while(num_finished_tasks < m_num_threads)
+	       { 
 	
 	           std::vector<size_t> vidxs = Event::WaitForEvents(events);
 	           // Ukoliko se neki event dogodio
 	           for(auto idx : vidxs)
-	           {
+	           { 
 	               	num_finished_tasks += 1;
 	
 	           		Event::Sigval value = events[idx]->Value();
 	
-	              	if(value == Event::Outcome::Unsat)
+	              	if(value == Event::Outcome::Unsat || cancel)
 	               	{
 	                   for(auto &t : m_threads)
 	                       t.Cancel();
+
 	   					std::cout << "Task finished unsuccessfully." << std::endl;
 	   					cancel = 1;                 
 	   					m_result = ThreadPool::Unsucc;
+//                        pthread_exit(0);
+                        exit(1);
 						break;
 	               	}
+
 	   				std::cout << "Task finished successfully." << std::endl;
 	           }
+               if(cancel) break;
 	       }
 	
 	       if(!cancel)
@@ -143,9 +159,12 @@ void ThreadPool::Work()
 {
 	StartWorkerThreads();
 	StartControlThread();
-
-   	JoinWorkerThreads();
+    if(FindFirstFlawed)
+        DetachWorkerThreads();
+    else
+        JoinWorkerThreads();
 	JoinControlThread();
+
 }
 
 ThreadPool::Result ThreadPool::GetResult()

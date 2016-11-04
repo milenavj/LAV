@@ -10,12 +10,12 @@ namespace argo {
 ////	Class ExpressionNode
 ////////////////////////////////////////////////////////////////////////////////
 
-hash<const char *> ExpressionNode::pconstchar_hash_func;
-hash<int> ExpressionNode::int_hash_func;
-hash<long int> ExpressionNode::long_int_hash_func;
+thread_local hash<const char *> ExpressionNode::pconstchar_hash_func;
+thread_local hash<int> ExpressionNode::int_hash_func;
+thread_local hash<long int> ExpressionNode::long_int_hash_func;
 
 #ifdef _DEBUG
-std::vector<ExpressionNode *> ExpressionNode::_nodes;
+std::vector<ExpressionNode *> thread_local ExpressionNode::_nodes;
 
 void ExpressionNode::PrintAllNodes() {
   cout << "Size :: " << ExpressionNode::_nodes.size() << endl;

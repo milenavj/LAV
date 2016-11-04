@@ -88,7 +88,7 @@ private:
   Formula **bitArray;
   unsigned int size;
 
-  static unsigned int m_iPropositionalVarCounter;
+  thread_local static unsigned int m_iPropositionalVarCounter;
 
 };
 
