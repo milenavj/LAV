@@ -23,8 +23,8 @@ public:
 protected:
   OutputFormater(FORMATER formater) { registry()[formater] = this; }
 
-  static std::map<int, OutputFormater *> &registry() {
-    static std::map<int, OutputFormater *> _registry;
+   static std::map<int, OutputFormater *> &registry() {
+   thread_local  static std::map<int, OutputFormater *> _registry;
     return _registry;
   }
 

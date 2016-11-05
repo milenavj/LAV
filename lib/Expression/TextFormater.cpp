@@ -124,6 +124,6 @@ void TextFormater::PrintPrefix(std::ostream &ostr, OperatorNode *e) {
   ostr << ")";
 }
 
-TextFormater _text_formater;
+thread_local TextFormater _text_formater;
 
 }

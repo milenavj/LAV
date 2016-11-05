@@ -593,8 +593,8 @@ void LBlock::CalculateConditions() {
     // napravi funkciju koju ce da izvrsava svaka nit
     auto maxf = [&](LLocalCondition * localCond, aExp * cond, LBlock * block, int i) 
 	{
-    	aExp e1 = aExp::AND(*cond, localCond->LHS());
-    	aExp e2 = localCond->RHS();
+    	aExp e1 = aExp::AND(*cond, aExp(localCond->LHS()));
+    	aExp e2 = aExp(localCond->RHS());
     	std::cout << "\n\n\n\n\n -----------------Start solver , thread id: "
               << pthread_self() << " ------------------ \n\n\n\n\n"
                << std::endl;

@@ -5,8 +5,8 @@
 
 namespace argo {
 
-Output coutput(std::cout);
-Output cerror(std::cerr);
+thread_local Output coutput(std::cout);
+thread_local Output cerror(std::cerr);
 
 Output &Output::operator<<(const Expression &e) {
   if (!_suspend)

@@ -25,7 +25,7 @@ public:
     return ExpressionFactory::_expression_factory;
   }
 
-  ~ExpressionFactory() {std::cout << "~ExpressionFactory" << std::endl;}
+  ~ExpressionFactory() {}
   ExpressionNode *Get(ExpressionNode *expr_node);
   void Remove(ExpressionNode *expression);
 

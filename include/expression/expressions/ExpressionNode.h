@@ -23,7 +23,7 @@ class ExpressionSet;
 typedef unsigned short Literal;
 typedef std::deque<unsigned> Position;
 
-extern std::vector<Expression> dummy_vector;
+extern thread_local std::vector<Expression> dummy_vector;
 
 #define PRIME_HASH 157
 

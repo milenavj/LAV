@@ -23,7 +23,7 @@ protected:
   virtual std::string GetSymbol(ExpressionNode *e) const;
 };
 
-extern TextFormater _text_formater;
+extern thread_local TextFormater _text_formater;
 } //end of namespace
 
 #endif

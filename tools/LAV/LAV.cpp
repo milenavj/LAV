@@ -219,7 +219,7 @@ static void AddStandardCompilePasses(PassManager &PM) {
   addPass(PM, createInstructionCombiningPass());
 
   //  addPass(PM, createLCSSAPass());                //loop closed ssa form -
-  // neophodno da bi se uradilo razmotavanje, ja dodala
+  // neophodno da bi se uradilo razmotavanje, dodato
   addPass(PM, createIndVarSimplifyPass());       // Canonicalize indvars
   addPass(PM, createLoopDeletionPass());         // Delete dead loops
   addPass(PM, createLoopUnrollPass());           // Unroll small loops

@@ -62,6 +62,6 @@ void SMTFormater::PrintPrefix(std::ostream &ostr, OperatorNode *e) {
   ostr << ")";
 }
 
-SMTFormater _smt_formater;
+thread_local SMTFormater _smt_formater;
 
 } //end of namespace

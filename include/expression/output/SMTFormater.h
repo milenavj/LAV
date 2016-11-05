@@ -17,7 +17,7 @@ private:
   void PrintPrefix(std::ostream &ostr, OperatorNode *e);
 };
 
-extern SMTFormater _smt_formater;
+extern thread_local SMTFormater _smt_formater;
 } // end of namespace
 
 #endif

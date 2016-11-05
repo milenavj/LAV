@@ -226,7 +226,6 @@ Expression Expression::AND(const Expression &arg1) {
   std::vector<Expression> operands;
   operands.push_back(arg1);
   return AND(operands);
-
 }
 
 Expression Expression::AND(const std::vector<Expression> &operands) {

@@ -71,7 +71,7 @@ protected:
   bool _suspend;
 };
 
-extern Output coutput;
-extern Output cerror;
+extern thread_local Output coutput;
+extern thread_local Output cerror;
 } //end of namespace
 #endif
