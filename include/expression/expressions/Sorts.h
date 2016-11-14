@@ -7,6 +7,7 @@
 #include <map>
 #include <string>
 #include <vector>
+
 namespace argo {
 typedef enum {
   //Formula sort

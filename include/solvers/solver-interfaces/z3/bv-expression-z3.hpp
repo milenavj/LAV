@@ -21,8 +21,9 @@ public:
       : ExpressionImpSymbolic(EK_ExpressionImpZ3), _expr(0) {}
 
   explicit BVExpressionImpZ3(SOLVER_EXPR_TYPE expr, size_t width, Z3Type type)
-      : ExpressionImpSymbolic(EK_ExpressionImpZ3), _expr(expr), _width(width),
-        _type(type) {}
+      : ExpressionImpSymbolic(EK_ExpressionImpZ3), _expr(expr), _width(width)
+//        _type(type) 
+    {}
 
   static bool classof(const ExpressionImp *S) {
     return S->getKind() == EK_ExpressionImpZ3;
@@ -860,7 +861,7 @@ private:
 
   SOLVER_EXPR_TYPE _expr;
   size_t _width;
-  Z3Type _type;
+//  Z3Type _type;
 };
 
 class BVExpressionFactoryZ3 : public ExpressionFactory {

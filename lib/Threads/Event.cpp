@@ -103,6 +103,8 @@ Event::Sigval Event::Value(bool block)
 		return Outcome::Unsat;
 	else if(m_finished)
 		return Outcome::Finished;
+
+    return Outcome::Finished;
 }
 
 std::vector<size_t> Event::WaitForEvents(std::vector<Event::Pointer> &events, const std::chrono::milliseconds &waitMs, bool blosk)

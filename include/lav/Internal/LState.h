@@ -21,7 +21,7 @@
 #include "lav/Internal/LTypes.h"
 
 namespace llvm {
-struct BasicBlock;
+class BasicBlock;
 class ConstantExpr;
 class AllocaInst;
 class Type;

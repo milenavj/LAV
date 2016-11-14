@@ -474,7 +474,7 @@ bool CheckModel(const char *directoryName, char *objname, char *filename,
 
   FILE *modeli =
       OpenForReading(modelFileWithDir, filename, log_file, "CheckModel 1");
-  if ((modeli == NULL))
+  if (modeli == NULL)
     return false;
 
   while (fgets(s, MAX_BUF, modeli) != NULL) {
@@ -503,12 +503,12 @@ bool CheckModel(const char *directoryName, char *objname, char *filename,
 
   FILE *LavOutput =
       OpenForReading(lavoutputmodel, filename, log_file, "CheckModel 2");
-  if ((LavOutput == NULL))
+  if (LavOutput == NULL)
     return false;
 
   FILE *ExpectedOutput =
       OpenForReading(expectedModel, filename, log_file, "CheckModel 3");
-  if ((ExpectedOutput == NULL)) {
+  if (ExpectedOutput == NULL) {
     fclose(LavOutput);
     return false;
   }
@@ -533,13 +533,13 @@ bool Check(const char *directoryName, char *objname, char *filename,
 
   /*Uporedi izlaz lava sa datim  izlazom*/
   LavOutput = OpenForReading(lavoutputname, filename, log_file, "Check 1");
-  if ((LavOutput == NULL)) {
+  if (LavOutput == NULL) {
     Delete(objname);
     return false;
   }
 
   ExpectedOutput = OpenForReading(name, filename, log_file, "Check 2");
-  if ((ExpectedOutput == NULL)) {
+  if (ExpectedOutput == NULL) {
     Delete(objname);
     Delete(lavoutputname);
     fclose(LavOutput);

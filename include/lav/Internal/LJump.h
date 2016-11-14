@@ -17,7 +17,7 @@
 
 #include "expression/expressions/Expression.h"
 
-namespace llvm { struct BasicBlock; }
+namespace llvm { class BasicBlock; }
 
 namespace lav {
 class LInstruction;

@@ -1,12 +1,8 @@
 /* include/config.h.  Generated from config.h.in by configure.  */
-/* include/config.h.in.  Generated from autoconf/configure.tmp.ac by autoheader.
- */
+/* include/config.h.in.  Generated from autoconf/configure.tmp.ac by autoheader.  */
 
 /* BOOLECTOR solver */
 /* #undef BOOLECTOR */
-
-/* BOOLECTOR solver */
-#define BOOLECTOR_OLD 1
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
@@ -38,9 +34,6 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1
 
-/* MATHSAT solver */
-#define MATHSAT 1
-
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "milena@matf.bg.ac.rs"
 
@@ -61,9 +54,6 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
-
-/* YICES solver */
-#define YICES 1
 
 /* Z3 solver */
 #define Z3 1

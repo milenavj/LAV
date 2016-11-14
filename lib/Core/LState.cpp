@@ -267,7 +267,7 @@ void LState::ProcessFInc(LInstruction *fi, llvm::Function *f,
                   GetIntType(i->getOperand(0)->getType()), false);
 
   for (unsigned j = 0; j < numArgs; ++j) {
-    const llvm::Type *t = i->getOperand(j)->getType();
+//    const llvm::Type *t = i->getOperand(j)->getType();
     std::string name = GetOperandName(i->getOperand(j));
     //!@#$      aExp e1 = ExpVar(GetNameOfNextVariable(), GetIntType(t), false
     //);
@@ -285,7 +285,7 @@ void LState::ProcessFDec(LInstruction *fi, llvm::Function *f,
                          unsigned numArgs) {
   llvm::Instruction *i = fi->Instruction();
   for (unsigned j = 0; j < numArgs; ++j) {
-    const llvm::Type *t = i->getOperand(j)->getType();
+//    const llvm::Type *t = i->getOperand(j)->getType();
     std::string name = GetOperandName(i->getOperand(j));
     //!@#$      aExp e1 = ExpVar(GetNameOfNextVariable(), GetIntType(t), false
     //);
@@ -2487,6 +2487,7 @@ aExp LState::ConnectVariables(unsigned id1, unsigned id2) const {
   return MakeANDFromExpressions(exps);
 }
 
+/*
 static bool IsComparison(const aExp *e) {
   if (e->IsEquality())
     return true;
@@ -2511,6 +2512,7 @@ static bool IsComparison(const aExp *e) {
 
   return false;
 }
+*/
 
 aExp LState::TransformationFormula() const {
   vaExp exps;

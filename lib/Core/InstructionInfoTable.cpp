@@ -211,31 +211,4 @@ public:
   }
 };
 
-static void
-buildInstructionToLineMap(Module *m,
-                          std::map<const Instruction *, unsigned> &out) {
-  InstructionToLineAnnotator a;
-  std::string bb = "";
-  llvm::raw_string_ostream buffer(bb);
-  m->print(buffer, &a);
-  std::string str = buffer.str();
-  const char *s;
-
-  unsigned line = 1;
-  for (s = str.c_str(); *s; s++) {
-    if (*s == '\n') {
-      line++;
-      if (s[1] == '%' && s[2] == '%' && s[3] == '%') {
-        s += 4;
-        char *end;
-        unsigned long long value = strtoull(s, &end, 10);
-        if (end != s) {
-          out.insert(std::make_pair((const Instruction *)value, line));
-        }
-        s = end;
-      }
-    }
-  }
-}
-
 } //end of namespace

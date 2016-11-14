@@ -24,7 +24,8 @@ class Module;
 namespace lav {
 
 /* Stores debug information for an Instruction */
-struct InstructionInfo {
+class InstructionInfo {
+public:
   unsigned id;
   cStr &file;
   unsigned line;

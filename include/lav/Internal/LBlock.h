@@ -25,7 +25,7 @@
 #include "lav/Internal/LMerge.h"
 
 namespace llvm {
-struct BasicBlock;
+class BasicBlock;
 class Type;
 }
 

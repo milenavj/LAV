@@ -89,13 +89,10 @@ std::string display_symbol(Z3_context c, Z3_symbol s) {
   case Z3_INT_SYMBOL:
     sprintf(ss, "%d", Z3_get_symbol_int(c, s));
     return std::string(ss);
-    break;
   case Z3_STRING_SYMBOL:
     return Z3_get_symbol_string(c, s);
-    break;
-  default:
-    return "unknown";
   }
+    return "unknown";
 }
 
 /**
