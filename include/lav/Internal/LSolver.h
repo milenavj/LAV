@@ -59,6 +59,7 @@ public:
   static void SetAddresses(caExp &addr);
   void reset();
   static void resetSolver();
+  static void setFactory();
   static void GetModel(stUrsaExp &symbolTable, const LBlock *fb,
                        const LInstruction *fi, ERRKIND erKind);
   static void GetTransform(stUrsaExp &symbolTable, vStr &transforamtions);

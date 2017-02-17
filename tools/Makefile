@@ -15,7 +15,7 @@ LEVEL=..
 #
 # List all of the subdirectories that we will compile.
 #
-PARALLEL_DIRS=LAV TestLAV CfgLAV 
+PARALLEL_DIRS=LAV TestLAV CfgLAV StatistikeLAV
 
 include $(LEVEL)/Makefile.common
 

@@ -1065,7 +1065,7 @@ void LState::ProcessFunctionCall(LInstruction *fi) {
   llvm::Function *f = GetFunction(i, numArgs);
   if (!f) //FIXME ovo je vazno i treba ga srediti
       {
-    std::cout << " funkcia nije deklarisana!!! " << std::endl;
+    std::cout << " funkcija nije deklarisana!!! " << std::endl;
     llvm::outs() << *i << '\n';
     std::cout << " !f ????: " << std::endl;
     return;
@@ -1281,7 +1281,9 @@ void LState::ProcessLibraryCall(LInstruction *fi, llvm::Function *f,
     aExp e = ExpVar(GetNextVariable(), fint_type, false);
     WriteIntoStore(i, e);
   } else if ((f->getName() == "ASSERT") || (f->getName() == "assert") ||
-             (f->getName() == "ASSERT_") || (f->getName() == "assert_")) {
+             (f->getName() == "ASSERT_") || (f->getName() == "assert_") ||
+             (f->getName() == "__ASSERT_FAIL") || (f->getName() == "__assert_fail") ||
+             (f->getName() == "ASSERT_LAV") || (f->getName() == "assert_lav")) {
 
     if (CheckAssert) {
       aExp r = GetValue(argument(i, 0));
@@ -1749,6 +1751,8 @@ void LState::Update(LInstruction *fi) {
   }
 
   llvm::Instruction *i = fi->Instruction();
+//  	  llvm::outs() << *i ;
+//  	  std::cout <<  std::endl;
 
   switch (i->getOpcode()) {
   // Control flow

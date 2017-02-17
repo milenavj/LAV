@@ -588,7 +588,7 @@ void LBlock::CalculateConditions() {
   if (EnableParallel) 
   {
     std::cout << "\n\n\n\n\n -----------------BRANISLAVA begin "
-                 "------------------ \n\n\n\n\n";
+                 "------------------ \n\n\n\n\n "<< std::endl;;
 
     // napravi funkciju koju ce da izvrsava svaka nit
     auto maxf = [&](LLocalCondition * localCond, aExp * cond, LBlock * block, int i) 
@@ -650,7 +650,7 @@ void LBlock::CalculateConditions() {
 //    ParallelExecution.stopTimer();
 
     std::cout << "\n\n\n\n\n -----------------BRANISLAVA end "
-                 "------------------ \n\n\n\n\n";
+                 "------------------ \n\n\n\n\n" << std::endl;
   } 
   else 
   {
@@ -882,6 +882,7 @@ void LBlock::CalculateConditionsIncremental() {
 
   if (QuickCalculate())
     return;
+//std::cout <<"LBlock::CalculateConditionsIncremental();" << std::endl;
 
   aExp e = AddAddresses(BlockEntry());
 
@@ -892,6 +893,7 @@ void LBlock::CalculateConditionsIncremental() {
     aExp e1 = aExp::AND(e, _LocalConditions[i].LHS());
     aExp e2 = _LocalConditions[i].RHS();
 
+//std::cout <<"LBlock::LSolver::instance().callSolverIncremental();" << std::endl;
     //      STATUS s = UNCHECKED;
     STATUS s = LSolver::instance().callSolverIncremental(
         e1, e2, this, _LocalConditions[i].Instruction(),
@@ -1102,6 +1104,7 @@ void LBlock::AddToLoopMax() const {
 
 void LBlock::CalculateDescriptions() {
 
+//std::cout <<"LBlock::CalculateDescriptions(); " <<_Id << std::endl;
   if (_DescriptionsCalculated)
     return;
 
@@ -1122,8 +1125,11 @@ void LBlock::CalculateDescriptions() {
         _Preds.push_back(fb_pred);
     }
 
+//std::cout <<"LBlock::SetState(); " <<_Id << std::endl;
     SetState();
+//std::cout <<"LBlock::SetJumps(); " <<_Id << std::endl;
     SetJumps();
+//std::cout <<"LBlock::SetPostcondition(); " <<_Id << std::endl;
     SetPostcondition();
 
     _PredsSet = true;
@@ -1135,32 +1141,32 @@ void LBlock::CalculateDescriptions() {
   if (SkipInsideLoop)
     AddToLoopMax();
 
-  //std::cout << "SetPreds" << std::endl;
+//  std::cout << "SetPreds" << std::endl;
   //SetPredsTimer.startTimer();
   SetPreds();
   //SetPredsTimer.stopTimer();
 
-  //std::cout << "ChangeInitStore" << std::endl;
+//  std::cout << "ChangeInitStore" << std::endl;
   //ChangeInitStoreTimer.startTimer();
   ChangeInitStore();
   //ChangeInitStoreTimer.stopTimer();
 
-  //std::cout << "SetState" << std::endl;
+//  std::cout << "SetState" << std::endl;
   //SetStoreTimer.startTimer();
   SetState();
   //SetStoreTimer.stopTimer();
 
-  //std::cout << "SetJumps" << std::endl;
+//  std::cout << "SetJumps" << std::endl;
   //SetJumpsTimer.startTimer();
   SetJumps();
   //SetJumpsTimer.stopTimer();
 
-  //std::cout << "SetPostcondition" << std::endl;
+//  std::cout << "SetPostcondition" << std::endl;
   //SetPredsTimer.startTimer();
   SetPostcondition();
   //SetPredsTimer.stopTimer();
 
-  //std::cout << "TryMerge()" << std::endl;
+//  std::cout << "TryMerge()" << std::endl;
   //TryMergeTimer.startTimer();
   TryMerge();
   //TryMergeTimer.stopTimer();
@@ -1472,14 +1478,16 @@ void LBlock::AddLocalCondition(caExp &r, LInstruction *fi, ERRKIND e) {
     }
   }
 
+/* --- ovo je iskomentarisano da bi se testirala paralelizacija
   aExp t = aExp::TOP();
   s = LSolver::callSolver(t, r, this, fi, e);
   if (ProcessStatus(fi, e, s) == true)
     return;
   aExp l = AddAddresses(AllConstraints());
-
+//*/
   //   _State.GetStore().Print(std::cout);
 
+/* --- ovo je iskomentarisano da bi se testirala paralelizacija
   s = LSolver::callSolver(l, r, this, fi, e, true);
 
   if (Id() == 0)
@@ -1487,6 +1495,7 @@ void LBlock::AddLocalCondition(caExp &r, LInstruction *fi, ERRKIND e) {
       exit(1);
   if (ProcessStatus(fi, e, s) == true)
     return;
+//*/
 
   //ako je u prvom bloku, onda nema potrebe ponovo da se racuna u odnosu na
   //prethodne blokove,

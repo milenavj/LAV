@@ -40,8 +40,8 @@ void LConstraints::AddAddressConstraint(long long &currentAddress,
 void LConstraints::AddConstraint(const argo::Expression &e, unsigned left,
                                  unsigned right) {
   if (CheckPointers) {
-    std::cout << "AddConstraint " << e.GetName() << " left= " << left
-              << " right= " << right << std::endl;
+//    std::cout << "AddConstraint " << e.GetName() << " left= " << left
+//              << " right= " << right << std::endl;
     argo::IntType iType = fint_type;
     argo::Expression leftside =
         argo::Expression::Equality(ExpLeft(e), ExpNum1(left, iType));

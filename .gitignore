@@ -14,3 +14,4 @@ config.status
 Makefile.common
 Makefile.config
 include/config.h
+Debug+Asserts/

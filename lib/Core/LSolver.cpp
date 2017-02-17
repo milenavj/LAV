@@ -190,6 +190,10 @@ bool LSolver::isLATheory() {
     return false;
 }
 
+void LSolver::setFactory() {
+  UrsaExp::setFactory(_Factory.get());
+}
+
 void LSolver::resetSolver() {
 #if defined(BOOLECTOR) || defined(BOOLECTOR_OLD)
   if (isBoolector()) {
@@ -804,6 +808,11 @@ UrsaExp LSolver::ExportExpressionBV(caExp &e, stUrsaExp &symbolTable) {
     return operands[0].aShiftR(operands[1]);
 
   if (e.IsITE()) {
+    if (e[0].IsTOP())
+        return operands[1];
+    else if (e[0].IsBOT())
+        return operands[2];
+    else {
     //fixme tip
     unsigned width = GetBitWidth(fint_type);
     if (e[1].IsVariable() || e[1].IsNumeral())
@@ -811,6 +820,7 @@ UrsaExp LSolver::ExportExpressionBV(caExp &e, stUrsaExp &symbolTable) {
     else if (e[2].IsVariable() || e[2].IsNumeral())
       width = GetBitWidth(e[2].getIntType());
     return operands[0].ite(operands[1], operands[2], width);
+    }
   }
 
   if (e.isSext())
@@ -827,12 +837,33 @@ UrsaExp LSolver::ExportExpressionBV(caExp &e, stUrsaExp &symbolTable) {
 
     if (isZ3()) {
       //ako je bool ne smem zext(bool) vec mora ite(bool ? 1,0)
-      if ((e[0].IsNumeral() || e[0].IsVariable()) && e[0].getIntWidth() < 3) {
+      if ((e[0].IsNumeral() || e[0].IsVariable())) {  //&& e[0].getIntWidth() < 3) {
         int width = e[1].GetValue().get_si();
         UrsaExp eu1 = UrsaExp::integerGround(1, width);
         UrsaExp eu0 = UrsaExp::integerGround(0, width);
         return operands[0].ite(eu1, eu0, width);
-      }
+      }     
+    else if(e[0].IsITE()) {
+//zext (ITE bot  0  1 ) 32 )    
+    if (e[0][0].IsBOT() && e[0][2].IsNumeral()) {
+        int width = e[1].GetValue().get_si();
+        UrsaExp eu0 = UrsaExp::integerGround(e[0][2].GetValue().get_si(), width);
+        return eu0;
+        }
+    else if (e[0][0].IsTOP() && e[0][1].IsNumeral()) {
+        int width = e[1].GetValue().get_si();
+        UrsaExp eu0 = UrsaExp::integerGround(e[0][1].GetValue().get_si(), width);
+        return eu0;
+        }
+    else {
+        int width = e[1].GetValue().get_si();
+        UrsaExp eu1 = UrsaExp::integerGround(1, width);
+        UrsaExp eu0 = UrsaExp::integerGround(0, width);
+        UrsaExp uslov = ExportExpressionBV(e[0][0], symbolTable);
+        return uslov.ite(eu1,eu0,width);
+    }
+    
+    }
     }
     return operands[0].zext(e[1].GetValue().get_si());
   }
@@ -1510,12 +1541,12 @@ STATUS LSolver::callSolver(caExp &a, caExp &b, const LBlock *fb,
                            const LInstruction *fi, ERRKIND erKind, bool m,
                            SOLVERCONTEXT c) {
 
-  //  std::cout << "---------------------------------------------------"
-  //            << std::endl;
-  //  std::cout << "callSolver" << std::endl;
-  //  std::cout << "---------------------------------------------------"
-  //            << std::endl;
-  //  PrintAB(a, b);
+/*    std::cout << "---------------------------------------------------"
+              << std::endl;
+    std::cout << "callSolver" << std::endl;
+    std::cout << "---------------------------------------------------"
+              << std::endl;
+    PrintAB(a, b);*/
 
 //  NonIncrementalPreparationTime.startTimer();
   saExp ls;
@@ -1812,7 +1843,7 @@ STATUS LSolver::callSolverBlock(caExp &f,
       s = exp.getAssignment();
     }
     catch (char const * ss) {
-      std::cout << "  " << ss << std::endl;
+      std::cout << "callSolverBlock::exception  " << ss << std::endl;
       continue;
     }
     if (s == "0")
@@ -1828,7 +1859,7 @@ STATUS LSolver::callSolverBlock(caExp &f,
 bool LSolver::FinalAddIntoSolver() {
   saExp ls;
   saExp rs;
-
+//  	  std::cout << "LSolver::FinalAddIntoSolver()" << std::endl;
   aExp abs_cond;
   if (Ackermannize()) {
     //ovim se dobije flattened abs_cond
@@ -1844,14 +1875,16 @@ bool LSolver::FinalAddIntoSolver() {
     //      abs_cond = _ExpToAddIntoSolver;
   }
 
-  //PrintA(_ExpToAddIntoSolver, " AddIntoSolver ");
-  //PrintA(abs_cond, " a-------------- ");
+//  PrintA(_ExpToAddIntoSolver, " AddIntoSolver ");
+//  PrintA(abs_cond, " a-------------- ");
 
   UrsaExp exported_cond;
   bool exported;
+//  	  std::cout << "TryExportExpression(abs_cond, exported_cond, _SymbolTable);" << std::endl;
   exported = TryExportExpression(abs_cond, exported_cond, _SymbolTable);
   if (!exported)
     return false;
+//  	  std::cout << "TryExportExpression(abs_cond, exported_cond, _SymbolTable); end" << std::endl;
   _ExpToAddIntoSolver = aExp::TOP();
 
   //Posle exporta, dodati ackimplikacije, ako je potrebno
@@ -1863,7 +1896,9 @@ bool LSolver::FinalAddIntoSolver() {
   }
 
 //  IncrementalTime.startTimer();
+//  	  std::cout << "AddConstraint(exported_cond);" << std::endl;
   AddConstraint(exported_cond);
+//  	  std::cout << "AddConstraint(exported_cond); end" << std::endl;
 //  IncrementalTime.stopTimer();
 
   return true; //uspelo dodavanje
@@ -1918,10 +1953,15 @@ bool LSolver::Export(caExp &ab, UrsaExp &exported_ab, UrsaExp &impls) {
 STATUS LSolver::callSolverIncremental(caExp &a, caExp &b, const LBlock *fb,
                                       const LInstruction *fi, ERRKIND erKind) {
 
-  //  std::cout << "callSolverIncremental" << std::endl;
-  //  PrintAB(a, b);
+//    std::cout << "callSolverIncremental" << std::endl;
+//    PrintAB(a, b);
+// 	  std::cout << "FinalAddIntoSolver() " << std::endl;
+
+  UrsaExp::setFactory(_Factory.get());
+
   if (FinalAddIntoSolver() == false)
     return ERROR;
+//  	  std::cout << "FinalAddIntoSolver() end" << std::endl;
 
   saExp ls;
   saExp rs;
@@ -1963,6 +2003,7 @@ STATUS LSolver::callSolverIncremental(caExp &a, caExp &b, const LBlock *fb,
 
 //  IncrementalTime.startTimer();
   bool satb = AddTempConstraint(exported_ab);
+//  	  std::cout << " AddTempConstraint(exported_ab)end" << std::endl;
 //  IncrementalTime.stopTimer();
 
   return GetStatus(((satnegb == true) ? SAT : UNSAT),
@@ -2041,7 +2082,7 @@ bool LSolver::AddTempConstraint(UrsaExp &e) {
 }
 
 bool LSolver::AddConstraint(UrsaExp &e) {
-  //    std::cout << "LSolver::addConstraint()" <<std::endl;
+//      std::cout << "LSolver::addConstraint()" <<std::endl;
   bool sat = e.addConstraint();
   return sat;
 }
