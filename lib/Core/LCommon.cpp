@@ -86,6 +86,20 @@ llvm::cl::opt<bool> SkipInsideLoop(
         "LAV --- Skip checking inner loop unwindings (default = true)"),
     llvm::cl::init(true));
 
+// Autor: Branislava
+// Dodato zbog paralelizacije
+
+llvm::cl::opt<int> NumberThreads(
+    "number-threads",
+    llvm::cl::desc(
+     "LAV --- Number of threads (default = hardware_concurrency)"),
+    llvm::cl::init(0));
+llvm::cl::opt<bool> EnableParallel(
+    "enable-parallel",
+    llvm::cl::desc("LAV --- Enable parallel solver calls (default = false)"),
+    llvm::cl::init(false));
+
+
 namespace lav {
 
 void AbstractName(std::string &name) {

@@ -40,6 +40,9 @@
 #include "expression/output/SMTFormater.h"
 #include "expression/expressions/NumeralTypes.h"
 
+
+#include <pthread.h>
+
 #include <vector>
 #include <string>
 
@@ -49,12 +52,15 @@ extern llvm::cl::opt<bool> TrackPointers;
 extern llvm::cl::opt<bool> SkipInsideLoop;
 extern llvm::cl::opt<bool> MemoryFlag;
 extern llvm::cl::opt<bool> CheckAssert;
+extern llvm::cl::opt<int> NumberThreads;
+extern llvm::cl::opt<bool> EnableParallel;
 
 namespace lav {
 
 //llvm::Timer Branching("Branching time --- call solver light");
 
 static argo::SMTFormater SMTF;
+pthread_mutex_t var=PTHREAD_MUTEX_INITIALIZER;
 
 void LState::WriteIntoStore(llvm::Instruction *i, const aExp &e) {
   if (e.isSelect() && (GetIntType(i->getType()) != fint_type))
@@ -558,7 +564,6 @@ void LState::ProcessBitCast(LInstruction *fi) {
         GetIntType(_Store.GetType(GetOperandName(i->getOperand(0)))));
     aExp e1 = *GetValue(GetOperandName(i->getOperand(0)));
 
-    //  std::cout << "BITCAST ovde sam" << std::endl;
     //  e1.Print(&SMTF, std::cout);
     //  std::cout << std::endl;
 
@@ -1017,26 +1022,44 @@ void LState::InlineFunction(LInstruction *fi, llvm::Function *f,
   //pronadji LFunction koji odgovara ovoj funkciji
   LFunction *ff = GetParentBlock()->GetParentModule()->GetLFunction(f);
 
-  //dali je funkcija sracunata
-  //ako nije, izracunaj je - pretpostavka da nema rekurzije
-  if (ff != NULL) {
-    //ovo je zastita samo od direktne rekurzije
-    //FIXME treba nesto pametnije uraditi a ne samo return
-    if (ff->GetFunctionName() == GetParentBlock()->GetFunctionName())
-      return;
-    //    ffTimer.startTimer();
+  // Autor: Branislava
+  // Dodato zbog paralelizacije funkcija
+  if(EnableParallel)
+  {
+    std::cout << "Funkcija: " <<  ff->GetFunctionName()<< " - Cekamo na vrednost shared future!" << std::endl; 
+    
+    auto FutureResultsPtr = GetParentBlock()->GetParentModule()->GetFutureResultsPtr();
+    
+    (*FutureResultsPtr)[std::string(ff->GetFunctionName())].getSharedFuture().wait();  
 
-    // ff->CalculateDescriptions();
+     ff->SetPostcondition();
 
-    ff->CalculateConditions();
-    ff->SetPostcondition();
+    std::cout << "Funkcija: " <<ff->GetFunctionName()<< " - Dobili smo vrednost shared future!" << std::endl; 
+  }
+  else
+  {
+    //dali je funkcija sracunata
+    //ako nije, izracunaj je - pretpostavka da nema rekurzije
+    if (ff != NULL) {
+      //ovo je zastita samo od direktne rekurzije
+      //FIXME treba nesto pametnije uraditi a ne samo return
+      if (ff->GetFunctionName() == GetParentBlock()->GetFunctionName())
+        return;
+      //    ffTimer.startTimer();
 
-    //    ffTimer.stopTimer();
-  } else {
-    std::cout << "funkcija nije nadjena, i sta sada???  " << std::endl;
-    exit(1);
+      // ff->CalculateDescriptions();
+
+      ff->CalculateConditions();
+      ff->SetPostcondition();
+
+      //    ffTimer.stopTimer();
+    } else {
+      std::cout << "funkcija nije nadjena, i sta sada???  " << std::endl;
+      exit(1);
+    }
   }
 
+pthread_mutex_lock(&var);
   ff->SetNewContext();
 
   ConnectFunctionArguments(i, f, numArgs, ff);
@@ -1053,7 +1076,7 @@ void LState::InlineFunction(LInstruction *fi, llvm::Function *f,
 
   //AddPostCondTimer.startTimer();
   _Constraints.Add(ff->GetPostcondition());
-
+pthread_mutex_unlock(&var);
   //AddPostCondTimer.stopTimer();
 }
 
@@ -1106,8 +1129,6 @@ void LState::ProcessFunctionCall(LInstruction *fi) {
       else {
 
     //InlineTimer.startTimer();
-
-    //!@#$ ovo otkomentarisati
     InlineFunction(fi, f, numArgs);
     //InlineTimer.stopTimer();
 

@@ -52,13 +52,13 @@
 #include "lav/Threads/ThreadPool.h"
 
 using namespace Threads;
-
-namespace {
+/*
+namespace lav {
  
 llvm::cl::opt<int> NumberThreads(
     "number-threads",
     llvm::cl::desc(
-        "LAV --- Number of threads (default = hardware_concurrency)"),
+     "LAV --- Number of threads (default = hardware_concurrency)"),
     llvm::cl::init(0));
 llvm::cl::opt<bool> EnableParallel(
     "enable-parallel",
@@ -66,6 +66,9 @@ llvm::cl::opt<bool> EnableParallel(
     llvm::cl::init(false));
 
 }
+  */
+
+  
 
 extern llvm::cl::opt<bool> Model;
 extern llvm::cl::opt<bool> FindFirstFlawed;
@@ -76,6 +79,10 @@ extern llvm::cl::opt<bool> PrintHtml;
 extern llvm::cl::opt<std::string> StartFunction;
 extern llvm::cl::opt<std::string> InputFile;
 extern llvm::cl::opt<std::string> OutputFolder;
+// Autor: Branislav
+// Dodato zbog paralelizacije
+extern llvm::cl::opt<int> NumberThreads;
+extern llvm::cl::opt<bool> EnableParallel;
 
 namespace lav {
 extern std::map<llvm::BasicBlock *, vLoop> FLoopBlocks;
@@ -483,7 +490,7 @@ int LBlock::stopWhenFound(const LInstruction *fi, STATUS s, bool count) const {
 
   if (s == FLAWED ||
       (count && (GetFunctionName() == StartFunction) && (s == UNSAFE))) {
-
+    
     std::string sFilename =
         OutputFolder + "/" + ExtractFileName(InputFile) + ".html";
     const LModule *parent = NULL;
@@ -585,32 +592,34 @@ void LBlock::CalculateConditions() {
 
   aExp cond = AddAddresses(GetTraceGlobFuncCons());
 
-  if (EnableParallel) 
+  // Autor: Branislava
+  // Dodato zbog paralelizacije bloka
+  if (EnableParallel) //<-----------------------IZBACITI NEGACIJU!!!!!!!!!!!!!!!!!!!!!!!!!
   {
-    std::cout << "\n\n\n\n\n -----------------BRANISLAVA begin "
-                 "------------------ \n\n\n\n\n";
+    std::cout << "\n ----------------- BEGIN PARALLEL BLOCK "
+                 "------------------ \n";
 
     // napravi funkciju koju ce da izvrsava svaka nit
     auto maxf = [&](LLocalCondition * localCond, aExp * cond, LBlock * block, int i) 
 	{
     	aExp e1 = aExp::AND(*cond, aExp(localCond->LHS()));
     	aExp e2 = aExp(localCond->RHS());
-    	std::cout << "\n\n\n\n\n -----------------Start solver , thread id: "
-              << pthread_self() << " ------------------ \n\n\n\n\n"
+    	std::cout << "\n ----------------- Start solver, thread id: "
+              << pthread_self() << " ------------------ \n"
                << std::endl;
 
 	    STATUS s = LSolver::instance().callSolver(e1, e2, block, localCond->Instruction(),
 	                                   localCond->ErrorKind(), true);
 	
-	    std::cout << "\n\n\n\n\n -----------------End solver , thread id: "
-	              << pthread_self() << "------------------ \n\n\n\n\n"
+	    std::cout << "\n ----------------- End solver, thread id: "
+	              << pthread_self() << "------------------ \n"
 	              << std::endl;
 	
 	    //std::cout << FindFirstFlawed << " find first flawed" << std::endl;
-	    if (stopWhenFound(localCond->Instruction(), s, true) == -1)
-	    	return -1;
-//            exit(1);
-	
+	    if (stopWhenFound(localCond->Instruction(), s, true) == -1) {
+//	    	return -1;
+            exit(1);
+}	
 	    if (FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED))
 		{
 	    	Delete(localCond->Instruction()->GetModelFileName());
@@ -643,18 +652,18 @@ void LBlock::CalculateConditions() {
     if (NumberThreads)
 		t.Init(std::move(functions) ,NumberThreads);
 	else 
-		t.Init(std::move(functions));
+		t.Init(std::move(functions), (std::thread::hardware_concurrency() < _LocalConditions.size()) ? std::thread::hardware_concurrency() :_LocalConditions.size() );
 
 	t.Work();	
 
 //    ParallelExecution.stopTimer();
 
-    std::cout << "\n\n\n\n\n -----------------BRANISLAVA end "
+    std::cout << "\n\n\n\n\n -----------------END PARALLEL BLOCK "
                  "------------------ \n\n\n\n\n";
   } 
   else 
   {
-    std::cout << "\n\n ----------------- BEGIN SEQUENTIAL LAV "
+    std::cout << "\n\n ----------------- BEGIN SEQUENTIAL BLOCK "
                  "------------------ \n\n";
 
     for (unsigned i = 0; i < _LocalConditions.size(); i++) {
@@ -667,8 +676,9 @@ void LBlock::CalculateConditions() {
           LSolver::callSolver(e1, e2, this, _LocalConditions[i].Instruction(),
                               _LocalConditions[i].ErrorKind(), true);
 
-      if (stopWhenFound(_LocalConditions[i].Instruction(), s, true) == -1)
+      if (stopWhenFound(_LocalConditions[i].Instruction(), s, true) == -1) {
         exit(1);
+    }
 
       if (FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED))
         Delete(_LocalConditions[i].Instruction()->GetModelFileName());
@@ -676,7 +686,7 @@ void LBlock::CalculateConditions() {
       _LocalConditions[i].Status() = s;
     }
     std::cout
-        << "\n\n ----------------- END SEQUENTIAL LAV ------------------ \n\n";
+        << "\n\n ----------------- END SEQUENTIAL BLOCK ------------------ \n\n";
   }
 
 }
@@ -1472,6 +1482,7 @@ void LBlock::AddLocalCondition(caExp &r, LInstruction *fi, ERRKIND e) {
     }
   }
 
+/* --- ovo je iskomentarisano da bi se testirala paralelizacija
   aExp t = aExp::TOP();
   s = LSolver::callSolver(t, r, this, fi, e);
   if (ProcessStatus(fi, e, s) == true)
@@ -1487,6 +1498,7 @@ void LBlock::AddLocalCondition(caExp &r, LInstruction *fi, ERRKIND e) {
       exit(1);
   if (ProcessStatus(fi, e, s) == true)
     return;
+*/
 
   //ako je u prvom bloku, onda nema potrebe ponovo da se racuna u odnosu na
   //prethodne blokove,

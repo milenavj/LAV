@@ -44,9 +44,9 @@ ThreadPool& ThreadPool::operator=(ThreadPool &&oth)
 
 ThreadPool::~ThreadPool()
     {
-		JoinControlThread();
+	JoinControlThread();
         JoinWorkerThreads();
-	}
+    }
 
 
 void ThreadPool::JoinControlThread()
@@ -66,14 +66,14 @@ void ThreadPool::DetachWorkerThreads()
     {
         for(auto i=0U ; i < m_num_threads; i++)
             m_threads[i].GetHandle().detach();
-   	}
+   }
 
 void ThreadPool::Init(std::vector<std::function<int()>> &&tasks, uint64_t num_threads)
-	{	
-		m_tasksPtr = std::make_shared<FixedQueue<std::function<int()>>>(FixedQueue<std::function<int()>>(std::move(tasks)));
-	 	m_num_threads = num_threads;
+   {	
+   	m_tasksPtr = std::make_shared<FixedQueue<std::function<int()>>>(FixedQueue<std::function<int()>>(std::move(tasks)));
+    	m_num_threads = num_threads;
      	m_num_tasks = tasks.size();
-	}
+   }
 
 
 void ThreadPool::StartWorkerThreads()
@@ -131,18 +131,15 @@ void ThreadPool::StartControlThread()
 	               	{
 	                   for(auto &t : m_threads)
 	                       t.Cancel();
-
-	   					std::cout << "Task finished unsuccessfully." << std::endl;
-	   					cancel = 1;                 
-	   					m_result = ThreadPool::Unsucc;
-//                        pthread_exit(0);
-                        exit(1);
-						break;
+	   		   std::cout << "Task finished unsuccessfully." << std::endl;
+			   cancel = 1;                 
+			   m_result = ThreadPool::Unsucc;
+	  	 	   break;
 	               	}
 
-	   				std::cout << "Task finished successfully." << std::endl;
+	   		std::cout << "Task finished successfully." << std::endl;
 	           }
-               if(cancel) break;
+               	   if(cancel) break;
 	       }
 	
 	       if(!cancel)
@@ -155,11 +152,12 @@ void ThreadPool::StartControlThread()
 
 void ThreadPool::Work()
 {
-	StartWorkerThreads();
+    StartWorkerThreads();
     if(FindFirstFlawed) {
-        DetachWorkerThreads();
+//        DetachWorkerThreads();
         StartControlThread();
-	    JoinControlThread();
+	JoinControlThread();
+//        JoinWorkerThreads();
     }
     else
         JoinWorkerThreads();

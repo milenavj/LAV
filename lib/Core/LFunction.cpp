@@ -59,7 +59,7 @@ LFunction::LFunction(llvm::Function *f, LModule *p)
 }
 
 std::string LFunction::GetNameOfNextVariable() {
-  return _FunctionName + "_" + VARNAME + ItoS(_VariableCounter++);
+  return GetFunctionName() + "_" + VARNAME + ItoS(_VariableCounter++);
 }
 
 void LFunction::AddBlocks() {
@@ -314,7 +314,7 @@ void LFunction::GetAddresses(unsigned &current,
       e = argo::Expression::Equality(ExpVar(it->first, fpointer_type, false),
                                      ExpNum1(current, fpointer_type));
     else
-      e = argo::Expression::Equality(ExpAddress(_FunctionName, it->first),
+      e = argo::Expression::Equality(ExpAddress(GetFunctionName(), it->first),
                                      ExpNum1(current, fpointer_type));
 
     current += it->second;
