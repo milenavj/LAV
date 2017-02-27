@@ -1,0 +1,39 @@
+0  LAV             0x00000000008c6ad5 llvm::sys::PrintStackTrace(_IO_FILE*) + 37
+1  LAV             0x00000000008c6f10
+2  libpthread.so.0 0x00007f5d5122d3d0
+3  libstdc++.so.6  0x00007f5d50181cd8 std::_Rb_tree_insert_and_rebalance(bool, std::_Rb_tree_node_base*, std::_Rb_tree_node_base*, std::_Rb_tree_node_base&) + 312
+4  LAV             0x00000000004a5a56 std::_Rb_tree_iterator<std::pair<llvm::Value* const, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > std::_Rb_tree<llvm::Value*, std::pair<llvm::Value* const, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >, std::_Select1st<std::pair<llvm::Value* const, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >, std::less<llvm::Value*>, std::allocator<std::pair<llvm::Value* const, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > >::_M_emplace_hint_unique<std::piecewise_construct_t const&, std::tuple<llvm::Value* const&>, std::tuple<> >(std::_Rb_tree_const_iterator<std::pair<llvm::Value* const, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >, std::piecewise_construct_t const&, std::tuple<llvm::Value* const&>&&, std::tuple<>&&) + 118
+5  LAV             0x00000000004a2407 lav::GetOperandName(llvm::Value*) + 391
+6  LAV             0x00000000004d1ddb lav::LState::WriteIntoStore(llvm::Instruction*, argo::Expression const&) + 59
+7  LAV             0x00000000004d7fb6 lav::LState::ProcessLoad(lav::LInstruction*) + 3014
+8  LAV             0x00000000004ed2ec lav::LBlock::SetState() + 108
+9  LAV             0x00000000004eda03 lav::LBlock::CalculateDescriptions() + 515
+10 LAV             0x00000000004b2ef9 lav::LFunction::CalculateDescriptions() + 137
+11 LAV             0x00000000004b2f45 lav::LFunction::CalculateConditions() + 37
+12 LAV             0x00000000004a8fa2
+13 LAV             0x000000000050a517
+14 libstdc++.so.6  0x00007f5d50195c80
+15 libpthread.so.0 0x00007f5d512236fa
+16 libc.so.6       0x00007f5d4fc04b5d clone + 109
+./test.sh: line 13: 23876 Segmentation fault      (core dumped) ../Release+Asserts/bin/LAV -solver=Z3-BV-ARR-EUF bfunkcije.o -enable-parallel
+
+0  LAV             0x00000000008c6ad5 llvm::sys::PrintStackTrace(_IO_FILE*) + 37
+1  LAV             0x00000000008c6f10
+2  libpthread.so.0 0x00007fcf323e63d0
+3  libstdc++.so.6  0x00007fcf3133ac6a std::_Rb_tree_insert_and_rebalance(bool, std::_Rb_tree_node_base*, std::_Rb_tree_node_base*, std::_Rb_tree_node_base&) + 202
+4  LAV             0x00000000004a5a56 std::_Rb_tree_iterator<std::pair<llvm::Value* const, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > std::_Rb_tree<llvm::Value*, std::pair<llvm::Value* const, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >, std::_Select1st<std::pair<llvm::Value* const, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >, std::less<llvm::Value*>, std::allocator<std::pair<llvm::Value* const, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > >::_M_emplace_hint_unique<std::piecewise_construct_t const&, std::tuple<llvm::Value* const&>, std::tuple<> >(std::_Rb_tree_const_iterator<std::pair<llvm::Value* const, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >, std::piecewise_construct_t const&, std::tuple<llvm::Value* const&>&&, std::tuple<>&&) + 118
+5  LAV             0x00000000004a2407 lav::GetOperandName(llvm::Value*) + 391
+6  LAV             0x00000000004d1ddb lav::LState::WriteIntoStore(llvm::Instruction*, argo::Expression const&) + 59
+7  LAV             0x00000000004d7fb6 lav::LState::ProcessLoad(lav::LInstruction*) + 3014
+8  LAV             0x00000000004ed2ec lav::LBlock::SetState() + 108
+9  LAV             0x00000000004eda03 lav::LBlock::CalculateDescriptions() + 515
+10 LAV             0x00000000004b2ef9 lav::LFunction::CalculateDescriptions() + 137
+11 LAV             0x00000000004b2f45 lav::LFunction::CalculateConditions() + 37
+12 LAV             0x00000000004a8fa2
+13 LAV             0x000000000050a517
+14 libstdc++.so.6  0x00007fcf3134ec80
+15 libpthread.so.0 0x00007fcf323dc6fa
+16 libc.so.6       0x00007fcf30dbdb5d clone + 109
+./test.sh: line 17: 23957 Segmentation fault      (core dumped) ../Release+Asserts/bin/LAV -solver=Z3-BV-ARR-EUF bfunkcije.o -enable-parallel
+
+

@@ -80,7 +80,7 @@ bool IsGlobalVariable(const argo::Expression &e) {
 }
 
 argo::Expression RenameExpressionVariables(const argo::Expression &e,
-                                           int Context,
+                                           const int& Context,
                                            const std::string &FunctionName) {
   if (Context == 0)
     return e;
@@ -101,13 +101,48 @@ argo::Expression RenameExpressionVariables(const argo::Expression &e,
   //Ovo je pitanje da li je potrebno
   if (e.GetArity() == 0)
     return e;
-
   //Apstrahovanje svih operanada
   std::vector<argo::Expression> operands;
   for (unsigned i = 0; i < e.GetArity(); i++)
     operands.push_back(RenameExpressionVariables(e[i], Context, FunctionName));
   bool b;
   return MakeExpression(e, operands, b);
+}
+
+
+argo::Expression RenameExpressionVariables(const argo::Expression &e,
+                                           const std::string &Context) {
+  if (e.IsTOP() || e.IsBOT() || e.IsNumeral())
+    return e;
+
+  if (e.IsVariable()) {
+    if (IsGlobalVariable(e) || isGlobalAddress(e.GetName()))
+      return e;
+    else
+      return ExpVar(e.GetName()+Context,
+                    e.getIntType(), e.isRelevant());
+  }
+  if (e.IsFormulaVariable()) {
+    return ExpFVar(e.GetName()+Context);
+  }
+
+  //Ovo je pitanje da li je potrebno
+  if (e.GetArity() == 0)
+    return e;
+  //Apstrahovanje svih operanada
+  std::vector<argo::Expression> operands;
+  for (unsigned i = 0; i < e.GetArity(); i++)
+    operands.push_back(RenameExpressionVariables(e[i], Context));
+  bool b;
+  return MakeExpression(e, operands, b);
+}
+
+
+argo::Expression RenameExpressionVariables(const argo::Expression &e,
+                                           const std::string &Context, int c) {
+  if (c == 0)
+    return e;
+    return RenameExpressionVariables(e, Context);
 }
 
 argo::Expression MakeExpression(const argo::Expression &e,

@@ -1071,11 +1071,10 @@ pthread_mutex_lock(&var);
   ConnectFunctionReturnValue(f, ff, i);
   ConnectGlobalVariablesEnd(f, ff);
   ff->AddFixedAddresses(GetParentBlock()->GetParentFunction());
-
   //Dodaj opis funkcije u additional constraints
-
   //AddPostCondTimer.startTimer();
   _Constraints.Add(ff->GetPostcondition());
+
 pthread_mutex_unlock(&var);
   //AddPostCondTimer.stopTimer();
 }
@@ -1634,6 +1633,7 @@ void LState::ProcessBr(LInstruction *fi) {
       //!@#$ ovo otkomentarisati
       if (MemoryFlag)
         _ParentBlock->UpdateAndSetAddresses();
+      if(!EnableParallel) //za paralelnost su iskljucene lokalne provere pa je moguce da ovo nije bitno
       s = LSolver::callSolver(t, check);
     }
 

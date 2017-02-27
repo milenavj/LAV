@@ -1512,7 +1512,7 @@ STATUS LSolver::callSolver(caExp &a, caExp &b, const LBlock *fb,
 
   //  std::cout << "---------------------------------------------------"
   //            << std::endl;
-  //  std::cout << "callSolver" << std::endl;
+    std::cout << "callSolver" << std::endl;
   //  std::cout << "---------------------------------------------------"
   //            << std::endl;
   //  PrintAB(a, b);
@@ -1554,6 +1554,7 @@ STATUS LSolver::callSolver(caExp &a, caExp &b, const LBlock *fb,
     GetModel(symbolTable, fb, fi, erKind);
   }
 
+    std::cout << "callSolver --- zavrsen prvi poziv" << std::endl;
   if (GetOut(c, satnegb)) {
 //    ResetTime.startTimer();
     resetSolver();
@@ -1563,7 +1564,7 @@ STATUS LSolver::callSolver(caExp &a, caExp &b, const LBlock *fb,
     else
       return UNSAFE;
   }
-
+    std::cout << "callSolver --- drugi poziv" << std::endl;
   exported = TryExportExpression(abs_b, exported_b, symbolTable);
   if (!exported)
     return ERROR;
@@ -1575,6 +1576,7 @@ STATUS LSolver::callSolver(caExp &a, caExp &b, const LBlock *fb,
 //  ResetTime.startTimer();
   resetSolver();
 //  ResetTime.stopTimer();
+    std::cout << "callSolver --- zavrsen drugi poziv" << std::endl;
 
   return GetStatus(((satnegb == true) ? SAT : UNSAT),
                    ((satb == true) ? SAT : UNSAT));
@@ -1918,7 +1920,7 @@ bool LSolver::Export(caExp &ab, UrsaExp &exported_ab, UrsaExp &impls) {
 STATUS LSolver::callSolverIncremental(caExp &a, caExp &b, const LBlock *fb,
                                       const LInstruction *fi, ERRKIND erKind) {
 
-  //  std::cout << "callSolverIncremental" << std::endl;
+    std::cout << "callSolverIncremental" << std::endl;
   //  PrintAB(a, b);
   if (FinalAddIntoSolver() == false)
     return ERROR;

@@ -249,6 +249,8 @@ void LBlock::ConnectFunctionConditions(LInstruction *fi, LFunction *ff) {
     //pravimo lhs1 samo jednom i to prvi put kada zatreba
     aExp lhs1;
     int b = 1;
+    std::string cont = AddContext("", ff->GetContext(), ff->GetFunctionName());
+    int c = ff->GetContext();
     for (unsigned m = 0; m < lc.size(); m++) {
 
       //proveravaju se oni uslovi koji nisu safe
@@ -259,17 +261,15 @@ void LBlock::ConnectFunctionConditions(LInstruction *fi, LFunction *ff) {
         //ako postoji takav uslov onda se sracunava rename trace-a od blok-a
         if (b) {
           lhs1 = RenameExpressionVariables(
-              fLBlocks[k]->GetTrace(), ff->GetContext(), ff->GetFunctionName());
+              fLBlocks[k]->GetTrace(), cont, c);
           b = 0;
         }
 
         //TODO ovde dodati mehanizam inkrementalnog dodavanja blokova funkcije
         //u dokazivac
-        aExp lhs2 = RenameExpressionVariables(lc[m].LHS(), ff->GetContext(),
-                                              ff->GetFunctionName());
+        aExp lhs2 = RenameExpressionVariables(lc[m].LHS(), cont, c);
         aExp lhs3 = aExp::AND(lhs1, lhs2);
-        aExp rhs = RenameExpressionVariables(lc[m].RHS(), ff->GetContext(),
-                                             ff->GetFunctionName());
+        aExp rhs = RenameExpressionVariables(lc[m].RHS(), cont, c);
 
         STATUS s = UNCHECKED;
         aExp lhs = aExp::AND(_State.Constraints(), lhs3);
@@ -646,16 +646,16 @@ void LBlock::CalculateConditions() {
 //    ParallelExecution.startTimer();
 
 
-
+if(functions.size() != 0) {
 	ThreadPool t;
 	// napravi thread pool i pokreni ga
     if (NumberThreads)
-		t.Init(std::move(functions) ,NumberThreads);
+		t.Init(std::move(functions), NumberThreads);
 	else 
-		t.Init(std::move(functions), (std::thread::hardware_concurrency() < _LocalConditions.size()) ? std::thread::hardware_concurrency() :_LocalConditions.size() );
+		t.Init(std::move(functions), (std::thread::hardware_concurrency() < functions.size()) ? std::thread::hardware_concurrency() :functions.size() );
 
 	t.Work();	
-
+}
 //    ParallelExecution.stopTimer();
 
     std::cout << "\n\n\n\n\n -----------------END PARALLEL BLOCK "
@@ -1503,8 +1503,13 @@ void LBlock::AddLocalCondition(caExp &r, LInstruction *fi, ERRKIND e) {
   //ako je u prvom bloku, onda nema potrebe ponovo da se racuna u odnosu na
   //prethodne blokove,
   //ako je u nekom narednom bloku, onda stavljamo da je unchecked
-  if (Id() != 0)
-    s = UNCHECKED;
+//  if (Id() != 0)
+
+  s = UNCHECKED;
+  if(e == DIVISIONBYZERO) 
+    if(r[0].IsNumeral() && r[0].GetValue()!=0) s = SAFE;
+
+
   _LocalConditions.push_back(
       LLocalCondition(_State.Constraints(), r, fi, e, s));
 
