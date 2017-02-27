@@ -29,8 +29,10 @@ Z3Instance::~Z3Instance() {
 
 bool Z3Instance::nextModel(Z3_ast expr) {
   if (_blocking_clause == 0) {
+//  	  std::cout << "Z3Instance::nextModel::Z3_push(_ctx);" << std::endl;
     Z3_push(_ctx);
     Z3_assert_cnstr(_ctx, expr);
+    _pushed++;
   } else {
     Z3_assert_cnstr(_ctx, _blocking_clause);
   }
@@ -42,9 +44,13 @@ bool Z3Instance::nextModel(Z3_ast expr) {
 
   return result == Z3_L_TRUE;
 }
+std::string display_ast(Z3_context c, Z3_ast v);
 
 bool Z3Instance::addConstraint(Z3_ast expr) {
+//  	  std::cout << "Z3Instance::addConstraint::Z3_push(_ctx);" << std::endl;
   Z3_push(_ctx);
+//  	  std::cout << display_ast(_ctx, expr) << std::endl;
+//  	  std::cout << "Z3Instance::Z3_assert_cnstr(_ctx, expr);;" << std::endl;
   Z3_assert_cnstr(_ctx, expr);
   // Z3_lbool result = Z3_check(_ctx);
   _pushed++;
@@ -59,6 +65,7 @@ bool Z3Instance::addTempConstraint(Z3_ast expr) {
     Z3_del_model(_ctx, _m);
   _m = 0;
 
+//  	  std::cout << "Z3Instance::addTempConstraint::Z3_push(_ctx);" << std::endl;
   Z3_push(_ctx);
   Z3_assert_cnstr(_ctx, expr);
 
@@ -74,6 +81,7 @@ bool Z3Instance::addTempConstraint(Z3_ast expr) {
 
 //FIXME mozda treba vise pop-ova
 void Z3Instance::reset() {
+//  	  std::cout << "Z3Instance::reset()" << std::endl;
   for (; _pushed > 0; _pushed--)
     Z3_pop(_ctx, 1);
   _m = 0;
@@ -101,6 +109,7 @@ std::string display_symbol(Z3_context c, Z3_symbol s) {
    This function demonstrates how to use the API to navigate terms.
 */
 std::string display_ast(Z3_context c, Z3_ast v) {
+//std::cout << "display_ast" << std::endl;
   switch (Z3_get_ast_kind(c, v)) {
   case Z3_NUMERAL_AST: {
     /* Z3_sort t;

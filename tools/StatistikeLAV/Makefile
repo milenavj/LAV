@@ -1,4 +1,4 @@
-#===-- tools/Makefile ----------------------------------------------------===#
+#===-- tools/TestLAV/Makefile --------------------------------------------===#
 #
 #                     The LAV Software Verification Tool
 #
@@ -10,14 +10,15 @@
 #
 # Relative path to the top of the source tree.
 #
-LEVEL=..
+LEVEL=../..
 
-#
-# List all of the subdirectories that we will compile.
-#
-PARALLEL_DIRS=LAV TestLAV CfgLAV StatistikeLAV
+TOOLNAME = Statistike
+USEDLIBS = transformation.a misc.a
+LINK_COMPONENTS = jit bitreader bitwriter ipo linker engine 
 
 include $(LEVEL)/Makefile.common
 
-
-
+LIBS += -lsolvers
+LIBS += -lexpression
+LIBS += -lgmp  
+LIBS += -lgmpxx  

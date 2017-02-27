@@ -140,7 +140,7 @@ bool LFunction::AddAllocationFixedAddress(llvm::AllocaInst *ai,
           std::pair<std::string, unsigned>(GetOperandName(ai), size * 1000));
     else
       _Addresses[GetOperandName(ai)] = size;
-    std::cout << "function::AddAllocationFixedAddress" << std::endl;
+//    std::cout << "function::AddAllocationFixedAddress" << std::endl;
     FunctionConstraints().AddConstraint(e, 0, size);
 
     variables.push_back(GetOperandName(ai));
@@ -564,6 +564,7 @@ void LFunction::CalculateConditions() {
     CalculateDescriptions();
 
   LSolver::instance().reset();
+  LSolver::instance().setFactory();
 
   if (CalculateAll)
     CalculateAllConditions();
@@ -608,9 +609,7 @@ void LFunction::AddLoopMax(const std::pair<unsigned, unsigned> &loop) {
 }
 
 void LFunction::Run() {
-
   CalculateDescriptions();
-
   CalculateConditions();
 }
 
