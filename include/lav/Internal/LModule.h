@@ -14,9 +14,12 @@
 #include <string>
 #include <map>
 #include <set>
+#include <memory>
 #include "expression/expressions/Expression.h"
 #include "lav/Internal/LConstraints.h"
 #include "lav/Internal/LTypes.h"
+#include "lav/Threads/FutureResult.h"
+
 
 namespace llvm {
 class AliasAnalysis;
@@ -78,6 +81,12 @@ public:
   std::map<std::string, unsigned> _Addresses;
   void Run();
 
+
+  // Author: BRANISLAVA
+  // Dodato zbog paralelizacije funkcija
+  void InitFutureResults(std::map<std::string,Threads::FutureResult> && results);
+  std::shared_ptr<std::map<std::string, Threads::FutureResult>> GetFutureResultsPtr() const;
+
 private:
   void init();
   LModule(const LModule &m);
@@ -93,6 +102,12 @@ private:
   std::set<llvm::GlobalVariable *> _GlobalReferences;
   std::set<llvm::GlobalVariable *> _GlobalVariables;
   long long _GlobalMemoryOffset;
+
+  // Author: BRANISLAVA
+  // Dodato za paralelizaciju funkcija
+  std::shared_ptr<std::map<std::string, Threads::FutureResult>> _FutureResults;
+
+
 };
 
 } //end of namespace

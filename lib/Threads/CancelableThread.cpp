@@ -62,10 +62,8 @@ std::cout << "OTKAZUJEMO NIT " << tid<<std::endl;
 			if((pthreadErrno = pthread_cancel(tid)) != 0 && pthreadErrno != ESRCH)
 			{
 				throw std::runtime_error{ std::string{"Threads::Greska prilikom cancel-ovanja niti. --- "} + ::strerror(pthreadErrno)};
-
 			}
 		}
-
 		m_finished = true;
 	}
 }

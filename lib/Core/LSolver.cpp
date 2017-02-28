@@ -1585,6 +1585,7 @@ STATUS LSolver::callSolver(caExp &a, caExp &b, const LBlock *fb,
     GetModel(symbolTable, fb, fi, erKind);
   }
 
+    std::cout << "callSolver --- zavrsen prvi poziv" << std::endl;
   if (GetOut(c, satnegb)) {
 //    ResetTime.startTimer();
     resetSolver();
@@ -1594,7 +1595,7 @@ STATUS LSolver::callSolver(caExp &a, caExp &b, const LBlock *fb,
     else
       return UNSAFE;
   }
-
+    std::cout << "callSolver --- drugi poziv" << std::endl;
   exported = TryExportExpression(abs_b, exported_b, symbolTable);
   if (!exported)
     return ERROR;
@@ -1606,6 +1607,7 @@ STATUS LSolver::callSolver(caExp &a, caExp &b, const LBlock *fb,
 //  ResetTime.startTimer();
   resetSolver();
 //  ResetTime.stopTimer();
+    std::cout << "callSolver --- zavrsen drugi poziv" << std::endl;
 
   return GetStatus(((satnegb == true) ? SAT : UNSAT),
                    ((satb == true) ? SAT : UNSAT));
@@ -1957,6 +1959,8 @@ STATUS LSolver::callSolverIncremental(caExp &a, caExp &b, const LBlock *fb,
 //    PrintAB(a, b);
 // 	  std::cout << "FinalAddIntoSolver() " << std::endl;
 
+
+// **Conflict**
   UrsaExp::setFactory(_Factory.get());
 
   if (FinalAddIntoSolver() == false)

@@ -53,13 +53,13 @@ static argo::SMTFormater SMTF;
 
 LFunction::LFunction(llvm::Function *f, LModule *p)
     : _Function(f), _Parent(p), _PostconditionIsSet(false),
-      _DescriptionsCalculated(false), _ConditionsCalculated(false), _Context(0),
+      _DescriptionsCalculated(false), _ConditionsCalculated(false), _Context(-1),
       _VariableCounter(0), _FunctionName(f->getName()), _MemCounter(0) {
   init();
 }
 
 std::string LFunction::GetNameOfNextVariable() {
-  return _FunctionName + "_" + VARNAME + ItoS(_VariableCounter++);
+  return GetFunctionName() + "_" + VARNAME + ItoS(_VariableCounter++);
 }
 
 void LFunction::AddBlocks() {
@@ -314,7 +314,7 @@ void LFunction::GetAddresses(unsigned &current,
       e = argo::Expression::Equality(ExpVar(it->first, fpointer_type, false),
                                      ExpNum1(current, fpointer_type));
     else
-      e = argo::Expression::Equality(ExpAddress(_FunctionName, it->first),
+      e = argo::Expression::Equality(ExpAddress(GetFunctionName(), it->first),
                                      ExpNum1(current, fpointer_type));
 
     current += it->second;
@@ -626,9 +626,12 @@ void LFunction::CalculateDescriptions() {
 }
 
 argo::Expression LFunction::GetPostcondition() {
-  if (!_PostconditionIsSet)
+  if (!_PostconditionIsSet) {
     SetPostcondition();
-  return RenameExpressionVariables(_Postcondition, _Context, GetFunctionName());
+}
+   
+  std::string cont = AddContext("", _Context, GetFunctionName());
+  return RenameExpressionVariables(_Postcondition, cont, _Context);
 }
 
 void LFunction::BlocksPostcondInSolverSetFalse() {
