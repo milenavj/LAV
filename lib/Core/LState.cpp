@@ -1282,8 +1282,11 @@ void LState::ProcessLibraryCall(LInstruction *fi, llvm::Function *f,
     WriteIntoStore(i, e);
   } else if ((f->getName() == "ASSERT") || (f->getName() == "assert") ||
              (f->getName() == "ASSERT_") || (f->getName() == "assert_") ||
-             (f->getName() == "__ASSERT_FAIL") || (f->getName() == "__assert_fail") ||
-             (f->getName() == "ASSERT_LAV") || (f->getName() == "assert_lav")) {
+             (f->getName() == "ASSERT_LAV") || (f->getName() == "assert_lav") ||
+             (f->getName().find("assert_lav") != std::string::npos )  
+)
+
+ {
 
     if (CheckAssert) {
       aExp r = GetValue(argument(i, 0));

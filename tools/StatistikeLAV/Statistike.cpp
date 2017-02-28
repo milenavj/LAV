@@ -199,14 +199,34 @@ private:
 
     void OdstampajStatistike() {
 //        of << " prosek, min, max, koef, entropy\n" ;
+    if(statistike.size() == 0) { of << separator << 0 << separator << 0<< separator << 0<< separator << 0; return ;}
+
         for(unsigned int i = 0; i<statistike.size(); i++)
             of << separator << statistike[i] ;
     }
 
     void OdstampajFrekvencije() {
+
+        double fn = 0;
+        if(frekvencije.size() == 0) { of << separator << 0 << separator << 0<< separator << 0<< separator << 0; return ;}
+        if(frekvencije.size() == 1) { of << separator << frekvencije[0] << separator << 0<< separator << 0<< separator << 0; return ;}
+        if(frekvencije.size() == 2) { of << separator << frekvencije[0] << separator << frekvencije[1] << separator << 0<< separator << 0; return ; }
+        if(frekvencije.size() == 3) { of << separator << frekvencije[0] << separator << frekvencije[1] << separator << frekvencije[2] << separator << 0;
+return ; }
+        if(frekvencije.size() == 4) { of << separator << frekvencije[0] << separator << frekvencije[1] << separator << frekvencije[2] << separator << frekvencije[3];
+return ; }
+        
+        for(unsigned int i = 3; i<frekvencije.size(); i++)
+            fn+=frekvencije[i];
+            of << separator << frekvencije[0] ;
+            of << separator << frekvencije[1] ;
+            of << separator << frekvencije[2] ;
+            of << separator << fn ;
+
+  
 //        of << "\n Frekvencije\n" ;
-        for(unsigned int i = 0; i<frekvencije.size(); i++)
-            of << separator << frekvencije[i] ;
+//        for(unsigned int i = 0; i<frekvencije.size(); i++)
+//            of << separator << frekvencije[i] ;
     }
 
 };
