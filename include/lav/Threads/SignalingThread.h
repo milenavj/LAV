@@ -1,5 +1,5 @@
 #ifndef SIGNALINGTHREAD_H
-#define  SIGNALINGTHREAD_H
+#define SIGNALINGTHREAD_H
 
 #include "CancelableThread.h"
 #include "Event.h"
@@ -7,31 +7,27 @@
 // STL zaglavlja
 #include <functional>
 
-namespace Threads
-{
-	struct SignalingThreadBaseFromMember
-	{
-		Event::Pointer m_event;
-		explicit SignalingThreadBaseFromMember();
- 		SignalingThreadBaseFromMember(SignalingThreadBaseFromMember &&st);
+namespace Threads {
+struct SignalingThreadBaseFromMember {
+  Event::Pointer m_event;
+  explicit SignalingThreadBaseFromMember();
+  SignalingThreadBaseFromMember(SignalingThreadBaseFromMember &&st);
 
- 		SignalingThreadBaseFromMember& operator=(SignalingThreadBaseFromMember &&st);
-		~SignalingThreadBaseFromMember();
-	};
+  SignalingThreadBaseFromMember &operator=(SignalingThreadBaseFromMember &&st);
+  ~SignalingThreadBaseFromMember();
+};
 
-	class SignalingThread : protected SignalingThreadBaseFromMember, public CancelableThread
-	{
-	public:
-		using Callable = std::function<void(const Event::Pointer &)>;
-		SignalingThread(Callable f);
-		SignalingThread(SignalingThread &&st);
-		SignalingThread& operator=(SignalingThread &&st);
-		virtual ~SignalingThread();
+class SignalingThread : protected SignalingThreadBaseFromMember,
+                        public CancelableThread {
+public:
+  using Callable = std::function<void(const Event::Pointer &)>;
+  SignalingThread(Callable f);
+  SignalingThread(SignalingThread &&st);
+  SignalingThread &operator=(SignalingThread &&st);
+  virtual ~SignalingThread();
 
-		const Event::Pointer& ShareEvent() const;
-	};
+  const Event::Pointer &ShareEvent() const;
+};
 }
 
-
 #endif // SIGNALINGTHREAD_H
-

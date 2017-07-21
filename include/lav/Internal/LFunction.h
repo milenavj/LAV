@@ -80,6 +80,7 @@ public:
   std::string GetNameOfNextVariable();
   unsigned GetLoopMax(unsigned loop);
   void AddLoopMax(const std::pair<unsigned, unsigned> &loop);
+  void DeleteAddress(const std::string &name);
 
 private:
   LFunction(const LFunction &f);

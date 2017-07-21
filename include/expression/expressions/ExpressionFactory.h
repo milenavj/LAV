@@ -79,16 +79,17 @@ private:
 
 namespace argo {
 inline void ExpressionFactory::Remove(ExpressionNode *expression) {
-if((expression != 0) && (_existing_nodes.find(expression) != _existing_nodes.end()))  {
-//     coutput<<"Removing : "<<*expression<<endl;
+  if ((expression != 0) &&
+      (_existing_nodes.find(expression) != _existing_nodes.end())) {
+    //     coutput<<"Removing : "<<*expression<<endl;
 
-  assert(expression != 0);
-  assert(_existing_nodes.find(expression) != _existing_nodes.end());
+    assert(expression != 0);
+    assert(_existing_nodes.find(expression) != _existing_nodes.end());
 
-  _existing_nodes.erase(expression);
-  delete expression;
-}
-else return;
+    _existing_nodes.erase(expression);
+    delete expression;
+  } else
+    return;
 
 }
 

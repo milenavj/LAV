@@ -761,7 +761,7 @@ private:
   }
 
   static SOLVER_TYPE _ctx;
-//  size_t _width;
+  //  size_t _width;
   SOLVER_EXPR_TYPE _expr;
 };
 

@@ -26,7 +26,8 @@ aExp PtrToInt(caExp &e);
 aExp IntToPtr(caExp &e);
 
 aExp MakeExpression(caExp &e, const vaExp &operands, bool &found);
-aExp RenameExpressionVariables(caExp &e, const int& Context, const std::string &fname);
+aExp RenameExpressionVariables(caExp &e, const int &Context,
+                               const std::string &fname);
 aExp RenameExpressionVariables(caExp &e, const std::string &Context, int c);
 aExp MakeANDFromExpressions(const vaExp &exps);
 

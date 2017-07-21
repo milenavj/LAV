@@ -79,9 +79,7 @@ argo::Expression EvaluateArithmetic(const argo::Expression &e,
   if (e.isaShiftR())
     return ExpNum1(e1.GetValue().get_si() >> e2.GetValue().get_si(),
                    e1.getIntType());
-
   return e;
-
 }
 
 //zbog ovoga mogu da se propuste greske prekoracnja!
@@ -137,7 +135,6 @@ argo::Expression SimplifyRelation(const argo::Expression &e) {
   if (e.IsDisequality())
     return argo::Expression::Disequality(e1, e2);
   return e;
-
 }
 
 //FIXME ovo ce da napravi rusvaj za signed i unsigned
@@ -204,7 +201,6 @@ argo::Expression EvaluateRelation(const argo::Expression &e,
     else
       return argo::Expression::BOT();
   }
-
   return e;
 }
 
@@ -255,7 +251,6 @@ argo::Expression SimplifyExpressionSelect(const argo::Expression &e) {
   else {
     return store[2];
   }
-
 }
 
 argo::Expression SimplifyExpressionStore(const argo::Expression &e) {
@@ -300,7 +295,6 @@ argo::Expression SimplifyExpressionStore(const argo::Expression &e) {
       a = argo::Expression::store(a, vindex[i], vvalue[i]);
     return argo::Expression::store(a, index, value);
   }
-
 }
 
 bool SimplifyFormulaOR(argo::Expression &e) {
@@ -329,7 +323,6 @@ void SimplifyFormulaAND(std::vector<argo::Expression> &expressions) {
       if (b)
         i--;
     }
-
   }
 }
 
@@ -397,9 +390,7 @@ argo::Expression OneNumeralAdd(const argo::Expression &e) {
     //Pomeranje konstante na desnu stranu ako je 3+a da postane a+3
     return argo::Expression::add(arg2, arg1);
   }
-
   return e;
-
 }
 
 argo::Expression OneNumeralSub(const argo::Expression &e) {
@@ -457,9 +448,7 @@ argo::Expression OneNumeralSub(const argo::Expression &e) {
         return argo::Expression::add(sub, arg2[1]);
       }
     }
-
   return e;
-
 }
 
 argo::Expression TwoNumeralsBothAdd(const argo::Expression &e) {
@@ -684,6 +673,37 @@ argo::Expression SimplifySub(const argo::Expression &e) {
   return e;
 }
 
+//ovde moze da nastane problem ako je jedno udiv a drugo sdiv
+argo::Expression SimplifyDiv(const argo::Expression &e) {
+
+  if (e.isUdiv() || e.isSdiv()) {
+    argo::Expression arg1 = e[0];
+    argo::Expression arg2 = e[1];
+
+    if (arg1.IsNumeral() && arg2.IsNumeral()) {
+      if ((arg2.GetValue() != 0)) {
+        if ((arg1.GetValue() == 0))
+          return ExpNum1(arg1.GetValue(), arg1.getIntType());
+        else
+          return ExpNum1(arg1.GetValue() / arg2.GetValue(), arg1.getIntType());
+      }
+    } //(a/10)/10 -> a/100
+        else if (arg2.IsNumeral() && (arg1.isUdiv() || arg1.isSdiv())) {
+      argo::Expression arg11 = arg1[0];
+      argo::Expression arg12 = arg1[1];
+      if (arg12.IsNumeral() && (arg12.GetValue() != 0)) {
+        argo::Expression mul =
+            ExpNum1(arg12.GetValue() * arg2.GetValue(), arg2.getIntType());
+        if (e.isUdiv())
+          return argo::Expression::udiv(arg11, mul);
+        if (e.isSdiv())
+          return argo::Expression::sdiv(arg11, mul);
+      }
+    }
+  }
+  return e;
+}
+
 argo::Expression SimplifyMul(const argo::Expression &e) {
   if (e.isMul()) {
     argo::Expression arg1 = e[0];
@@ -745,6 +765,8 @@ argo::Expression SimplifyExpression(const argo::Expression &e) {
       return SimplifySub(e);
     else if (e.isMul())
       return SimplifyMul(e);
+    else if (e.isUdiv() || e.isSdiv())
+      return SimplifyDiv(e);
 
     /*    else if(e.isUlt() || e.isUle()  || e.isUgt()  || e.isUge()
             || e.isSlt()  || e.isSle()  || e.isSgt()  || e.isSge()

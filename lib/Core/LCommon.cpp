@@ -92,13 +92,12 @@ llvm::cl::opt<bool> SkipInsideLoop(
 llvm::cl::opt<int> NumberThreads(
     "number-threads",
     llvm::cl::desc(
-     "LAV --- Number of threads (default = hardware_concurrency)"),
+        "LAV --- Number of threads (default = hardware_concurrency)"),
     llvm::cl::init(0));
 llvm::cl::opt<bool> EnableParallel(
     "enable-parallel",
     llvm::cl::desc("LAV --- Enable parallel solver calls (default = false)"),
     llvm::cl::init(false));
-
 
 namespace lav {
 
@@ -320,7 +319,7 @@ argo::Expression MakeExp(const std::string &name, const std::string &function,
   else
     newname = (name + function + "_" + s + "_" + ItoS(id) + "_1");
 
-  if (Context != 0)
+  if (Context > 0)
     newname = AddContext(newname, Context, fname);
 
   if (s == MEMORY)
@@ -349,7 +348,9 @@ argo::Expression Transformation(const std::string &function, int id1, int id2) {
 
 std::string AddContext(const std::string &name, int Context,
                        const std::string &f) {
-  return (name + "_" + f + CONTEXT + ItoS(Context));
+  if (Context > 0)
+    return (name + "_" + f + CONTEXT + ItoS(Context));
+  return name;
 }
 
 } //end of namespace

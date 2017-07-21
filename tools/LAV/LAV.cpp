@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
 
   std::cout << "Loading the bytecode... Completed " << std::endl << std::endl;
 
-  //  llvm::outs() << *mainModule;
+  //llvm::outs() << *mainModule;
 
   // Prepare output directory
   MakeDirectory(OutputFolder);
@@ -119,16 +119,15 @@ int main(int argc, char **argv) {
   AddTransformPasses(Passes);
 
   // Add LAV analysis
-  //#!
   addPass(Passes, createLavPass());
 
   //  llvm::outs() << *mainModule;
   // Run our queue of passes all at once now, efficiently.
   Passes.run(*mainModule);
 
-  //  llvm::outs() << *mainModule;
-
+  //llvm::outs() << *mainModule;
   BufferPtr.take();
+
   std::cout << "Finished " << std::endl << std::endl;
 
   return 0;

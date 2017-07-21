@@ -58,14 +58,14 @@ public:
 
   virtual ~ExpressionNode() {
 
-//#ifdef _DEBUG
+    //#ifdef _DEBUG
     std::vector<ExpressionNode *>::iterator i;
     for (i = _nodes.begin(); i != _nodes.end(); i++)
       if (*i == this) {
         _nodes.erase(i);
         break;
       }
-//#endif
+    //#endif
   }
 
   ExpressionNode(const ExpressionNode &e)
@@ -73,9 +73,9 @@ public:
         _union_find_parrent(e._union_find_parrent), _index(e._index),
         _assigned(e._assigned), _literal(e._literal), _name(e._name),
         _type(e._type), _intType(e._intType) {
-//#ifdef _DEBUG
+    //#ifdef _DEBUG
     _nodes.push_back(this);
-//#endif
+    //#endif
   }
 
   ExpressionNode(EXPRESSION_TYPE type, const std::string &name,
@@ -83,9 +83,9 @@ public:
       : _reference_count(0), _union_find_parrent(0), _index((unsigned)(-1)),
         _assigned(false), _literal((Literal)(-1)), _name(name), _type(type),
         _intType(intType), _relevant(r) {
-//#ifdef _DEBUG
+    //#ifdef _DEBUG
     _nodes.push_back(this);
-//#endif
+    //#endif
   }
 
   virtual ExpressionNode *Clone() const { return new ExpressionNode(*this); }

@@ -40,27 +40,25 @@
 #include "expression/output/SMTFormater.h"
 #include "expression/expressions/NumeralTypes.h"
 
-
 #include <pthread.h>
-
 #include <vector>
 #include <string>
 
 extern llvm::cl::opt<bool> Model;
 extern llvm::cl::opt<bool> Students;
 extern llvm::cl::opt<bool> TrackPointers;
-extern llvm::cl::opt<bool> SkipInsideLoop;
 extern llvm::cl::opt<bool> MemoryFlag;
 extern llvm::cl::opt<bool> CheckAssert;
 extern llvm::cl::opt<int> NumberThreads;
 extern llvm::cl::opt<bool> EnableParallel;
+extern llvm::cl::opt<bool> CheckPointers;
 
 namespace lav {
 
 //llvm::Timer Branching("Branching time --- call solver light");
 
 static argo::SMTFormater SMTF;
-pthread_mutex_t var=PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t var = PTHREAD_MUTEX_INITIALIZER;
 
 void LState::WriteIntoStore(llvm::Instruction *i, const aExp &e) {
   if (e.isSelect() && (GetIntType(i->getType()) != fint_type))
@@ -85,22 +83,11 @@ void LState::Write(const std::string &name, aExp *value, const llvm::Type *type,
 aExp LState::argument(const llvm::Instruction *i, unsigned int n) {
   assert(i->getNumOperands() > n);
   if (llvm::Constant *c = llvm::dyn_cast<llvm::Constant>(i->getOperand(n))) {
-
-    //std::cout << "evalConstant(c) --- GetOperandName(i->getOperand(n)) " <<
-    //GetOperandName(i->getOperand(n)) << "
-    //GetIntType(i->getOperand(n)->getType()) " <<
-    //GetIntType(i->getOperand(n)->getType()) <<  std::endl;
-
     return evalConstant(c);
   }
       //ovde u principu nije bitan ni tip ni relevant jer se koristi samo za
       //_store.getvalue
       else {
-    //llvm::outs() << *i;
-    //std::cout << "\nGetOperandName(i->getOperand(n)) " <<
-    //GetOperandName(i->getOperand(n)) << "
-    //GetIntType(i->getOperand(n)->getType()) " <<
-    //GetIntType(i->getOperand(n)->getType()) <<  std::endl<<  std::endl;
     return ExpVar(GetOperandName(i->getOperand(n)),
                   GetIntType(i->getOperand(n)->getType()), false);
   }
@@ -137,11 +124,41 @@ void LState::ProcessStore(LInstruction *fi) {
     llvm::Type *t = i->getOperand(0)->getType();
     unsigned size = GetParentBlock()->GetParentModule()->GetTargetData()
         ->getTypeAllocSize(t);
-    aExp r1 = aExp::sle(ExpNum1(size, fint_type), ExpRight(index));
-    aExp r2 = aExp::sge(ExpNumZeroInt, ExpLeft(index));
-    aExp r = aExp::AND(r1, r2);
-    GetParentBlock()->AddLocalConditionPointers(r, fi);
+    if (CheckPointers) {
+      aExp r1 = aExp::sle(ExpNum1(size, fint_type), ExpRight(index));
+      aExp r2 = aExp::sge(ExpNumZeroInt, ExpLeft(index));
+      aExp r = aExp::AND(r1, r2);
+      GetParentBlock()->AddLocalConditionPointers(r, fi);
+    }
+  } else if (llvm::dyn_cast<llvm::LoadInst>(i->getOperand(0)) &&
+             llvm::dyn_cast<llvm::CallInst>(llvm::dyn_cast<llvm::LoadInst>(
+                 i->getOperand(0))->getOperand(0))) {
+    //TODO dodati ovde gore jos uslova
+    //sta ako je u pitanju referenca
+    //  %call4 = call i32* @_Z3minRiS_(i32* %plave1, i32* %plave2), !dbg !1025
+    //  %0 = load i32* %call4, !dbg !1025
+    //  store i32 %0, i32* %a, align 4, !dbg !1025
+    llvm::LoadInst *load = llvm::dyn_cast<llvm::LoadInst>(i->getOperand(0));
+
+    if (load) {
+      llvm::CallInst *call =
+          llvm::dyn_cast<llvm::CallInst>(load->getOperand(0));
+      if (call) {
+        unsigned numArgs;
+        llvm::Function *f = GetFunction(call, numArgs);
+        llvm::Type *t = f->getReturnType();
+        if (llvm::dyn_cast<llvm::PointerType>(t)) {
+          std::string name = GetOperandName(i->getOperand(1));
+          aExp index = ExpAddress(GetParentBlock()->GetFunctionName(), name);
+          aExp mem = *GetValue(MEMORY);
+          aExp ee = GetValue(argument(load, 0));
+          aExp value = aExp::select(mem, ee);
+          MemoryStore(mem, index, value);
+        } //if pointer
+      }   //if call
+    }     //if load
   }
+
       //nije ni gepi ni *p, da li je globalna promenljiva?
       else if (llvm::dyn_cast<llvm::GlobalValue>(i->getOperand(1))) {
     //ovo deluje suludo, kao da je dovoljno samo
@@ -155,11 +172,12 @@ void LState::ProcessStore(LInstruction *fi) {
     aExp base = ExpGlobalAddress(GetOperandName(c->getOperand(0)));
     aExp addend = arg1[1];
 
-    aExp r1 = aExp::slt(addend, ExpRight(base));
-    aExp r2 = aExp::sge(addend, ExpLeft(base));
-    aExp r = aExp::AND(r1, r2);
-    GetParentBlock()->AddLocalConditionPointers(r, fi);
-
+    if (CheckPointers) {
+      aExp r1 = aExp::slt(addend, ExpRight(base));
+      aExp r2 = aExp::sge(addend, ExpLeft(base));
+      aExp r = aExp::AND(r1, r2);
+      GetParentBlock()->AddLocalConditionPointers(r, fi);
+    }
     if (!TrackPointers)
       return;
     aExp index = SimplifyExpression(aExp::add(base, addend));
@@ -258,8 +276,8 @@ void LState::ProcessFChange(LInstruction *fi, llvm::Function *f,
 
 void LState::ProcessFEnd(LInstruction *fi, llvm::Function *f,
                          unsigned numArgs) {
+
   aExp e = aExp::NOT(GetParentBlock()->Active());
-  aExp cond = ExpPropVar;
   _Constraints.Add(e);
 }
 
@@ -273,7 +291,7 @@ void LState::ProcessFInc(LInstruction *fi, llvm::Function *f,
                   GetIntType(i->getOperand(0)->getType()), false);
 
   for (unsigned j = 0; j < numArgs; ++j) {
-//    const llvm::Type *t = i->getOperand(j)->getType();
+    //    const llvm::Type *t = i->getOperand(j)->getType();
     std::string name = GetOperandName(i->getOperand(j));
     //!@#$      aExp e1 = ExpVar(GetNameOfNextVariable(), GetIntType(t), false
     //);
@@ -291,7 +309,7 @@ void LState::ProcessFDec(LInstruction *fi, llvm::Function *f,
                          unsigned numArgs) {
   llvm::Instruction *i = fi->Instruction();
   for (unsigned j = 0; j < numArgs; ++j) {
-//    const llvm::Type *t = i->getOperand(j)->getType();
+    //    const llvm::Type *t = i->getOperand(j)->getType();
     std::string name = GetOperandName(i->getOperand(j));
     //!@#$      aExp e1 = ExpVar(GetNameOfNextVariable(), GetIntType(t), false
     //);
@@ -409,7 +427,6 @@ void LState::ProcessICmp(LInstruction *fi) {
     exit(1);
   }
   }
-
 }
 
 void LState::ProcessFCmp(LInstruction *fi) {
@@ -487,8 +504,8 @@ void LState::WriteAllocation(LConstraints &constraints, llvm::AllocaInst *ai,
     //    WriteIntoStore(ai, e);
     _Store.Write(GetOperandName(ai), new aExp(e), ai->getAllocatedType());
   }
-
-  constraints.AddConstraint(e, left, right);
+  if (CheckPointers)
+    constraints.AddConstraint(e, left, right);
 }
 
 //FIXME postaviti i druge varijante za alokaciju,
@@ -551,8 +568,8 @@ void LState::ProcessIntToPtr(LInstruction *fi) {
   aExp e = IntToPtr(ee);
   WriteIntoStore(i, e);
 }
-//FIXME Ovo nesto nije u redu kada se npr doda assert(right(a) == 40) to dodaje
-//bitcast i kao da se ne prepisu left i right i onda ima manjak informacija
+//FIXME Ovo nije u redu kada se npr doda assert(right(a) == 40) to dodaje
+//bitcast i zato se ne prepisu left i right i onda ima manjak informacija
 void LState::ProcessBitCast(LInstruction *fi) {
 
   llvm::Instruction *i = fi->Instruction();
@@ -564,10 +581,7 @@ void LState::ProcessBitCast(LInstruction *fi) {
         GetIntType(_Store.GetType(GetOperandName(i->getOperand(0)))));
     aExp e1 = *GetValue(GetOperandName(i->getOperand(0)));
 
-    //  e1.Print(&SMTF, std::cout);
-    //  std::cout << std::endl;
-
-    //FIXME ovo proveriti
+    //FIXME
     if (width_s == argo::noInt)
       width_s = fint_type;
     aExp e = SetWidth(e1, width_s, width_t);
@@ -591,10 +605,12 @@ void LState::GepiArgument(const aExp &arg, LInstruction *fi) {
     else
       addend = e[1];
   }
-  aExp r1 = aExp::slt(addend, ExpRight(base));
-  aExp r2 = aExp::sge(addend, ExpLeft(base));
-  aExp r = aExp::AND(r1, r2);
-  GetParentBlock()->AddLocalConditionPointers(r, fi);
+  if (CheckPointers) {
+    aExp r1 = aExp::slt(addend, ExpRight(base));
+    aExp r2 = aExp::sge(addend, ExpLeft(base));
+    aExp r = aExp::AND(r1, r2);
+    GetParentBlock()->AddLocalConditionPointers(r, fi);
+  }
 }
 
 void LState::ProcessLoad(LInstruction *fi) {
@@ -627,10 +643,12 @@ void LState::ProcessLoad(LInstruction *fi) {
     llvm::Type *t = i->getOperand(0)->getType();
     unsigned size = GetParentBlock()->GetParentModule()->GetTargetData()
         ->getTypeAllocSize(t);
-    aExp r1 = aExp::sle(ExpNum1(size, fint_type), ExpRight(index));
-    aExp r2 = aExp::sge(ExpNumZeroInt, ExpLeft(index));
-    aExp r = aExp::AND(r1, r2);
-    GetParentBlock()->AddLocalConditionPointers(r, fi);
+    if (CheckPointers) {
+      aExp r1 = aExp::sle(ExpNum1(size, fint_type), ExpRight(index));
+      aExp r2 = aExp::sge(ExpNumZeroInt, ExpLeft(index));
+      aExp r = aExp::AND(r1, r2);
+      GetParentBlock()->AddLocalConditionPointers(r, fi);
+    }
 
     if (!TrackPointers)
       //fixme tip
@@ -643,18 +661,19 @@ void LState::ProcessLoad(LInstruction *fi) {
     e = GetGlobalValue(GetOperandName(i->getOperand(0)));
   } else
       //ali je mozda konstantan gepi
-      //FIXME ovo je sumnjivo
+      //FIXME
       if (llvm::Constant *c =
               llvm::dyn_cast<llvm::Constant>(i->getOperand(0))) {
     aExp arg0 = argument(i, 0);
     //FIXME ?!? zasto global address
     aExp base = ExpGlobalAddress(GetOperandName(c->getOperand(0)));
     aExp addend = arg0[1];
-    aExp r1 = aExp::slt(addend, ExpRight(base));
-    aExp r2 = aExp::sge(addend, ExpLeft(base));
-    aExp r = aExp::AND(r1, r2);
-    GetParentBlock()->AddLocalConditionPointers(r, fi);
-
+    if (CheckPointers) {
+      aExp r1 = aExp::slt(addend, ExpRight(base));
+      aExp r2 = aExp::sge(addend, ExpLeft(base));
+      aExp r = aExp::AND(r1, r2);
+      GetParentBlock()->AddLocalConditionPointers(r, fi);
+    }
     if (!TrackPointers)
       //fixme tip
       e = ExpVar(GetNameOfNextVariable(), argo::sInt32Type, false);
@@ -663,6 +682,25 @@ void LState::ProcessLoad(LInstruction *fi) {
       aExp mem = *GetValue(MEMORY);
       e = aExp::select(mem, index);
     }
+  } else if (llvm::dyn_cast<llvm::CallInst>(i->getOperand(0))) {
+    //TODO dodati ovde gore jos uslova
+    //sta ako je u pitanju referenca
+    //  %call4 = call i32* @_Z3minRiS_(i32* %plave1, i32* %plave2), !dbg !1025
+    //  %0 = load i32* %call4, !dbg !1025
+    llvm::CallInst *call = llvm::dyn_cast<llvm::CallInst>(i->getOperand(0));
+    if (call) {
+      unsigned numArgs;
+      llvm::Function *f = GetFunction(call, numArgs);
+      llvm::Type *t = f->getReturnType();
+      if (llvm::dyn_cast<llvm::PointerType>(t)) {
+        //                aExp index = GetValue(argument(i, 1));
+        std::string name = GetOperandName(i->getOperand(0));
+        aExp index = ExpAddress(GetParentBlock()->GetFunctionName(), name);
+        aExp mem = *GetValue(MEMORY);
+        aExp ee = GetValue(argument(i, 0));
+        e = aExp::select(mem, ee);
+      } //if pointer
+    }   //if call
   } else {
     //!@#$
     //    aExp arg0 = argument(i, 0);
@@ -702,14 +740,12 @@ const aExp *LState::GetValue(const std::string &name) {
         {
       e = ExpGlobalAddress(name);
     }
-    //pitanje je da li ovo treba
+    //?
     //for(unsigned i=0; i<_Memory.size(); i++)
     //  if(_Memory[i]==e) return (&(_Memory[i]));
     _Memory.push_back(e);
     return (&(_Memory[_Memory.size() - 1]));
-
   }
-
 }
 
 aExp LState::StoreValue(LInstruction *fi) {
@@ -721,17 +757,15 @@ aExp LState::StoreValue(LInstruction *fi) {
       llvm::dyn_cast<llvm::GetElementPtrInst>(i->getOperand(0));
 
   if (llvm::dyn_cast<llvm::GlobalValue>(i->getOperand(0)))
-    //ovo je sumnjivo
+    //FIXME
     return ExpGlobalAddress(GetOperandName(i->getOperand(0)));
   else if (gepi) {
     GepiArgument(arg0, fi);
     return GetValue(arg0);
   }
-      //ovo je sumnjivo
+      //FIXME
       //ako je u pitanju citanje adrese promenljive b onda vracamo amp_b
       else if (arg0.IsVariable() && !_Store.IsDefined(arg0.GetName())) {
-    //std::cout << "mozda ovde " <<GetParentBlock()->GetFunctionName() << "    "
-    //<< arg0.GetName() << std::endl;
     return ExpAddress(GetParentBlock()->GetFunctionName(), arg0.GetName());
   } else {
     return GetValue(arg0);
@@ -744,19 +778,20 @@ void LState::MemoryStore(const aExp &mem, const aExp &index,
   if (!TrackPointers)
     return;
   aExp store = aExp::store(mem, index, value);
-
   //OVO JE DA SE PRATI JEDAN VELIKI NIZ STOROVA UMESTO UBACIVANJA NOVE
   //PROMENLJJIVE ZA VREDNOST MEMORIJE
   //ZA OVO JE ONDA POTREBNO KOD PROCESS-BR KADA SE ZOVE SOLVER DODATI I ADRESE
   //PRAVIMO PREKID AKO NIJE fiksni index --- da se ne pravi kobasica bezveze
-  if (MemoryFlag && !VariableIndex(index))
-    _Store.ChangeValue(MEMORY, new aExp(store));
-  else {
-    aExp newmem = ExpArray(GetNameOfNextVariable());
-    _Store.ChangeValue(MEMORY, new aExp(newmem));
-    aExp addconst = aExp::Equality(newmem, store);
-    _Constraints.Add(addconst);
-  }
+  //Ovo bi trebalo optimizovati nekako - da nebude predugacko ali i da se ne
+  //prekida svaki put
+  //  if (MemoryFlag && !VariableIndex(index))
+  //    _Store.ChangeValue(MEMORY, new aExp(store));
+  //  else {
+  aExp newmem = ExpArray(GetNameOfNextVariable());
+  _Store.ChangeValue(MEMORY, new aExp(newmem));
+  aExp addconst = aExp::Equality(newmem, store);
+  _Constraints.Add(addconst);
+  //  }
 }
 
 std::string LState::GetNameOfNextVariable() const {
@@ -846,6 +881,8 @@ void LState::ConnectFunctionArguments(llvm::Instruction *i, llvm::Function *f,
 }
 
 void LState::ConnectFunctionMemory(llvm::Function *f, LFunction *ff) {
+  if (!TrackPointers)
+    return;
   //Trenutna memorija
   aExp mem1 = *GetValue(MEMORY);
   //memorija u funkciji
@@ -903,8 +940,7 @@ void LState::ConnectFunctionReturnValue(llvm::Function *f, LFunction *ff,
       //tj uslov da je return blok ukljucen
       //na primer ako imamo petlju mozemo da zavrsimo u mrtvom bloku i
       //onda bez ovoga se stvara greska cak i ako se doda da taj mrtvi blok ne
-      //moze
-      //da bude aktivan
+      //moze da bude aktivan
       aExp e = ActiveBlock(ff->GetFunctionName(), fb->Id());
       std::string s =
           AddContext(e.GetName(), ff->GetContext(), ff->GetFunctionName());
@@ -984,18 +1020,18 @@ void LState::AddMainArgumentConditions() {
   aExp expFour = ExpNum1(ItoS(fpointer_type / 8), fint_type);
   aExp argcexp = aExp::mul(argcexp1, expFour);
 
-  //Ovo je budjavstina, ali mora tako inace moze da dodje do prekoracenja ako
+  //Ovo je ruzno, ali mora tako inace moze da dodje do prekoracenja ako
   //bi na primer argc bilo oko 1 000 000 000 i zbog toga javlja uvek unsafe
   //ako se ne stavi ovakvo nekakvo ogranicenje
   aExp expBig = ExpNum1(ItoS(1000), fint_type);
   aExp e4 = aExp::slt(argcexp1, expBig);
-
   _Constraints.Add(e4);
-  aExp e = aExp::Equality(ExpRight(argvexp), argcexp);
-  _Constraints.Add(e);
-  aExp e1 = aExp::Equality(ExpLeft(argvexp), ExpNumZeroInt);
-  _Constraints.Add(e1);
-
+  if (CheckPointers) {
+    aExp e = aExp::Equality(ExpRight(argvexp), argcexp);
+    _Constraints.Add(e);
+    aExp e1 = aExp::Equality(ExpLeft(argvexp), ExpNumZeroInt);
+    _Constraints.Add(e1);
+  }
   aExp e3 = aExp::sgt(argcexp, ExpNumZeroInt);
   _Constraints.Add(e3);
 
@@ -1009,7 +1045,26 @@ void LState::AddMainArgumentConditions() {
 }
 
 void LState::ProcessMemcpy(LInstruction *fi, llvm::Function *f,
-                           unsigned numArgs) {}
+                           unsigned numArgs) {
+  //%0 = bitcast %"class.std::initializer_list"* %agg.tmp to i8*, !dbg !1050
+  //  %1 = bitcast %"class.std::initializer_list"* %il to i8*, !dbg !1050
+  //  call void @llvm.memcpy.p0i8.p0i8.i32(i8* %0, i8* %1, i32 8, i32 4, i1
+  // false), !dbg !1050
+
+  llvm::Instruction *i = fi->Instruction();
+  llvm::BitCastInst *b1 = llvm::dyn_cast<llvm::BitCastInst>(i->getOperand(0));
+  llvm::BitCastInst *b2 = llvm::dyn_cast<llvm::BitCastInst>(i->getOperand(1));
+  if (!b1 || !b2)
+    return;
+  std::string name1 = GetOperandName(b1->getOperand(0));
+  std::string name2 = GetOperandName(b2->getOperand(0));
+  aExp address1 = ExpAddress(GetParentBlock()->GetFunctionName(), name1);
+  aExp address2 = ExpAddress(GetParentBlock()->GetFunctionName(), name2);
+  aExp e = aExp::Equality(address1, address2);
+  _Constraints.Add(e);
+  //FIXME ovo moze da bude problem prilikom inkrementalnog koriscenja
+  GetParentBlock()->GetParentFunction()->DeleteAddress(name1);
+}
 
 void LState::InlineFunction(LInstruction *fi, llvm::Function *f,
                             unsigned numArgs) {
@@ -1024,21 +1079,22 @@ void LState::InlineFunction(LInstruction *fi, llvm::Function *f,
 
   // Autor: Branislava
   // Dodato zbog paralelizacije funkcija
-  if(EnableParallel)
-  {
-    std::cout << "Funkcija: " <<  ff->GetFunctionName()<< " - Cekamo na vrednost shared future!" << std::endl; 
-    
-    auto FutureResultsPtr = GetParentBlock()->GetParentModule()->GetFutureResultsPtr();
-    
-    (*FutureResultsPtr)[std::string(ff->GetFunctionName())].getSharedFuture().wait();  
+  if (EnableParallel) {
+    std::cout << "Funkcija: " << ff->GetFunctionName()
+              << " - Cekamo na vrednost shared future!" << std::endl;
 
-     ff->SetPostcondition();
+    auto FutureResultsPtr =
+        GetParentBlock()->GetParentModule()->GetFutureResultsPtr();
 
-    std::cout << "Funkcija: " <<ff->GetFunctionName()<< " - Dobili smo vrednost shared future!" << std::endl; 
-  }
-  else
-  {
-    //dali je funkcija sracunata
+    (*FutureResultsPtr)[std::string(ff->GetFunctionName())].getSharedFuture()
+        .wait();
+
+    ff->SetPostcondition();
+
+    std::cout << "Funkcija: " << ff->GetFunctionName()
+              << " - Dobili smo vrednost shared future!" << std::endl;
+  } else {
+    //da li je funkcija sracunata
     //ako nije, izracunaj je - pretpostavka da nema rekurzije
     if (ff != NULL) {
       //ovo je zastita samo od direktne rekurzije
@@ -1054,12 +1110,12 @@ void LState::InlineFunction(LInstruction *fi, llvm::Function *f,
 
       //    ffTimer.stopTimer();
     } else {
-      std::cout << "funkcija nije nadjena, i sta sada???  " << std::endl;
+      std::cout << "funkcija nije nadjena  " << std::endl;
       exit(1);
     }
   }
 
-pthread_mutex_lock(&var);
+  pthread_mutex_lock(&var);
   ff->SetNewContext();
 
   ConnectFunctionArguments(i, f, numArgs, ff);
@@ -1075,7 +1131,7 @@ pthread_mutex_lock(&var);
   //AddPostCondTimer.startTimer();
   _Constraints.Add(ff->GetPostcondition());
 
-pthread_mutex_unlock(&var);
+  pthread_mutex_unlock(&var);
   //AddPostCondTimer.stopTimer();
 }
 
@@ -1092,15 +1148,6 @@ void LState::ProcessFunctionCall(LInstruction *fi) {
     std::cout << " !f ????: " << std::endl;
     return;
   }
-
-  /*llvm::outs() << *i << '\n';
-  std::cout<<'\n'<< "_Store pre instrukcije poziva
-  funkcije--------------------------" <<'\n';
-  _Store.Print(std::cout);
-  std::cout<< "PrintConstraints() pre instrukcije  poziva
-  funkcije--------------------------" <<std::endl;
-  PrintConstraints();
-  */
 
   if (f && f->isDeclaration()) {
 
@@ -1149,9 +1196,8 @@ void LState::ProcessLibraryCall(LInstruction *fi, llvm::Function *f,
     aExp e = GetParentBlock()->Active();
     _Constraints.Add(aExp::IMPL(e, aExp::BOT()));
   } else if ((f->getName() == "malloc") || (f->getName() == "realloc") ||
-             (f->getName() == "calloc"))
-      //dodati i proveru tipa da je to bas the malloc a ne neki drugi
-      {
+             (f->getName() == "calloc")) {
+    //dodati i proveru tipa da je to bas the malloc a ne neki drugi
     //FIXME ovo moze da je greska jer se kod gepija i drugih kace expaddress a
     //ovde ne
     //      aExp e = ExpAddress(GetFunctionName(), MALLOC+GetOperandName(i));
@@ -1186,7 +1232,6 @@ void LState::ProcessLibraryCall(LInstruction *fi, llvm::Function *f,
        vec mora za n da se stavi neka gornja granica tako
        da ne moze da prekoraci a isto tako i donja granica
        mozda bi ovde trebalo dodati i da n<n*sizeof() */
-
     if (Students) {
       aExp mul = GetValue(right);
       if (mul.isMul() || mul.isShiftL()) {
@@ -1272,29 +1317,38 @@ void LState::ProcessLibraryCall(LInstruction *fi, llvm::Function *f,
     aExp eq3 = aExp::Equality(ExpRight(ee), ExpNumZeroInt);
     _Constraints.Add(eq1);
     _Constraints.Add(eq3);
-  } else if (f->getName() ==
-             "strcpy") //ovo je sumnjivo, poredjenje je samo na osnovu alocirane
-      //memorije a ne na osnovu stvarnog stanja u memoriji
-      {
+  } else if (f->getName() == "strcpy") {
+    //ovo nije precizno, poredjenje je samo na osnovu alocirane
+    //memorije a ne na osnovu stvarnog stanja u memoriji
     aExp dst = GetValue(argument(i, 0));
     aExp src = GetValue(argument(i, 1));
     aExp e = aExp::uge(ExpRight(dst), ExpRight(src));
     GetParentBlock()->AddLocalCondition(e, fi, BUFFEROVERFLOW);
-  }
-      //TODO dodati za abs i fabs
-
-      //TODO za toupper i tolower umetnuti implementaciju
-      //za strlen dodati pretpostavku da je povratna vrednost >=0
-      else if (f->getName() == "strlen" || f->getName() == "toupper" ||
-               f->getName() == "tolower" || f->getName() == "cos" ||
-               f->getName() == "atoi") {
+  } else if (f->getName() == "abs" || f->getName() == "fabs") {
+    aExp e = GetValue(argument(i, 0));
+    const llvm::Type *t = i->getOperand(0)->getType();
+    aExp grZero = aExp::sgt(e, ExpNumZero(GetIntType(t)));
+    aExp minus = aExp::sub(ExpNumZero(GetIntType(t)), e);
+    aExp ite = aExp::IfThenElse(grZero, e, minus);
+    WriteIntoStore(i, ite);
+  } else if (f->getName() == "strlen" || f->getName() == "toupper" ||
+             f->getName() == "sin" || f->getName() == "tolower" ||
+             f->getName() == "cos" || f->getName() == "sqrt" || f->getName() ==
+             "atoi" || f->getName() == "round" || f->getName() == "trunc" ||
+             f->getName() == "ceil" || f->getName() == "floor") {
+    //TODO za toupper i tolower umetnuti implementaciju
+    //za strlen dodati pretpostavku da je povratna vrednost >=0
     aExp e = aExp::Function(f->getName(), GetValue(argument(i, 0)),
                             GetIntType(i->getOperand(0)->getType()));
     WriteIntoStore(i, e);
-  }
+  } else if (f->getName() == "pow") {
+    aExp e = aExp::Function(f->getName(), GetValue(argument(i, 0)),
+                            GetValue(argument(i, 1)),
+                            GetIntType(i->getOperand(0)->getType()));
+    WriteIntoStore(i, e);
 
-      //TODO ovde bi trebalo modelirati da je argument razlicit od null
-      else if (f->getName() == "_IO_getc" || f->getName() == "_IO_fgetc") {
+  } else if (f->getName() == "_IO_getc" || f->getName() == "_IO_fgetc") {
+    //TODO ovde bi trebalo modelirati da je argument razlicit od null
     aExp e = ExpVar(GetNameOfNextVariable(), fchar_type, false);
     WriteIntoStore(i, e);
   } else if (f->getName() == "getchar") {
@@ -1303,11 +1357,7 @@ void LState::ProcessLibraryCall(LInstruction *fi, llvm::Function *f,
   } else if ((f->getName() == "ASSERT") || (f->getName() == "assert") ||
              (f->getName() == "ASSERT_") || (f->getName() == "assert_") ||
              (f->getName() == "ASSERT_LAV") || (f->getName() == "assert_lav") ||
-             (f->getName().find("assert_lav") != std::string::npos )  
-)
-
- {
-
+             (f->getName().find("assert_lav") != std::string::npos)) {
     if (CheckAssert) {
       aExp r = GetValue(argument(i, 0));
       if (r.isZext()) {
@@ -1319,7 +1369,9 @@ void LState::ProcessLibraryCall(LInstruction *fi, llvm::Function *f,
       }
     }
   } else if ((f->getName() == "ASSUME") || (f->getName() == "assume") ||
-             (f->getName() == "ASSUME_") || (f->getName() == "assume_")) {
+             (f->getName() == "ASSUME_") || (f->getName() == "assume_") ||
+             (f->getName() == "ASSUME_LAV") || (f->getName() == "assume_lav") ||
+             (f->getName().find("assume_lav") != std::string::npos)) {
     aExp cond = GetValue(argument(i, 0));
     if (cond.isZext())
       _Constraints.Add(cond[0]);
@@ -1328,13 +1380,11 @@ void LState::ProcessLibraryCall(LInstruction *fi, llvm::Function *f,
       aExp e = aExp::Disequality(cond, ExpNumZero(GetIntType(t)));
       _Constraints.Add(e);
     }
-  }
-
-      //#ifdef Z3 --- u common prebaciti izbor solvera i ovde promeniti solver
-      //po potrebi
-      //ovo moze ako se ne radi akermanizacija jer je za ovo suludo raditi
-      //akermanizaciju
-      else if ((f->getName().find("__UF__", 0)) != (std::string::npos)) {
+  } else if ((f->getName().find("__UF__", 0)) != (std::string::npos)) {
+    //#ifdef Z3 --- u common prebaciti izbor solvera i ovde promeniti solver
+    //po potrebi
+    //ovo moze ako se ne radi akermanizacija jer je za ovo suludo raditi
+    //akermanizaciju
     std::size_t found = f->getName().find_first_of("8765432");
     if (found != std::string::npos) {
       std::vector<aExp> operands;
@@ -1351,9 +1401,7 @@ void LState::ProcessLibraryCall(LInstruction *fi, llvm::Function *f,
     //FIXME trebalo bi da se napravi neinterpretirana funckija a ne nova
     //promenljiva
     aExp e = ExpVar(GetNameOfNextVariable(), GetIntType(i->getType()), false);
-
     WriteIntoStore(i, e);
-
     //  Ako ne znamo nista o funkciji
     //  ResetMemory();
   }
@@ -1432,25 +1480,26 @@ void LState::ProcessGEPI(LInstruction *fi) {
   //onda ga mozda ne treba dodati da bi sistem mogao da se od toga oporavi i
   //nastavi dalje da ne bi
   //bilo posle sve unreachable
-  aExp sright = aExp::sub(ExpRight(base), constantOffset);
-  aExp e1 = aExp::Equality(ExpRight(ee), sright);
+  if (CheckPointers) {
+    aExp sright = aExp::sub(ExpRight(base), constantOffset);
+    aExp e1 = aExp::Equality(ExpRight(ee), sright);
 
-  aExp sleft = aExp::sub(ExpLeft(base), constantOffset);
-  aExp e2 = aExp::Equality(ExpLeft(ee), sleft);
+    aExp sleft = aExp::sub(ExpLeft(base), constantOffset);
+    aExp e2 = aExp::Equality(ExpLeft(ee), sleft);
 
-  _Constraints.Add(e1);
-  _Constraints.Add(e2);
+    _Constraints.Add(e1);
+    _Constraints.Add(e2);
+  }
 }
 
 //TODO
 void LState::ProcessPHI(LInstruction *fi) {
-  // fi ce da ima suvisne informacije --- duplo ce se prespajati neke vrednosti
+  //fi ce da ima suvisne informacije --- duplo ce se prespajati neke vrednosti
   //to bi trebalo izbaciti da se ne prespaja dva puta --- nema smisla
   //nece da radi getelementptr ako mu je prethodnik phi on ne ume da odredi
   //koliki su mu left i right
 
   llvm::Instruction *i = fi->Instruction();
-
   std::string value = GetNextVariable();
   aExp e = ExpVar(value, GetIntType(i->getType()), false);
   WriteIntoStore(i, e);
@@ -1470,8 +1519,8 @@ void LState::ProcessPHI(LInstruction *fi) {
       }
       //dodati u store ovu vrednost
 
-      //FIXME ovo je sumnjivo, mora da postoji neki metod za citanje
-      //ove vrednosti i treba ga naci gde je, ovo je copy-paste od onoga dole
+      //FIXME, nedostaje metod za citanje ove vrednosti, ovo je copy-paste od
+      //onoga dole
       aExp e3;
       llvm::Constant *c1 = llvm::dyn_cast<llvm::Constant>(i->getOperand(j));
       if (c1 != NULL)
@@ -1500,8 +1549,8 @@ void LState::ProcessPHI(LInstruction *fi) {
       LBlock *pred = _ParentBlock->GetParentFunction()->GetLBlock(bb1);
 
       //ako su neki blokovi sracunati da ne mogu da budu predhodnici onda ih
-      //preskociti
-      //ne treba preskociti uvek, ako su spojeni uzeti ono u sta su spojeni
+      //preskociti ne treba preskociti uvek, ako su spojeni uzeti ono u sta su
+      //spojeni
       if (_ParentBlock->GetPredWithId(pred->Id()) == NULL) {
         if (pred->IsMerged())
           pred = pred->MergedInto();
@@ -1520,8 +1569,7 @@ void LState::ProcessPHI(LInstruction *fi) {
         e3 = evalConstant(c1);
       } else {
         std::string s = GetOperandName(phiin->getIncomingValue(j));
-        if (GetValue(s) != NULL) { //std::cout << "S = " << s << std::endl;
-                                   //_Store.Print(std::cout);
+        if (GetValue(s) != NULL) {
           e3 = *GetValue(s);
         } else
           e3 = ExpVar(s, GetIntType(phiin->getIncomingValue(j)->getType()),
@@ -1638,8 +1686,9 @@ void LState::ProcessBr(LInstruction *fi) {
       //!@#$ ovo otkomentarisati
       if (MemoryFlag)
         _ParentBlock->UpdateAndSetAddresses();
-      if(!EnableParallel) //za paralelnost su iskljucene lokalne provere pa je moguce da ovo nije bitno
-      s = LSolver::callSolver(t, check);
+      if (!EnableParallel) //za paralelnost su iskljucene lokalne provere pa je
+                           //moguce da ovo nije bitno
+        s = LSolver::callSolver(t, check);
     }
 
     LFunction *f = _ParentBlock->GetParentFunction();
@@ -1672,13 +1721,10 @@ static std::string cut_addr(const std::string &s) {
 }
 
 //ovde bi bilo bolje da se jednom sracunaju ove vrednosti a ne svaki put iz
-//pocetka
-//problem je sto u zavisnosti od pozicije u bloku mozemo imati razlicite
-//vrednosti
-//koje nam za model trebaju i to zavisi od trenutnog stanja izvrsavanja
-//instrukcija
-//to komplikuje stvari i ne znam kako bi to razresila drugacije nego da se svaki
-//put iznova izracunava
+//pocetka problem je sto u zavisnosti od pozicije u bloku mozemo imati
+//razlicite vrednosti koje nam za model trebaju i to zavisi od trenutnog
+//stanja izvrsavanja instrukcija to komplikuje stvari i ne znam kako bi to
+//razresila drugacije nego da se svaki put iznova izracunava
 mspaExp LState::GetModelValues() const {
   const msVarInfo &st = _Store.GetStore();
   mspaExp ModelValues;
@@ -1735,48 +1781,16 @@ aExp LState::GetDivValue(llvm::Instruction *i, bool b) {
     e = aExp::sdiv(GetValue(argument(i, 0)), GetValue(argument(i, 1)));
   return e;
 }
-/*ovo ne pomaze jer se mnozenje i sabiranje tretiraju realno pa to onda nije
-dovoljno
-jednoznacno
-aExp LState::GetRemValue(llvm::Instruction* i, bool b)
-{
-    aExp e;
-    aExp e0 = GetValue(argument(i,0));
-    aExp e1 = GetValue(argument(i,1));
-    if(LSolver::isLATheory() && e1.IsNumeral() && !e0.IsNumeral())
-    {
-      //ako su oba numerali to ce se izracunati prilikom upisivanja u store
-      //a%2 ===> b /\ a=2x+b /\ 0<=b<2
-      //fixme tip
-      //ovo je b
-      e = ExpVar(GetNameOfNextVariable(),
-GetIntType(i->getOperand(1)->getType()), false);
-      aExp x = ExpVar(GetNameOfNextVariable(),
-GetIntType(i->getOperand(1)->getType()), false);
-      aExp eq1 = aExp::Equality(aExp::mul(aExp::mul(e1, x), e), e0);
-      //fixme tip, fixme sle ili ule
-      aExp eq2 = aExp::sle(ExpNumZeroInt, e);
-      aExp eq3 = aExp::slt(e, e1);
-      _Constraints.Add(eq1);
-      _Constraints.Add(eq2);
-      _Constraints.Add(eq3);
-    }
-    else if(b) e = aExp::urem(GetValue(argument(i,0)), GetValue(argument(i,1)));
-          else e = aExp::srem(GetValue(argument(i,0)), GetValue(argument(i,1)));
-return e;
-}*/
 
 //FIXME - nepodrzane su free, vaarg, unwind, unreachable i neke float i
 //poslednje tri
 void LState::Update(LInstruction *fi) {
   if (_ParentBlock->IsUnreachableBlock()) {
-    std::cerr << "unreachable blok!!!" << std::endl;
     return;
   }
 
   llvm::Instruction *i = fi->Instruction();
-//  	  llvm::outs() << *i ;
-//  	  std::cout <<  std::endl;
+  //llvm::outs() << *i ;
 
   switch (i->getOpcode()) {
   // Control flow
@@ -1784,27 +1798,18 @@ void LState::Update(LInstruction *fi) {
     ProcessReturn(fi);
     break;
   }
-  //  case llvm::Instruction::Unwind: {
-  //      exit_error("Unwind instruction not supported!");
-  //	  std::cout << *i <<  std::endl;
-  //    break;
-  //  }
-  case llvm::Instruction::Br: {
-//    Branching.startTimer();
-    ProcessBr(fi);
-//    Branching.stopTimer();
 
+  case llvm::Instruction::Br: {
+    ProcessBr(fi);
     break;
   }
+
   case llvm::Instruction::Switch: {
     ProcessSwitch(fi);
     break;
   }
 
-  case llvm::Instruction::Unreachable: {
-    //	  std::cout << *i <<  std::endl;
-    break;
-  }
+  case llvm::Instruction::Unreachable: { break; }
 
   case llvm::Instruction::Invoke:
   case llvm::Instruction::Call: {
@@ -1868,7 +1873,6 @@ void LState::Update(LInstruction *fi) {
     GetParentBlock()->AddLocalConditionZeroDisequality(GetValue(argument(i, 1)),
                                                        fi);
     aExp e = aExp::urem(GetValue(argument(i, 0)), GetValue(argument(i, 1)));
-    //    aExp e = GetRemValue(i, true);
     WriteIntoStore(i, e);
     break;
   }
@@ -1877,7 +1881,6 @@ void LState::Update(LInstruction *fi) {
     GetParentBlock()->AddLocalConditionZeroDisequality(GetValue(argument(i, 1)),
                                                        fi);
     aExp e = aExp::srem(GetValue(argument(i, 0)), GetValue(argument(i, 1)));
-    //    aExp e = GetRemValue(i, false);
     WriteIntoStore(i, e);
     break;
   }
@@ -1905,14 +1908,14 @@ void LState::Update(LInstruction *fi) {
     break;
   }
 
-  //logical shift - za unsigned
+  //logical shift - unsigned
   case llvm::Instruction::LShr: {
     aExp e = aExp::lShiftR(GetValue(argument(i, 0)), GetValue(argument(i, 1)));
     WriteIntoStore(i, e);
     break;
   }
 
-  //arithmetic shift - za signed
+  //arithmetic shift - signed
   case llvm::Instruction::AShr: {
     aExp e = aExp::aShiftR(GetValue(argument(i, 0)), GetValue(argument(i, 1)));
     WriteIntoStore(i, e);
@@ -1933,10 +1936,8 @@ void LState::Update(LInstruction *fi) {
       break;
     }
 
-  //fixmeT videti gde je ovo nestalo
-  //fixme ovo je skroz neprovereno
+  //FIXME
   /*  case llvm::Instruction::Free: {
-  //  std::cout << *i <<  std::endl;
         aExp ee = GetValue(argument(i,0));
         aExp zero = aExp::Equality(ee, ExpNumZeroPtr);
         _Constraints.Add(zero);
@@ -1946,9 +1947,8 @@ void LState::Update(LInstruction *fi) {
         _Constraints.Add(eq3);
       break;
     }
-
- 
   */
+
   case llvm::Instruction::Load: {
     ProcessLoad(fi);
     break;
@@ -1968,11 +1968,11 @@ void LState::Update(LInstruction *fi) {
   case llvm::Instruction::Trunc: {
     aExp e0 = GetValue(argument(i, 0));
     unsigned width = GetBitWidth(GetIntType(i->getType()));
-    aExp e; // = aExp::extract(e0, 0, width-1);
+    aExp e;
     if (e0.IsNumeral())
       e = ExpNum1(e0.GetValue(), GetIntType(i->getType()));
     else
-      e = aExp::extract(e0, 0, width - 1);
+      e = aExp::extract(e0, 0, width > 1 ? width - 1 : 1);
     WriteIntoStore(i, e);
     break;
   }
@@ -1980,7 +1980,7 @@ void LState::Update(LInstruction *fi) {
   case llvm::Instruction::ZExt: {
     aExp e0 = GetValue(argument(i, 0));
     unsigned width = GetBitWidth(GetIntType(i->getType()));
-    aExp e; // = aExp::zext(e0, width);
+    aExp e;
     if (e0.IsNumeral())
       e = ExpNum1(e0.GetValue(), GetIntType(i->getType()));
     //ovo je vazno za z3, za boolector nije potrebno, pitanje je jedino da li
@@ -2003,7 +2003,7 @@ void LState::Update(LInstruction *fi) {
   case llvm::Instruction::SExt: {
     aExp e0 = GetValue(argument(i, 0));
     unsigned width = GetBitWidth(GetIntType(i->getType()));
-    aExp e; // = aExp::sext(e0, width);
+    aExp e;
     if (e0.IsNumeral())
       e = ExpNum1(e0.GetValue(), GetIntType(i->getType()));
     else
@@ -2028,22 +2028,18 @@ void LState::Update(LInstruction *fi) {
   }
   // Floating point specific instructions
   case llvm::Instruction::FAdd: {
-    //    BinaryOperator *bi = cast<BinaryOperator>(i);
-    //	  std::cout << *bi <<  std::endl;
     aExp e = aExp::add(GetValue(argument(i, 0)), GetValue(argument(i, 1)));
     WriteIntoStore(i, e);
     break;
   }
 
   case llvm::Instruction::FSub: {
-    //    BinaryOperator *bi = cast<BinaryOperator>(i);
     aExp e = aExp::sub(GetValue(argument(i, 0)), GetValue(argument(i, 1)));
     WriteIntoStore(i, e);
     break;
   }
 
   case llvm::Instruction::FMul: {
-    //    BinaryOperator *bi = cast<BinaryOperator>(i);
     aExp e = aExp::mul(GetValue(argument(i, 0)), GetValue(argument(i, 1)));
     WriteIntoStore(i, e);
 
@@ -2051,17 +2047,14 @@ void LState::Update(LInstruction *fi) {
   }
 
   case llvm::Instruction::FDiv: {
-    //  BinaryOperator *bi = cast<BinaryOperator>(i);
     GetParentBlock()->AddLocalConditionZeroDisequality(GetValue(argument(i, 1)),
                                                        fi);
-    //    aExp e = aExp::sdiv(GetValue(argument(i,0)), GetValue(argument(i,1)));
     aExp e = GetDivValue(i, false);
     WriteIntoStore(i, e);
     break;
   }
 
   case llvm::Instruction::FRem: {
-    //  BinaryOperator *bi = cast<BinaryOperator>(i);
     GetParentBlock()->AddLocalConditionZeroDisequality(GetValue(argument(i, 1)),
                                                        fi);
     aExp e = aExp::srem(GetValue(argument(i, 0)), GetValue(argument(i, 1)));
@@ -2071,7 +2064,6 @@ void LState::Update(LInstruction *fi) {
 
   //fixme
   case llvm::Instruction::FPTrunc: {
-    //  FPTruncInst *fi = cast<FPTruncInst>(i);
     aExp e0 = GetValue(argument(i, 0));
     WriteIntoStore(i, e0);
     break;
@@ -2079,19 +2071,15 @@ void LState::Update(LInstruction *fi) {
 
   //fixme
   case llvm::Instruction::FPExt: {
-    //    FPExtInst *fi = cast<FPExtInst>(i);
     aExp e0 = GetValue(argument(i, 0));
     WriteIntoStore(i, e0);
     break;
   }
 
   case llvm::Instruction::FPToUI: {
-    //  FPToUIInst *fi = cast<FPToUIInst>(i);
-    //    aExp e0 = GetValue(argument(i,0));
-    //    WriteIntoStore(i, e0);
     aExp e0 = GetValue(argument(i, 0));
     unsigned width = GetBitWidth(GetIntType(i->getType()));
-    aExp e; // = aExp::zext(e0, width);
+    aExp e;
     if (e0.IsNumeral())
       e = ExpNum1(e0.GetValue(), GetIntType(i->getType()));
     else
@@ -2101,12 +2089,9 @@ void LState::Update(LInstruction *fi) {
   }
 
   case llvm::Instruction::FPToSI: {
-    //  FPToSIInst *fi = cast<FPToSIInst>(i);
-    //    aExp e0 = GetValue(argument(i,0));
-    //    WriteIntoStore(i, e0);
     aExp e0 = GetValue(argument(i, 0));
     unsigned width = GetBitWidth(GetIntType(i->getType()));
-    aExp e; // = aExp::zext(e0, width);
+    aExp e;
     if (e0.IsNumeral())
       e = ExpNum1(e0.GetValue(), GetIntType(i->getType()));
     else
@@ -2117,13 +2102,9 @@ void LState::Update(LInstruction *fi) {
   }
 
   case llvm::Instruction::UIToFP: {
-    //  UIToFPInst *fi = cast<UIToFPInst>(i);
-    //    aExp e0 = GetValue(argument(i,0));
-    //    WriteIntoStore(i, e0);
-
     aExp e0 = GetValue(argument(i, 0));
     unsigned width = GetBitWidth(GetIntType(i->getType()));
-    aExp e; // = aExp::zext(e0, width);
+    aExp e;
     if (e0.IsNumeral())
       e = ExpNum1(e0.GetValue(), GetIntType(i->getType()));
     else
@@ -2134,13 +2115,9 @@ void LState::Update(LInstruction *fi) {
   }
 
   case llvm::Instruction::SIToFP: {
-    //  SIToFPInst *fi = cast<SIToFPInst>(i);
-    //   aExp e0 = GetValue(argument(i,0));
-    //   WriteIntoStore(i, e0);
-
     aExp e0 = GetValue(argument(i, 0));
     unsigned width = GetBitWidth(GetIntType(i->getType()));
-    aExp e; // = aExp::zext(e0, width);
+    aExp e;
     if (e0.IsNumeral())
       e = ExpNum1(e0.GetValue(), GetIntType(i->getType()));
     else
@@ -2151,7 +2128,6 @@ void LState::Update(LInstruction *fi) {
   }
 
   case llvm::Instruction::FCmp: {
-    //  FCmpInst *fi = cast<FCmpInst>(i);
     ProcessFCmp(fi);
     break;
   }
@@ -2163,46 +2139,27 @@ void LState::Update(LInstruction *fi) {
   case llvm::Instruction::ShuffleVector:
     exit_error("Unsuported instructions: ExtractElement, InsertElement, "
                "ShuffleVector!");
-    //    std::cout << *i <<  std::endl;
     break;
 
   default:
-    std::cout << "nepodrzano" << std::endl;
     //    exit_error("unknown instruction");
     break;
   } //end of switch
 }   //end of function
 
 //ne moze zbog gettargetdata da se jednostavno izbaci iz bloka u common
-//FIXME pola toga je zbrljano ili preskoceno!!!
+//FIXME
 aExp LState::evalConstantExpr(llvm::ConstantExpr *ce) {
-  /*  std::cout << std::endl << std::endl << std::endl << std::endl << std::endl
-              << std::endl << std::endl << std::endl << std::endl << std::endl
-              << "evalConstantExpr ---------------------------------------"
-              << std::endl;*/
-  //evalConstantExpr \n" << *ce << std::endl ;
 
-  //aExp op1=ExpZero, op2 = ExpZero, op3 = ExpZero;
-  //FIXME!!!
   aExp op1 = ExpNumZeroInt, op2 = ExpNumZeroInt, op3 = ExpNumZeroInt;
 
   int numOperands = ce->getNumOperands();
-  //std::cout << "*ce->getOperand(0) " << *ce->getOperand(0) << std::endl;
   if (numOperands > 0)
     op1 = evalConstant(ce->getOperand(0));
   if (numOperands > 1)
     op2 = evalConstant(ce->getOperand(1));
   if (numOperands > 2)
     op3 = evalConstant(ce->getOperand(2));
-  /*  std::cout << "evalConstantExpr: op1 ";
-    op1.Print(&SMTF, std::cout);
-    std::cout << std::endl;
-    std::cout << "evalConstantExpr: op2 ";
-    op2.Print(&SMTF, std::cout);
-    std::cout << std::endl;
-    std::cout << "evalConstantExpr: op3 ";
-    op3.Print(&SMTF, std::cout);
-    std::cout << std::endl;*/
 
   switch (ce->getOpcode()) {
   default: {
@@ -2212,12 +2169,10 @@ aExp LState::evalConstantExpr(llvm::ConstantExpr *ce) {
     abort();
     break;
   }
-  //FIXME
   case llvm::Instruction::Trunc:
   case llvm::Instruction::ZExt:
   case llvm::Instruction::SExt: {
-    //  std::cout << std::endl << "Trunc ZExt i SExt --- ovde moze da je puklo"
-    // << std::endl;
+    //FIXME
     return op1;
   }
   case llvm::Instruction::Add:
@@ -2256,11 +2211,7 @@ aExp LState::evalConstantExpr(llvm::ConstantExpr *ce) {
     return PtrToInt(op1);
 
   case llvm::Instruction::GetElementPtr: {
-    //    std::cout << std::endl << std::endl << "evalConstantExpr ----
-    // GetElementPtr"
-    //              << std::endl;
-
-    //FIXME ovo je krpljevina i jako je sumnjivo
+    //FIXME
     if (llvm::dyn_cast<llvm::GlobalValue>(ce->getOperand(0)))
       op1 = ExpGlobalAddress(GetOperandName(ce->getOperand(0)));
 
@@ -2291,16 +2242,11 @@ aExp LState::evalConstantExpr(llvm::ConstantExpr *ce) {
         addend = SimplifyExpression(
             aExp::mul(index, ExpNum1(elementSize, fint_type)));
       }
-      //ovo je sumnjivo
+      //FIXME
       add = SimplifyExpression(aExp::add(add, addend));
     }
 
     base = ExpGepi(base, add);
-    //std::cout << "EvalConstantExpr ---------------------------------------" <<
-    //std::endl;
-    //base.Print(&SMTF, std::cout);
-    //std::cout << std::endl << "EvalConstantExpr
-    //---------------------------------------" << std::endl;
     return base;
   }
 
@@ -2347,25 +2293,18 @@ aExp LState::evalConstantExpr(llvm::ConstantExpr *ce) {
   case llvm::Instruction::FPToUI:
   case llvm::Instruction::FPToSI:
   case llvm::Instruction::FCmp:
-    //        std::cout << "FIXME: fxxx in constant expression! " << std::endl;
     assert(0 && "floating point ConstantExprs unsupported");
   }
 
-  //ovo je cisto da bi funkcija nesto vratila da ne bi bilo warning-a
-  //        std::cout << "ExpZeroExpZeroExpZero111111111111111" << std::endl;
   return op1;
-
 }
 
-//FIXME ovo treba sve zakrpiti
+//FIXME
 aExp LState::evalConstant(llvm::Constant *c) {
-
-  //inicijalizacija da ne bi pucalo
+  //inicijalizacija
   aExp e = ExpNumZeroInt;
   if (c == NULL)
     return e;
-  //  llvm::outs() << "evalConstant " << *c << '\n';
-  //_Store.Print(std::cout);
   if (llvm::ConstantExpr *ce = llvm::dyn_cast<llvm::ConstantExpr>(c)) {
     return evalConstantExpr(ce);
   } else {
@@ -2378,14 +2317,11 @@ aExp LState::evalConstant(llvm::Constant *c) {
       case llvm::Type::FloatTyID: {
         float f = cf->getValueAPF().convertToFloat();
         //FIXME tip
-        //          std::cout << "float evalConstant " << *c << std::endl;
         return ExpNum1(f, GetIntType(llvm::Type::FloatTyID));
       }
       case llvm::Type::DoubleTyID: {
         double d = cf->getValueAPF().convertToDouble();
-        //          llvm::outs() << "double evalConstant " << *c << "\n";
         return ExpNum1(d, GetIntType(llvm::Type::DoubleTyID));
-        //return ExpNum1(d, argo::sInt32Type);
       }
       case llvm::Type::X86_FP80TyID: {
         llvm::APFloat apf = cf->getValueAPF();
@@ -2396,10 +2332,7 @@ aExp LState::evalConstant(llvm::Constant *c) {
         (void) r;
         double d = apf.convertToDouble();
         //FIXME tip
-        //          std::cout << "X86_FP80TyID evalConstant " << *c <<
-        // std::endl;
         return ExpNum1(d, argo::sInt64Type);
-        //          return ExpNum1(d, argo::sInt32Type);
       }
       default:
         llvm::errs() << "Constant of type " << *(cf->getType())
@@ -2408,9 +2341,7 @@ aExp LState::evalConstant(llvm::Constant *c) {
       }
     } else if (llvm::GlobalValue *gv = llvm::dyn_cast<llvm::GlobalValue>(c)) {
       {
-
-        //FIXME ovde je svasta ispusteno!!!
-        //        std::cout << "GlobalValue " << *gv;
+        //FIXME
         if (llvm::GlobalVariable *gvar =
                 llvm::dyn_cast<llvm::GlobalVariable>(gv)) {
           if (gvar->isConstant()) {
@@ -2429,7 +2360,7 @@ aExp LState::evalConstant(llvm::Constant *c) {
     } else if (llvm::isa<llvm::ConstantPointerNull>(c)) {
       return ExpNumZeroPtr;
     } else if (llvm::isa<llvm::UndefValue>(c)) {
-      //mozda treba neko globalno ime a ne lokalno, nisam sigurna,
+      //mozda treba neko globalno ime a ne lokalno,
       //mozda je dobro ovako, tip je svakako los
       return ExpVar(GetNameOfNextVariable(), argo::sInt32Type, false);
     } else {
@@ -2439,48 +2370,6 @@ aExp LState::evalConstant(llvm::Constant *c) {
   }
   return e;
 }
-
-/*
-    } else if (isa<UndefValue>(c) || isa<ConstantAggregateZero>(c)) {
-      return ConstantExpr::create(0, getWidthForLLVMType(c->getType()));
-#if LLVM_VERSION_CODE >= LLVM_VERSION(3, 1)
-    } else if (const ConstantDataSequential *cds =
-                 dyn_cast<ConstantDataSequential>(c)) {
-      std::vector<ref<Expr> > kids;
-      for (unsigned i = 0, e = cds->getNumElements(); i != e; ++i) {
-        ref<Expr> kid = evalConstant(cds->getElementAsConstant(i));
-        kids.push_back(kid);
-      }
-      ref<Expr> res = ConcatExpr::createN(kids.size(), kids.data());
-      return cast<ConstantExpr>(res);
-#endif
-    } else if (const ConstantStruct *cs = dyn_cast<ConstantStruct>(c)) {
-      const StructLayout *sl =
-kmodule->targetData->getStructLayout(cs->getType());
-      llvm::SmallVector<ref<Expr>, 4> kids;
-      for (unsigned i = cs->getNumOperands(); i != 0; --i) {
-        unsigned op = i-1;
-        ref<Expr> kid = evalConstant(cs->getOperand(op));
-
-        uint64_t thisOffset = sl->getElementOffsetInBits(op),
-                 nextOffset = (op == cs->getNumOperands() - 1)
-                              ? sl->getSizeInBits()
-                              : sl->getElementOffsetInBits(op+1);
-        if (nextOffset-thisOffset > kid->getWidth()) {
-          uint64_t paddingWidth = nextOffset-thisOffset-kid->getWidth();
-          kids.push_back(ConstantExpr::create(0, paddingWidth));
-        }
-
-        kids.push_back(kid);
-      }
-      ref<Expr> res = ConcatExpr::createN(kids.size(), kids.data());
-      return cast<ConstantExpr>(res);
-    } else {
-      // Constant{Array,Vector}
-      assert(0 && "invalid argument to evalConstant()");
-    }
-  }
-*/
 
 //id1 je tekuci a id2 je prethodnik
 //ovo bi mozda trebalo delegirati da se uradi u store-u

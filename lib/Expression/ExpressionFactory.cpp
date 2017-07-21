@@ -12,7 +12,7 @@ thread_local std::vector<Expression> dummy_vector;
 namespace argo {
 ExpressionNode *ExpressionFactory::Get(ExpressionNode *expr_node) {
   //	coutput << _existing_nodes.size() << "/" << _existing_nodes.bucket_count()
-  //<< endl; 
+  //<< endl;
   ExpressionNodePointerSet::const_iterator i = _existing_nodes.find(expr_node);
 
   if (i != _existing_nodes.end()) {

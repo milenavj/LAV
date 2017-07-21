@@ -22,8 +22,8 @@ public:
 
   explicit BVExpressionImpZ3(SOLVER_EXPR_TYPE expr, size_t width, Z3Type type)
       : ExpressionImpSymbolic(EK_ExpressionImpZ3), _expr(expr), _width(width)
-//        _type(type) 
-    {}
+        //        _type(type)
+        {}
 
   static bool classof(const ExpressionImp *S) {
     return S->getKind() == EK_ExpressionImpZ3;
@@ -38,9 +38,10 @@ public:
   }
 
   bool addTempConstraint() {
-//    std::cout << "addTempConstraint Z3::searching..." << std::endl;
+    //    std::cout << "addTempConstraint Z3::searching..." << std::endl;
     bool b = Z3Instance::instance().addTempConstraint(_expr);
-//    std::cout << "addTempConstraint Z3::searching...Finished" << std::endl;
+    //    std::cout << "addTempConstraint Z3::searching...Finished" <<
+    // std::endl;
     return b;
   }
 
@@ -861,7 +862,7 @@ private:
 
   SOLVER_EXPR_TYPE _expr;
   size_t _width;
-//  Z3Type _type;
+  //  Z3Type _type;
 };
 
 class BVExpressionFactoryZ3 : public ExpressionFactory {

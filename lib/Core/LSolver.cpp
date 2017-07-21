@@ -190,9 +190,7 @@ bool LSolver::isLATheory() {
     return false;
 }
 
-void LSolver::setFactory() {
-  UrsaExp::setFactory(_Factory.get());
-}
+void LSolver::setFactory() { UrsaExp::setFactory(_Factory.get()); }
 
 void LSolver::resetSolver() {
 #if defined(BOOLECTOR) || defined(BOOLECTOR_OLD)
@@ -218,9 +216,9 @@ void LSolver::resetSolver() {
 }
 
 void LSolver::reset() {
-//  ResetTime.startTimer();
+  //  ResetTime.startTimer();
   resetSolver();
-//  ResetTime.stopTimer();
+  //  ResetTime.stopTimer();
   _Addresses.clear();
   _SymbolTable.clear();
   _Lefts.clear();
@@ -362,7 +360,7 @@ void LSolver::GetTransform(stUrsaExp &symbolTable, vStr &transforamtions) {
   }
 }
 
-//TODO prebaciti u dugu klasu
+//TODO prebaciti u drugu klasu
 void WriteHint(std::ostream &ostr, ERRKIND ErrKind) {
   ostr << std::endl;
   ostr << "-------------------------" << std::endl;
@@ -809,17 +807,17 @@ UrsaExp LSolver::ExportExpressionBV(caExp &e, stUrsaExp &symbolTable) {
 
   if (e.IsITE()) {
     if (e[0].IsTOP())
-        return operands[1];
+      return operands[1];
     else if (e[0].IsBOT())
-        return operands[2];
+      return operands[2];
     else {
-    //fixme tip
-    unsigned width = GetBitWidth(fint_type);
-    if (e[1].IsVariable() || e[1].IsNumeral())
-      width = GetBitWidth(e[1].getIntType());
-    else if (e[2].IsVariable() || e[2].IsNumeral())
-      width = GetBitWidth(e[2].getIntType());
-    return operands[0].ite(operands[1], operands[2], width);
+      //fixme tip
+      unsigned width = GetBitWidth(fint_type);
+      if (e[1].IsVariable() || e[1].IsNumeral())
+        width = GetBitWidth(e[1].getIntType());
+      else if (e[2].IsVariable() || e[2].IsNumeral())
+        width = GetBitWidth(e[2].getIntType());
+      return operands[0].ite(operands[1], operands[2], width);
     }
   }
 
@@ -837,33 +835,33 @@ UrsaExp LSolver::ExportExpressionBV(caExp &e, stUrsaExp &symbolTable) {
 
     if (isZ3()) {
       //ako je bool ne smem zext(bool) vec mora ite(bool ? 1,0)
-      if ((e[0].IsNumeral() || e[0].IsVariable())) {  //&& e[0].getIntWidth() < 3) {
+      if ((e[0].IsNumeral() ||
+           e[0].IsVariable())) { //&& e[0].getIntWidth() < 3) {
         int width = e[1].GetValue().get_si();
         UrsaExp eu1 = UrsaExp::integerGround(1, width);
         UrsaExp eu0 = UrsaExp::integerGround(0, width);
         return operands[0].ite(eu1, eu0, width);
-      }     
-    else if(e[0].IsITE()) {
-//zext (ITE bot  0  1 ) 32 )    
-    if (e[0][0].IsBOT() && e[0][2].IsNumeral()) {
-        int width = e[1].GetValue().get_si();
-        UrsaExp eu0 = UrsaExp::integerGround(e[0][2].GetValue().get_si(), width);
-        return eu0;
+      } else if (e[0].IsITE()) {
+        //zext (ITE bot  0  1 ) 32 )
+        if (e[0][0].IsBOT() && e[0][2].IsNumeral()) {
+          int width = e[1].GetValue().get_si();
+          UrsaExp eu0 =
+              UrsaExp::integerGround(e[0][2].GetValue().get_si(), width);
+          return eu0;
+        } else if (e[0][0].IsTOP() && e[0][1].IsNumeral()) {
+          int width = e[1].GetValue().get_si();
+          UrsaExp eu0 =
+              UrsaExp::integerGround(e[0][1].GetValue().get_si(), width);
+          return eu0;
+        } else {
+          int width = e[1].GetValue().get_si();
+          UrsaExp eu1 = UrsaExp::integerGround(1, width);
+          UrsaExp eu0 = UrsaExp::integerGround(0, width);
+          UrsaExp uslov = ExportExpressionBV(e[0][0], symbolTable);
+          return uslov.ite(eu1, eu0, width);
         }
-    else if (e[0][0].IsTOP() && e[0][1].IsNumeral()) {
-        int width = e[1].GetValue().get_si();
-        UrsaExp eu0 = UrsaExp::integerGround(e[0][1].GetValue().get_si(), width);
-        return eu0;
-        }
-    else {
-        int width = e[1].GetValue().get_si();
-        UrsaExp eu1 = UrsaExp::integerGround(1, width);
-        UrsaExp eu0 = UrsaExp::integerGround(0, width);
-        UrsaExp uslov = ExportExpressionBV(e[0][0], symbolTable);
-        return uslov.ite(eu1,eu0,width);
-    }
-    
-    }
+
+      }
     }
     return operands[0].zext(e[1].GetValue().get_si());
   }
@@ -917,11 +915,30 @@ UrsaExp LSolver::ExportExpressionBV(caExp &e, stUrsaExp &symbolTable) {
 
   if (e.IsFunction() && (solver != BoolectorBV) &&
       (e.GetName() == "strlen" || e.GetName() == "toupper" ||
-       e.GetName() == "tolower" || e.GetName() == "atoi")) {
+       e.GetName() == "tolower" || e.GetName() == "atoi" ||
+       e.GetName() == "round" || e.GetName() == "trunc" ||
+       e.GetName() == "ceil" || e.GetName() == "floor" ||
+       e.GetName() == "sqrt" || e.GetName() == "sin" || e.GetName() == "cos")) {
     std::vector<UrsaMajor::TypedId> args;
     //fixme ovde mozda treba e[0].getIntWidth
     args.push_back(UrsaMajor::TypedId(
         UrsaMajor::Type(BITVECTOR, e.getIntWidth()), ItoS(0)));
+    //fixme ovde mozda treba e[0].getIntWidth
+    UrsaMajor::Function f(UrsaMajor::Type(BITVECTOR, e.getIntWidth()),
+                          e.GetName(), args, 0);
+    UrsaExp uf = UrsaExp::uninterpretedFunction(f, operands);
+    return uf;
+
+  }
+
+  if (e.IsFunction() && (solver != BoolectorBV) && (e.GetName() == "pow")) {
+
+    std::vector<UrsaMajor::TypedId> args;
+    //fixme ovde mozda treba e[0].getIntWidth
+    args.push_back(UrsaMajor::TypedId(
+        UrsaMajor::Type(BITVECTOR, e.getIntWidth()), ItoS(0)));
+    args.push_back(UrsaMajor::TypedId(
+        UrsaMajor::Type(BITVECTOR, e.getIntWidth()), ItoS(1)));
     //fixme ovde mozda treba e[0].getIntWidth
     UrsaMajor::Function f(UrsaMajor::Type(BITVECTOR, e.getIntWidth()),
                           e.GetName(), args, 0);
@@ -1262,8 +1279,7 @@ LSolver::LSolver() {
     break;
 #endif
 #if (!defined(BOOLECTOR) && !defined(BOOLECTOR_OLD) && defined(Z3))
-    _Factory =
-        LSolver::ExpFactory(new UrsaMajor::BVExpressionFactoryZ3());
+    _Factory = LSolver::ExpFactory(new UrsaMajor::BVExpressionFactoryZ3());
     _BV = true;
     break;
 #endif
@@ -1289,9 +1305,9 @@ void LSolver::PrepareNoAck(caExp &a, caExp &b, aExp &abs_a, aExp &abs_b,
 void LSolver::PrepareAck(caExp &a, caExp &b, aExp &abs_a, aExp &abs_b,
                          aExp &abs_neg_b, saExp &ls, saExp &rs) {
   aExp r_a = a, r_b = b;
-//  AckermannizeTimer.startTimer();
+  //  AckermannizeTimer.startTimer();
   LAckermannization::Ackermannize(r_a, r_b, ls, rs);
-//  AckermannizeTimer.stopTimer();
+  //  AckermannizeTimer.stopTimer();
 
   abs_a = r_a;
   abs_b = r_b;
@@ -1541,14 +1557,14 @@ STATUS LSolver::callSolver(caExp &a, caExp &b, const LBlock *fb,
                            const LInstruction *fi, ERRKIND erKind, bool m,
                            SOLVERCONTEXT c) {
 
-/*    std::cout << "---------------------------------------------------"
-              << std::endl;
-    std::cout << "callSolver" << std::endl;
-    std::cout << "---------------------------------------------------"
-              << std::endl;
-    PrintAB(a, b);*/
+  //    std::cout << "---------------------------------------------------"
+  //              << std::endl;
+  //    std::cout << "callSolver" << std::endl;
+  //    std::cout << "---------------------------------------------------"
+  //              << std::endl;
+  //    PrintAB(a, b);
 
-//  NonIncrementalPreparationTime.startTimer();
+  //  NonIncrementalPreparationTime.startTimer();
   saExp ls;
   saExp rs;
 
@@ -1574,40 +1590,38 @@ STATUS LSolver::callSolver(caExp &a, caExp &b, const LBlock *fb,
   if (Ackermannize())
     AckImplications(ls, rs, exported_a, symbolTable);
 
-//  NonIncrementalPreparationTime.stopTimer();
-//  NonIncrementalTime.startTimer();
+  //  NonIncrementalPreparationTime.stopTimer();
+  //  NonIncrementalTime.startTimer();
 
   AddConstraint(exported_a);
   bool satnegb = AddTempConstraint(exported_neg_b);
-//  NonIncrementalTime.stopTimer();
+  //  NonIncrementalTime.stopTimer();
 
   if (m && (c == NORMAL) && (satnegb == true) && Model) {
     GetModel(symbolTable, fb, fi, erKind);
   }
 
-    std::cout << "callSolver --- zavrsen prvi poziv" << std::endl;
   if (GetOut(c, satnegb)) {
-//    ResetTime.startTimer();
+    //    ResetTime.startTimer();
     resetSolver();
- //   ResetTime.stopTimer();
+    //   ResetTime.stopTimer();
     if (satnegb == false)
       return SAFE;
     else
       return UNSAFE;
   }
-    std::cout << "callSolver --- drugi poziv" << std::endl;
+
   exported = TryExportExpression(abs_b, exported_b, symbolTable);
   if (!exported)
     return ERROR;
 
-//  NonIncrementalTime.startTimer();
+  //  NonIncrementalTime.startTimer();
   bool satb = AddTempConstraint(exported_b);
-//  NonIncrementalTime.stopTimer();
+  //  NonIncrementalTime.stopTimer();
 
-//  ResetTime.startTimer();
+  //  ResetTime.startTimer();
   resetSolver();
-//  ResetTime.stopTimer();
-    std::cout << "callSolver --- zavrsen drugi poziv" << std::endl;
+  //  ResetTime.stopTimer();
 
   return GetStatus(((satnegb == true) ? SAT : UNSAT),
                    ((satb == true) ? SAT : UNSAT));
@@ -1822,9 +1836,9 @@ STATUS LSolver::callSolverBlock(caExp &f,
     return ERROR;
 
   //proverava se negacija uslova ispravnosti
-//  BlockIncrementalTime.startTimer();
+  //  BlockIncrementalTime.startTimer();
   bool satSafety = AddTempConstraint(exported_cond);
-//  BlockIncrementalTime.stopTimer();
+  //  BlockIncrementalTime.stopTimer();
 
   //negacija uslova ispravnosti je nezadovoljiva sve komane su safe
   if (satSafety == false) {
@@ -1861,14 +1875,14 @@ STATUS LSolver::callSolverBlock(caExp &f,
 bool LSolver::FinalAddIntoSolver() {
   saExp ls;
   saExp rs;
-//  	  std::cout << "LSolver::FinalAddIntoSolver()" << std::endl;
+  //  	  std::cout << "LSolver::FinalAddIntoSolver()" << std::endl;
   aExp abs_cond;
   if (Ackermannize()) {
     //ovim se dobije flattened abs_cond
-//    GlobalAckermannizationTimer.startTimer();
+    //    GlobalAckermannizationTimer.startTimer();
     LAckermannization::GlobalAckermannization(_ExpToAddIntoSolver, abs_cond, ls,
                                               rs, _Acks);
-//    GlobalAckermannizationTimer.stopTimer();
+    //    GlobalAckermannizationTimer.stopTimer();
   } else {
     //NOVO
     saExp eqs;
@@ -1877,16 +1891,18 @@ bool LSolver::FinalAddIntoSolver() {
     //      abs_cond = _ExpToAddIntoSolver;
   }
 
-//  PrintA(_ExpToAddIntoSolver, " AddIntoSolver ");
-//  PrintA(abs_cond, " a-------------- ");
+  //  PrintA(_ExpToAddIntoSolver, " AddIntoSolver ");
+  //  PrintA(abs_cond, " a-------------- ");
 
   UrsaExp exported_cond;
   bool exported;
-//  	  std::cout << "TryExportExpression(abs_cond, exported_cond, _SymbolTable);" << std::endl;
+  //  	  std::cout << "TryExportExpression(abs_cond, exported_cond,
+  // _SymbolTable);" << std::endl;
   exported = TryExportExpression(abs_cond, exported_cond, _SymbolTable);
   if (!exported)
     return false;
-//  	  std::cout << "TryExportExpression(abs_cond, exported_cond, _SymbolTable); end" << std::endl;
+  //  	  std::cout << "TryExportExpression(abs_cond, exported_cond,
+  // _SymbolTable); end" << std::endl;
   _ExpToAddIntoSolver = aExp::TOP();
 
   //Posle exporta, dodati ackimplikacije, ako je potrebno
@@ -1897,11 +1913,11 @@ bool LSolver::FinalAddIntoSolver() {
     SetUnion(_Rights, rs);
   }
 
-//  IncrementalTime.startTimer();
-//  	  std::cout << "AddConstraint(exported_cond);" << std::endl;
+  //  IncrementalTime.startTimer();
+  //  	  std::cout << "AddConstraint(exported_cond);" << std::endl;
   AddConstraint(exported_cond);
-//  	  std::cout << "AddConstraint(exported_cond); end" << std::endl;
-//  IncrementalTime.stopTimer();
+  //  	  std::cout << "AddConstraint(exported_cond); end" << std::endl;
+  //  IncrementalTime.stopTimer();
 
   return true; //uspelo dodavanje
 }
@@ -1955,17 +1971,14 @@ bool LSolver::Export(caExp &ab, UrsaExp &exported_ab, UrsaExp &impls) {
 STATUS LSolver::callSolverIncremental(caExp &a, caExp &b, const LBlock *fb,
                                       const LInstruction *fi, ERRKIND erKind) {
 
-//    std::cout << "callSolverIncremental" << std::endl;
-//    PrintAB(a, b);
-// 	  std::cout << "FinalAddIntoSolver() " << std::endl;
+  //    std::cout << "callSolverIncremental" << std::endl;
+  //    PrintAB(a, b);
+  // 	  std::cout << "FinalAddIntoSolver() " << std::endl;
 
-
-// **Conflict**
   UrsaExp::setFactory(_Factory.get());
 
   if (FinalAddIntoSolver() == false)
     return ERROR;
-//  	  std::cout << "FinalAddIntoSolver() end" << std::endl;
 
   saExp ls;
   saExp rs;
@@ -1981,9 +1994,9 @@ STATUS LSolver::callSolverIncremental(caExp &a, caExp &b, const LBlock *fb,
     return ERROR;
 
   //proverava se negacija uslova ispravnosti
-//  IncrementalTime.startTimer();
+  //  IncrementalTime.startTimer();
   bool satnegb = AddTempConstraint(exported_anegb);
-//  IncrementalTime.stopTimer();
+  //  IncrementalTime.stopTimer();
 
   //negacija uslova ispravnosti je nezadovoljiva komanda je safe
   if (satnegb == false && !unreachable) {
@@ -2005,10 +2018,10 @@ STATUS LSolver::callSolverIncremental(caExp &a, caExp &b, const LBlock *fb,
   if (Export(ab, exported_ab, ls, rs, impls) == false)
     return ERROR;
 
-//  IncrementalTime.startTimer();
+  //  IncrementalTime.startTimer();
   bool satb = AddTempConstraint(exported_ab);
-//  	  std::cout << " AddTempConstraint(exported_ab)end" << std::endl;
-//  IncrementalTime.stopTimer();
+  //  	  std::cout << " AddTempConstraint(exported_ab)end" << std::endl;
+  //  IncrementalTime.stopTimer();
 
   return GetStatus(((satnegb == true) ? SAT : UNSAT),
                    ((satb == true) ? SAT : UNSAT));
@@ -2070,9 +2083,9 @@ void LSolver::PrepareAckIncremental(caExp &a, caExp &b, aExp &abs_a,
                                     aExp &abs_b, aExp &abs_neg_b, saExp &ls,
                                     saExp &rs) {
 
-//  GlobalAckermannizationTimer.startTimer();
+  //  GlobalAckermannizationTimer.startTimer();
   LAckermannization::GlobalAckermannization(a, b, abs_a, abs_b, ls, rs, _Acks);
-//  GlobalAckermannizationTimer.stopTimer();
+  //  GlobalAckermannizationTimer.stopTimer();
 
   abs_neg_b = aExp::NOT(abs_b);
 
@@ -2086,7 +2099,7 @@ bool LSolver::AddTempConstraint(UrsaExp &e) {
 }
 
 bool LSolver::AddConstraint(UrsaExp &e) {
-//      std::cout << "LSolver::addConstraint()" <<std::endl;
+  //      std::cout << "LSolver::addConstraint()" <<std::endl;
   bool sat = e.addConstraint();
   return sat;
 }

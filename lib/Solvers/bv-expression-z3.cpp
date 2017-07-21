@@ -4,7 +4,8 @@
 #include "solvers/solver-interfaces/z3/bv-expression-z3.hpp"
 
 namespace UrsaMajor {
-thread_local std::map<std::string, Z3_func_decl> BVExpressionImpZ3::_uf_registry;
+thread_local std::map<std::string, Z3_func_decl>
+    BVExpressionImpZ3::_uf_registry;
 } // namespace UrsaMajor
 
 #endif

@@ -50,7 +50,7 @@ ModulePass *createLavPass() { return new LavPass(); }
 
 bool LavPass::runOnModule(Module &M) {
 
-//  Timer PrintingTime("Printing results");
+  //  Timer PrintingTime("Printing results");
   std::cout << "Generating and testing conditions... " << std::endl;
   LModule LavModule(&M);
   LavModule.Run();
@@ -58,9 +58,9 @@ bool LavPass::runOnModule(Module &M) {
             << std::endl;
 
   std::cout << "Printing results ... " << std::endl;
-//  PrintingTime.startTimer();
+  //  PrintingTime.startTimer();
   LavModule.PrintResults();
-//  PrintingTime.stopTimer();
+  //  PrintingTime.stopTimer();
   std::cout << "Printing results ... Completed " << std::endl << std::endl;
 
   //modul nije modifikovan ovim pasom

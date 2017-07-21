@@ -15,7 +15,6 @@
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/Support/raw_ostream.h"
 
-
 #include "lav/Internal/LCommon.h"
 #include "lav/Internal/LExpressionTransformation.h"
 #include "lav/Internal/LModule.h"
@@ -50,18 +49,20 @@ LModule::LModule(llvm::Module *m)
 
 // Autor: Branislava
 // Dodato zbog paralelizacije funkcija
-void LModule::InitFutureResults(std::map<std::string,Threads::FutureResult> &&results)
-{
-	_FutureResults = std::make_shared<std::map<std::string, Threads::FutureResult>>(std::move(results));
+void LModule::InitFutureResults(
+    std::map<std::string, Threads::FutureResult> &&results) {
+  _FutureResults =
+      std::make_shared<std::map<std::string, Threads::FutureResult> >(
+          std::move(results));
 }
 
-std::shared_ptr<std::map<std::string, Threads::FutureResult>> LModule::GetFutureResultsPtr() const
-{
-	return _FutureResults;
+std::shared_ptr<std::map<std::string, Threads::FutureResult> >
+LModule::GetFutureResultsPtr() const {
+  return _FutureResults;
 }
 
 void LModule::CalculateConditions() {
- int b = 0;
+  int b = 0;
 
   for (unsigned i = 0; i < _Functions.size(); i++)
     if (_Functions[i]->GetFunctionName() == StartFunction) {
@@ -90,64 +91,64 @@ void LModule::CalculateDescriptions() {
 
 void LModule::Run() {
   //Autor: Branislava
-  if(EnableParallel){     
-     // Pravimo strukturu rezultata
-     std::map<std::string, FutureResult> res;
-     for (unsigned i = 0; i < _Functions.size(); i++)
-       res[std::string(_Functions[i]->GetFunctionName())] = FutureResult();
+  if (EnableParallel) {
+    // Pravimo strukturu rezultata
+    std::map<std::string, FutureResult> res;
+    for (unsigned i = 0; i < _Functions.size(); i++)
+      res[std::string(_Functions[i]->GetFunctionName())] = FutureResult();
 
-     InitFutureResults(std::move(res));
+    InitFutureResults(std::move(res));
 
-     auto results = GetFutureResultsPtr();
-          
-     // Pravimo funkcije koje ce niti da izvrsavaju
-     std::vector<std::function<int()>> functions;
+    auto results = GetFutureResultsPtr();
 
-     for (unsigned i = 0; i < _Functions.size(); i++)
-     {
-//	if (_Functions[i]->GetFunctionName() == StartFunction) {
-//       	 auto Function = _Functions[i];
-//        
-//	 functions.push_back([&results, Function, i](){
-//	     std::cout << "Funkcija["<< i << "]: "  <<  Function->GetFunctionName() << " - Pocinje" << std::endl; 
-//             Function->CalculateConditions();
-//
-//	    
-//             (*results)[std::string(Function->GetFunctionName())].setResult(1);  
-//         }); 		
-//	}
-//	else{
-//	
-         auto Function = _Functions[i];
-         functions.push_back([&results, Function, i](){
-	     std::cout << "Funkcija["<< i << "]: "  <<  Function->GetFunctionName() << " - Pocinje" << std::endl; 
-             Function->CalculateConditions();
-             (*results)[std::string(Function->GetFunctionName())].setResult(1);  
-	     return 1;
-         }); 
-//	}    
-     }
+    // Pravimo funkcije koje ce niti da izvrsavaju
+    std::vector<std::function<int()> > functions;
+
+    for (unsigned i = 0; i < _Functions.size(); i++) {
+      //	if (_Functions[i]->GetFunctionName() == StartFunction) {
+      //       	 auto Function = _Functions[i];
+      //
+      //	 functions.push_back([&results, Function, i](){
+      //	     std::cout << "Funkcija["<< i << "]: "  <<
+      //Function->GetFunctionName() << " - Pocinje" << std::endl;
+      //             Function->CalculateConditions();
+      //
+      //
+      //             (*results)[std::string(Function->GetFunctionName())].setResult(1);
+      //         });
+      //	}
+      //	else{
+      //
+      auto Function = _Functions[i];
+      functions.push_back([&results, Function, i]() {
+        std::cout << "Funkcija[" << i << "]: " << Function->GetFunctionName()
+                  << " - Pocinje" << std::endl;
+        Function->CalculateConditions();
+        (*results)[std::string(Function->GetFunctionName())].setResult(1);
+        return 1;
+      });
+      //	}
+    }
 
     ThreadPool t;
     // napravi thread pool i pokreni ga
-    t.Init(std::move(functions),_Functions.size());
+    t.Init(std::move(functions), _Functions.size());
 
     t.Work();
-     
-  }
-  else {
-    int b = 0;
-     for (unsigned i = 0; i < _Functions.size(); i++)
-       if (_Functions[i]->GetFunctionName() == StartFunction) {
-         _Functions[i]->Run();
-         b++;
-         break;
-       }
 
-     if (b == 0)
-       for (unsigned i = 0; i < _Functions.size(); i++) {
-         _Functions[i]->Run();
-       }
+  } else {
+    int b = 0;
+    for (unsigned i = 0; i < _Functions.size(); i++)
+      if (_Functions[i]->GetFunctionName() == StartFunction) {
+        _Functions[i]->Run();
+        b++;
+        break;
+      }
+
+    if (b == 0)
+      for (unsigned i = 0; i < _Functions.size(); i++) {
+        _Functions[i]->Run();
+      }
   }
 }
 
@@ -323,8 +324,11 @@ void LModule::GetAddresses(std::vector<argo::Expression> &eqs) const {
 void LModule::PrintResults() const {
   std::string oname = OutputFolder + "/" + ExtractFileName(InputFile);
   Print(oname + ".txt");
-  if (PrintHtml)
+  std::cout << oname << ".txt" << std::endl;
+  if (PrintHtml) {
     PrintHTML(oname + ".html");
+    std::cout << oname << ".html" << std::endl;
+  }
 }
 
 void LModule::init() {
@@ -389,9 +393,8 @@ void LModule::init() {
             //ne da se ovo izbrise
             _GlobalConstraints.AddAddressConstraint(_GlobalMemoryOffset, e,
                                                     size);
-            //          long long int a = _Addresses.find(e.GetName())->second;
-            //          _GlobalConstraints.AddAddressConstraint(a, e, size);
-
+            //long long int a = _Addresses.find(e.GetName())->second;
+            //_GlobalConstraints.AddAddressConstraint(a, e, size);
           } else { //FIXME za razlicite tipove
           }
         }

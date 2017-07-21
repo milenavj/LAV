@@ -65,7 +65,6 @@ llvm::cl::opt<unsigned>
     UnrollLoopEnd("loop-unroll-end",
                   llvm::cl::desc("LAV --- Loop unrolling - end (default=1)"),
                   llvm::cl::init(1));
-
 }
 
 namespace {
@@ -138,7 +137,6 @@ static inline void RemapInstruction1(Instruction *I, ValueToValueMapTy &VMap) {
         PN->setIncomingBlock(i, cast<BasicBlock>(It->second));
     }
   }
-
 }
 
 /// FoldBlockIntoPredecessor - Folds a basic block into its predecessor if it
@@ -305,7 +303,6 @@ void GetChangedValues(Loop *L, std::set<Value *> &ChangedValues) {
       }
     }
   }
-
 }
 
 void RemapBlockInstructions(BasicBlock *BB, ValueToValueMapTy &LastValueMap) {
@@ -337,6 +334,7 @@ void DodajObelezje(BasicBlock *BB, BasicBlock *New, unsigned brRazmotavanja) {
   lav::FLoopBlocks[New] = razmotavanja;
 }
 
+//TODO refaktorisati
 Function *CreateFChangeFunction() {
   llvm::ArrayRef<llvm::Type *> Params;
   FunctionType *ft = FunctionType::get(
@@ -350,6 +348,7 @@ Function *CreateFIncFunction() {
       llvm::Type::getVoidTy(getGlobalContext()), Params, true);
   return Function::Create(ft, llvm::GlobalValue::ExternalLinkage, "FInc");
 }
+
 Function *CreateFDecFunction() {
   llvm::ArrayRef<llvm::Type *> Params;
   FunctionType *ft = FunctionType::get(
@@ -357,6 +356,7 @@ Function *CreateFDecFunction() {
   return Function::Create(ft, llvm::GlobalValue::ExternalLinkage, "FDec");
 }
 
+//TODO refaktorisati
 CallInst *CreateFIncCallInstruction(const std::set<Value *> &IncValues) {
   Function *f = CreateFIncFunction();
   std::vector<Value *> args;
@@ -365,9 +365,6 @@ CallInst *CreateFIncCallInstruction(const std::set<Value *> &IncValues) {
     Value *param = *(ii);
     args.push_back(param);
   }
-
-  // llvm::CallInst* llvm::CallInst::Create(llvm::Value*,
-  // llvm::ArrayRef<llvm::Value*>, const llvm::Twine&, llvm::Instruction*)
   return CallInst::Create(f, args, "");
 }
 
@@ -542,7 +539,6 @@ void TryToUnrollOnce(Loop *L, LoopInfo *LI, int It,
 
   // Remap all instructions in the most recent iteration
   RemapAllInstructions(NewBlocks, LastValueMap);
-
 }
 
 bool isBackEdgeBB(BasicBlock *bb, const std::vector<BasicBlock *> &BackEdges) {
@@ -590,10 +586,7 @@ bool LastIteration(Loop *L, LoopInfo *LI, int It,
   ValueToValueMapTy LastValueMap;
   std::vector<BasicBlock *> NewBlocks;
 
-  std::vector<BasicBlock *> NewBlocksDodatak;
-  ValueToValueMapTy LastValueMapDodatak;
-
-  //ovde bi trebalo da sve sto se vraca nazad u petlju bude preusmereno na zlaz
+  //ovde bi trebalo da sve sto se vraca nazad u petlju bude preusmereno na izlaz
   //iz petlje
   for (LoopBlocksDFS::RPOIterator BB = BlockBegin; BB != BlockEnd; ++BB) {
     ValueToValueMapTy VMap1;
@@ -623,229 +616,11 @@ bool LastIteration(Loop *L, LoopInfo *LI, int It,
 
       //ako je bezuslovan skok
       if (BI->isUnconditional() == 1) {
-        if (BI->getSuccessor(0) == Header) {
-
-          ValueToValueMapTy VMap;
-          BasicBlock *NewHeader =
-              CloneBasicBlock(Header, VMap, "." + Twine(It + 1));
-          Header->getParent()->getBasicBlockList().push_back(NewHeader);
-          BranchInst *BIHeader = GetBI(NewHeader);
-
-          //!      L->addBasicBlockToLoop(NewHeader, LI->getBase());
-
-          //FIXME ovo moze da bude null ukoliko je u pitanju switch instrukcija
-          //za grananje umesto br
-          if (BIHeader == NULL) {
-            llvm::outs() << *NewHeader;
-            llvm::errs() << *NewHeader;
-            return false;
-          }
-          //      DodajObelezje(*BB, NewHeader, brRazmotavanja+1);
-
-          //ovo ce da radi za Error: goto Error
-          //ili za Error: goto Error1; Error1: goto Error
-          //ali ne radi u oba slucaj ukoliko ima kod neki i grananja izmedju
-          //za takav slucaj sada se vodi racuna da ne dodje do uzajamne
-          //rekurzije na drugom mestu
-
-          if (BIHeader->isUnconditional() == 1) {
-            BIHeader->setSuccessor(0, EndBlock);
-            BI->setSuccessor(0, NewHeader);
-            LastValueMap[*BB] = NewHeader;
-            NewBlocks.push_back(*BB);
-            LastValueMapDodatak[Header] = EndBlock;
-            NewBlocksDodatak.push_back(Header);
-          } else {
-            LastValueMapDodatak[*BB] = New;
-
-            // Update our running map of newest clones
-            LastValueMapDodatak[Header] = NewHeader;
-            AddToMapDstSrc(LastValueMapDodatak, VMap);
-
-            // Add phi entries for newly created values to all exit blocks.
-            PhiExitBlocks(Header, NewHeader, L, LastValueMapDodatak);
-
-            Headers.push_back(NewHeader);
-            NewBlocksDodatak.push_back(NewHeader);
-
-            // FIXME ukoliko imamo for sa 4 uslova, nece raditi for(i = 0; i<n
-            // && j<k & m<n && a<b; i++ )
-            if (L->contains(BIHeader->getSuccessor(0)) &&
-                L->contains(BIHeader->getSuccessor(1))) {
-
-              BasicBlock *succ0 = BIHeader->getSuccessor(0);
-              BasicBlock *succ1 = BIHeader->getSuccessor(1);
-
-              //            {//pocetak obrade succ0
-
-              ValueToValueMapTy VMap2;
-              BasicBlock *newSucc0 =
-                  CloneBasicBlock(succ0, VMap2, "." + Twine(It + 1));
-              succ0->getParent()->getBasicBlockList().push_back(newSucc0);
-              BranchInst *BI0 = GetBI(newSucc0);
-              if (BI0 == NULL)
-                return false;
-
-              //      DodajObelezje(*BB, newSucc0, brRazmotavanja+1);
-              //!      L->addBasicBlockToLoop(newSucc0, LI->getBase());
-
-              AddToMapDstSrc(LastValueMapDodatak, VMap2);
-              NewBlocksDodatak.push_back(newSucc0);
-
-              if (succ0 == LatchBlock)
-                Latches.push_back(newSucc0);
-
-              BIHeader->setSuccessor(0, newSucc0);
-
-              LastValueMapDodatak[succ0] = newSucc0;
-              VMap2[succ0] = newSucc0;
-
-              //            }//kraj obrade succ0 bez phi
-
-              { //pocetak obrade succ1
-
-                ValueToValueMapTy VMap3;
-                BasicBlock *newSucc1 =
-                    CloneBasicBlock(succ1, VMap3, "." + Twine(It + 1));
-                succ1->getParent()->getBasicBlockList().push_back(newSucc1);
-
-                //      DodajObelezje(*BB, newSucc1, brRazmotavanja+1);
-                //!      L->addBasicBlockToLoop(newSucc1, LI->getBase());
-
-                BranchInst *BI1 = GetBI(newSucc1);
-                if (BI1 == NULL)
-                  return false;
-
-                LastValueMapDodatak[succ1] = newSucc1;
-                VMap3[succ1] = newSucc1;
-
-                if (BI0->isUnconditional() == 1) {
-                  BI0->setSuccessor(0, newSucc1);
-                  LastValueMapDodatak[BI0->getSuccessor(0)] = newSucc1;
-                  VMap2[BI0->getSuccessor(0)] = newSucc1;
-                  VMap3[BI0->getSuccessor(0)] = newSucc1;
-                }
-
-                if (BI1->isUnconditional() == 1) {
-                  BI1->setSuccessor(0, newSucc0);
-                  LastValueMapDodatak[BI1->getSuccessor(0)] = newSucc0;
-                  VMap2[BI1->getSuccessor(0)] = newSucc0;
-                  VMap3[BI1->getSuccessor(0)] = newSucc0;
-                }
-
-                LastValueMapDodatak[BIHeader->getSuccessor(1)] = newSucc1;
-
-                VMap2[succ1] = newSucc1;
-                VMap2[succ0] = newSucc0;
-
-                RemapBlockInstructions(newSucc0, VMap2);
-                // Add phi entries for newly created values to all exit blocks.
-                PhiExitBlocks(succ0, newSucc0, L, VMap2);
-
-                if (BI0->isUnconditional() != 1)
-                  if (BI0->getSuccessor(0) == LatchBlock ||
-                      BI0->getSuccessor(1) == LatchBlock)
-                    SetSuccEnd(L, BI0, EndBlock);
-                if (BI1->isUnconditional() != 1)
-                  if (BI1->getSuccessor(0) == LatchBlock ||
-                      BI1->getSuccessor(1) == LatchBlock)
-                    SetSuccEnd(L, BI1, EndBlock);
-                //ovo je da se pokrije slucaj za tri bloka
-                if (BI0->isUnconditional() != 1 &&
-                    BI1->isUnconditional() != 1) {
-                  BasicBlock *succ2;
-                  if (L->contains(BI0->getSuccessor(0)))
-                    succ2 = BI0->getSuccessor(0);
-                  else if (L->contains(BI0->getSuccessor(1)))
-                    succ2 = BI0->getSuccessor(1);
-                  else
-                    succ2 = NULL;
-                  if (succ2) {
-                    ValueToValueMapTy VMap4;
-                    BasicBlock *newSucc2 =
-                        CloneBasicBlock(succ2, VMap4, "." + Twine(It + 1));
-                    succ2->getParent()->getBasicBlockList().push_back(newSucc2);
-
-                    //      DodajObelezje(*BB, newSucc2, brRazmotavanja+1);
-                    //!      L->addBasicBlockToLoop(newSucc2, LI->getBase());
-
-                    BranchInst *BI2 = GetBI(newSucc2);
-                    if (BI2 == NULL) {
-                      llvm::errs() << *newSucc2;
-                      std::cerr << "\nuh3" << std::endl;
-                      return false;
-                    }
-
-                    LastValueMapDodatak[succ2] = newSucc2;
-                    VMap4[succ2] = newSucc2;
-
-                    if (L->contains(BI0->getSuccessor(0)))
-                      BI0->setSuccessor(0, newSucc2);
-                    else
-                      BI0->setSuccessor(1, newSucc2);
-
-                    AddToMapDstSrc(LastValueMapDodatak, VMap4);
-                    NewBlocksDodatak.push_back(newSucc2);
-                    LastValueMapDodatak[succ2] = newSucc2;
-
-                    // Add phi entries for newly created values to all exit
-                    // blocks.
-                    PhiExitBlocks(succ2, newSucc2, L, VMap4);
-                  }
-                }
-
-                if (succ1 == LatchBlock)
-                  Latches.push_back(newSucc1);
-
-                if (L->contains(BIHeader->getSuccessor(0)))
-                  BIHeader->setSuccessor(0, newSucc1);
-                else
-                  BIHeader->setSuccessor(1, newSucc1);
-
-                // Add phi entries for newly created values to all exit blocks.
-                PhiExitBlocks(succ1, newSucc1, L, VMap3);
-
-                AddToMapDstSrc(LastValueMapDodatak, VMap3);
-                NewBlocksDodatak.push_back(newSucc1);
-
-                RemapBlockInstructions(newSucc1, VMap3);
-
-              } //kraj obrade succ1
-
-            } else { //ako petlja ne sadrzi oba sledbenika bloka vec samo jedan
-              SetSuccEnd(L, BIHeader, EndBlock);
-            }
-            BranchInst::Create(NewHeader, BI);
-            New->getInstList().pop_back();
-
-            ValueToValueMapTy LastValueMap1;
-            LastValueMap1[Header] = NewHeader;
-            AddToMapDstSrc(LastValueMap1, VMap);
-
-            Headers.push_back(NewHeader);
-
-            // Add phi entries for newly created values to all exit blocks.
-            PhiExitBlocks(Header, NewHeader, L, LastValueMap1);
-            RemapBlockInstructions(NewHeader, LastValueMap1);
-          }
-
-        } //else od if(BI->getSuccessor(0) == Header)
-            else {
-          std::cerr << "OVDE JE GRESKA 1, jao! " << std::endl;
-          std::cout << "OVDE JE GRESKA 1, jao! " << std::endl;
-          BranchInst::Create(EndBlock, BI);
-          New->getInstList().pop_back();
-        }
-
-      }   //else jeste unconditional ali mu sledbenik nije header
-          else
-          //pretpostavka je da jedna od njih pokazuje na header - zato sto je to
-          //backedge
-          //FIXME SUMNJIVO
-          {
-        if (BI->getSuccessor(0) == Header)
+        BI->setSuccessor(0, EndBlock);
+      } else {
+        if (L->contains(BI->getSuccessor(0)))
           BI->setSuccessor(0, EndBlock);
-        else
+        if (L->contains(BI->getSuccessor(1)))
           BI->setSuccessor(1, EndBlock);
       }
     } //else: nije backedge prema tome ne treba nista posebno, samo je klonirana
@@ -868,13 +643,8 @@ bool LastIteration(Loop *L, LoopInfo *LI, int It,
     NewBlocks.push_back(New);
   }
 
-  for (unsigned newbl = 0; newbl < NewBlocksDodatak.size(); newbl++)
-    if (!L->contains(NewBlocksDodatak[newbl]))
-      L->addBasicBlockToLoop(NewBlocksDodatak[newbl], LI->getBase());
-
   // Remap all instructions in the most recent iteration
   RemapAllInstructions(NewBlocks, LastValueMap);
-  RemapAllInstructions(NewBlocksDodatak, LastValueMapDodatak);
 
   return true;
 }
@@ -884,11 +654,9 @@ void AddLastInstructionFromBlock(BasicBlock *to, BasicBlock *from,
   //Prepisuje se bezuslovni skok na petlju
   BasicBlock::iterator lbit = from->end();
   --lbit;
-  //Instruction* newInst = lbit->clone(getGlobalContext());
   Instruction *newInst = lbit->clone();
   if (lbit->hasName())
     newInst->setName(lbit->getName() + NameSuffix);
-  //llvm::outs() << "poslednja instrukcija iz bloka " << *newInst << '\n';
   to->getInstList().push_back(newInst);
   //ovo je verovatno suvisno
   ValueToValueMapTy ValueMap;
@@ -937,25 +705,20 @@ void SetUpBranches(LoopInfo *LI, std::vector<BasicBlock *> &Headers,
       // iteration.
       Term->setSuccessor(!ContinueOnTrue, Dest);
     } else {
-
-      //       BranchInst* bbi =
       BranchInst::Create(Dest, Term);
-
       Term->eraseFromParent();
 
       // Merge adjacent basic blocks, if possible.
       if (BasicBlock *Fold = FoldBlockIntoPredecessor(Dest, LI, LPM)) {
-
         std::replace(Latches.begin(), Latches.end(), Dest, Fold);
         std::replace(Headers.begin(), Headers.end(), Dest, Fold);
       }
-
     }
   }
 }
 
 //vrsi razmotavanje petlje u opstem slucaju
-//FIXME moze da razmota jednom vise
+//FIXME moze da razmota jednom manje
 bool LAVUnroll(Loop *L, unsigned Count, unsigned CountEnd, LoopInfo *LI,
                LPPassManager *LPM, BasicBlock *EndBlock) {
 
@@ -989,9 +752,6 @@ bool LAVUnroll(Loop *L, unsigned Count, unsigned CountEnd, LoopInfo *LI,
 
   std::vector<BasicBlock *> LoopBlocks = L->getBlocks();
 
-  //  bool ContinueOnTrue = L->contains(BI->getSuccessor(0));
-  //  BasicBlock *LoopExit = BI->getSuccessor(ContinueOnTrue);
-
   // For the first iteration of the loop, we should use the precloned values for
   // PHI nodes.  Insert associations now.
   std::vector<PHINode *> OrigPHINode;
@@ -1007,7 +767,6 @@ bool LAVUnroll(Loop *L, unsigned Count, unsigned CountEnd, LoopInfo *LI,
       BackedgeBlocks.push_back(*I);
 
   /*****************************************************/
-
   //KOJE SE SVE VREDNOSTI MENJAJU U PETLJI
   //-----------------------------------------
   std::set<Value *> ChangedValues;
@@ -1045,20 +804,15 @@ bool LAVUnroll(Loop *L, unsigned Count, unsigned CountEnd, LoopInfo *LI,
   //1.
   //-----------------------------------------------------------------------------
   //1. RAZMOTATI PETLJE COUNT PUTA
-  if (Count > 0)
-      //razmotati jednom manje, i onda se doda jos poslednje razmotavanje pa ima
-      //ukupno dovoljno razmotavanja,
-      {
+  if (Count > 0) {
     //ovo -1 je jer vec postoji jedno razmotavanje iz orginalnog koda na koje se
     //kace nova razmotavanja
-    for (unsigned It = 1; It < Count - 1; ++It) {
+    for (unsigned It = 1; It < Count-1; ++It) {
 
       TryToUnrollOnce(L, LI, It, Headers, Latches, Header, LatchBlock,
                       brRazmotavanja, BlockBegin, BlockEnd, OrigPHINode);
       brRazmotavanja++;
-
     }
-
   }
 
   //1.-------------------------------------------------------------------------
@@ -1096,8 +850,6 @@ bool LAVUnroll(Loop *L, unsigned Count, unsigned CountEnd, LoopInfo *LI,
     //--------------------------------------------------------------------------------
   }
 
-  //std::cout << "----------LAVUnroll -----------razmotavanje 7.5" << std::endl;
-  //3.
   //-----------------------------------------------------------------------------
   //3. UBACITI IZVRSAVANJE PETLJE U KOJE SE DOLAZI IZ PRETHODNOG BLOKA
   if (CountEnd > 0)
@@ -1113,7 +865,6 @@ bool LAVUnroll(Loop *L, unsigned Count, unsigned CountEnd, LoopInfo *LI,
                      LatchBlock, EndBlock, BackedgeBlocks, brRazmotavanja,
                      BlockBegin, BlockEnd, OrigPHINode))
     std::cerr << "greska teska! u razmotavanju " << std::endl;
-  //else std::cout << "last iteration dodato " <<std::endl;
 
   //-----------------------------------------------------------------------------
   //4. KRAJ
@@ -1146,9 +897,7 @@ bool FUnrollLoop(Loop *L, unsigned Count, unsigned CountEnd, LoopInfo *LI,
     return false;
   }
 
-  //  if (BI->isUnconditional())
   LAVUnroll(L, Count, CountEnd, LI, LPM, EndBlock);
-  //  else  UnrollSTDLoop(L, Count, CountEnd, LI, LPM, EndBlock);
 
   // At this point, the code is well formed.  We now do a quick sweep over the
   // inserted code, doing constant propagation and dead code elimination as we
@@ -1199,11 +948,6 @@ bool FLoopUnroll::runOnLoop(Loop *L, LPPassManager &LPM) {
   BasicBlock *EndBlock = CreateEndBlock(names, ParentFunction);
 
   loop_no++;
-
-  //ool b = false;
-  //if(UnrollLoopEnd == 0 && Fixed)
-  //   b = NewUnrollLoop(L, UnrollLoopBegin, LI, &LPM);
-  //if(!b)
   FUnrollLoop(L, UnrollLoopBegin, UnrollLoopEnd, LI, &LPM, EndBlock);
 
   // FIXME: Reconstruct dom info, because it is not preserved properly.

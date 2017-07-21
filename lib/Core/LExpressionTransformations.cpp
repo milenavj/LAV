@@ -80,7 +80,7 @@ bool IsGlobalVariable(const argo::Expression &e) {
 }
 
 argo::Expression RenameExpressionVariables(const argo::Expression &e,
-                                           const int& Context,
+                                           const int &Context,
                                            const std::string &FunctionName) {
   if (Context == 0)
     return e;
@@ -109,7 +109,6 @@ argo::Expression RenameExpressionVariables(const argo::Expression &e,
   return MakeExpression(e, operands, b);
 }
 
-
 argo::Expression RenameExpressionVariables(const argo::Expression &e,
                                            const std::string &Context) {
   if (e.IsTOP() || e.IsBOT() || e.IsNumeral())
@@ -119,11 +118,10 @@ argo::Expression RenameExpressionVariables(const argo::Expression &e,
     if (IsGlobalVariable(e) || isGlobalAddress(e.GetName()))
       return e;
     else
-      return ExpVar(e.GetName()+Context,
-                    e.getIntType(), e.isRelevant());
+      return ExpVar(e.GetName() + Context, e.getIntType(), e.isRelevant());
   }
   if (e.IsFormulaVariable()) {
-    return ExpFVar(e.GetName()+Context);
+    return ExpFVar(e.GetName() + Context);
   }
 
   //Ovo je pitanje da li je potrebno
@@ -137,12 +135,11 @@ argo::Expression RenameExpressionVariables(const argo::Expression &e,
   return MakeExpression(e, operands, b);
 }
 
-
 argo::Expression RenameExpressionVariables(const argo::Expression &e,
                                            const std::string &Context, int c) {
   if (c == 0)
     return e;
-    return RenameExpressionVariables(e, Context);
+  return RenameExpressionVariables(e, Context);
 }
 
 argo::Expression MakeExpression(const argo::Expression &e,
@@ -231,8 +228,8 @@ argo::Expression MakeExpression(const argo::Expression &e,
     return argo::Expression::IfThenElse(operands[0], operands[1], operands[2]);
 
   //TODO ovo nije podrzano
-  //if (e.IsPredicate())    return argo::Expression::Predicate(e.GetName(),
-  //operands);
+  //if (e.IsPredicate())
+  //return argo::Expression::Predicate(e.GetName(), operands);
 
   if (e.IsFunction())
     return aExp::Function(e.GetName(), operands, e.getIntType());

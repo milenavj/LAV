@@ -29,6 +29,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/GlobalVariable.h"
+#include "llvm/IR/DerivedTypes.h"
 
 #include "expression/output/SMTFormater.h"
 
@@ -53,8 +54,9 @@ static argo::SMTFormater SMTF;
 
 LFunction::LFunction(llvm::Function *f, LModule *p)
     : _Function(f), _Parent(p), _PostconditionIsSet(false),
-      _DescriptionsCalculated(false), _ConditionsCalculated(false), _Context(-1),
-      _VariableCounter(0), _FunctionName(f->getName()), _MemCounter(0) {
+      _DescriptionsCalculated(false), _ConditionsCalculated(false),
+      _Context(-1), _VariableCounter(0), _FunctionName(f->getName()),
+      _MemCounter(0) {
   init();
 }
 
@@ -140,7 +142,6 @@ bool LFunction::AddAllocationFixedAddress(llvm::AllocaInst *ai,
           std::pair<std::string, unsigned>(GetOperandName(ai), size * 1000));
     else
       _Addresses[GetOperandName(ai)] = size;
-//    std::cout << "function::AddAllocationFixedAddress" << std::endl;
     FunctionConstraints().AddConstraint(e, 0, size);
 
     variables.push_back(GetOperandName(ai));
@@ -165,7 +166,6 @@ void LFunction::AddReferenceConstraint(llvm::AllocaInst *ai) {
   // ako je unija char[10], int ovo vrati 12
   unsigned size = GetParentModule()->GetTargetData()->getTypeAllocSize(t);
   argo::Expression a = ExpAddress(GetFunctionName(), GetOperandName(ai));
-  //  std::cout << "function::AddReferenceConstraint" << std::endl;
   FunctionConstraints().AddConstraint(a, 0, size);
   //  }
 }
@@ -237,9 +237,8 @@ void LFunction::AddLocalVariables(std::vector<std::string> &variables,
         }
       } else {
         if (_References.find(GetOperandName(&*II)) != _References.end()) {
-          //FIXME videti sta raditi u ovom slucaju
-          //std::cerr << "\n\n\n\n\n\n\n\n\nnije allocation a uzima se referenca
-          //?!?" << GetOperandName(&*II) << std::endl;
+          //FIXME videti sta raditi u ovom slucaju ije allocation a uzima se
+          //referenca
           continue;
         }
         variables.push_back(GetOperandName(&*II));
@@ -330,14 +329,6 @@ void LFunction::AddGlobalReferenceConstraint(llvm::GlobalVariable *gv) {
   llvm::Type *t = gv->getType();
   unsigned size = GetParentModule()->GetTargetData()->getTypeAllocSize(t);
   argo::Expression e = ExpGlobalAddress(GetOperandName(gv));
-
-  //  std::cout <<std::endl <<"GetFunctionName() "<<  GetFunctionName() <<
-  // std::endl;
-  //  std::cout << "function::AddGlobalReferenceConstraint " << " e.GetName() "
-  // << e.GetName() << " left = 0 " << "right = " << size << std::endl;
-
-  //!@#$ otkomentarisati i resiti problem
-
   GetParentModule()->GlobalConstraints().AddConstraint(e, 0, size);
   //FIXME nedostaje pomeraj*1000 --- ovo bi sve trebalo modul da radi
   GetParentModule()->_Addresses
@@ -393,7 +384,30 @@ void LFunction::SetReferences() {
     //zasto se ovo uopste dodaje
     if (instr->getOpcode() == llvm::Instruction::Store) {
       AddReferences(instr, 0);
-    }
+      /*
+        %call4 = call i32* @_Z3minRiS_(i32* %plave1, i32* %plave2), !dbg !1025
+        %0 = load i32* %call4, !dbg !1025
+        store i32 %0, i32* %a, align 4, !dbg !1025
+      */
+
+      llvm::LoadInst *load =
+          llvm::dyn_cast<llvm::LoadInst>(instr->getOperand(0));
+
+      if (load) {
+        llvm::CallInst *call =
+            llvm::dyn_cast<llvm::CallInst>(load->getOperand(0));
+        if (call) {
+          unsigned numArgs;
+          llvm::Function *f = GetFunction(call, numArgs);
+          llvm::Type *t = f->getReturnType();
+          if (llvm::dyn_cast<llvm::PointerType>(t)) {
+            AddReferences(instr, 1);
+            //            _References.insert(std::pair<std::string, llvm::Type
+            // *>(name, t));
+          } //if pointer
+        }   //if call
+      }     //if load
+    }       //if store
 
     //reference u operaciji poredjenja
     if (instr->getOpcode() == llvm::Instruction::ICmp ||
@@ -413,8 +427,14 @@ void LFunction::SetReferences() {
       llvm::Function *f = GetFunction(instr, numArgs);
 
       if (f && !(f->isDeclaration())) {
-        for (unsigned j = 0; j < numArgs; ++j)
+        for (unsigned j = 0; j < numArgs; ++j) {
           AddReferences(instr, j);
+        }
+        llvm::Type *t = f->getReturnType();
+        if (llvm::dyn_cast<llvm::PointerType>(t)) {
+          std::string name = GetOperandName(instr);
+          _References.insert(std::pair<std::string, llvm::Type *>(name, t));
+        }
       }
 
       //FIXME sta ako je malloc za globalnu promenljivu
@@ -428,9 +448,11 @@ void LFunction::SetReferences() {
           }
       }
     } //kraj if-a za funkciju
+  }   //kraj fora
+}
 
-  } //kraj fora
-
+void LFunction::DeleteAddress(const std::string &name) {
+  _Addresses.erase(name);
 }
 
 void LFunction::AddFixedAddresses(LFunction *ff) {
@@ -628,8 +650,8 @@ void LFunction::CalculateDescriptions() {
 argo::Expression LFunction::GetPostcondition() {
   if (!_PostconditionIsSet) {
     SetPostcondition();
-}
-   
+  }
+
   std::string cont = AddContext("", _Context, GetFunctionName());
   return RenameExpressionVariables(_Postcondition, cont, _Context);
 }
