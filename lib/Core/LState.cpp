@@ -1492,10 +1492,25 @@ void LState::ProcessGEPI(LInstruction *fi) {
   }
 }
 
+aExp LState::GetPhiValue(llvm::Value *value) {
+  aExp e3;
+  llvm::Constant *c1 = llvm::dyn_cast<llvm::Constant>(value);
+  if (c1 != NULL) {
+    e3 = evalConstant(c1);
+  } else {
+    std::string s = GetOperandName(value);
+    if (GetValue(s) != NULL) {
+      e3 = *GetValue(s);
+    } else
+      e3 = ExpVar(s, GetIntType(value->getType()), false);
+  } //c1!=null
+  return e3;
+}
+
 //TODO
 void LState::ProcessPHI(LInstruction *fi) {
   //fi ce da ima suvisne informacije --- duplo ce se prespajati neke vrednosti
-  //to bi trebalo izbaciti da se ne prespaja dva puta --- nema smisla
+  //to bi trebalo izbaciti da se ne prespaja dva puta
   //nece da radi getelementptr ako mu je prethodnik phi on ne ume da odredi
   //koliki su mu left i right
 
@@ -1503,85 +1518,110 @@ void LState::ProcessPHI(LInstruction *fi) {
   std::string value = GetNextVariable();
   aExp e = ExpVar(value, GetIntType(i->getType()), false);
   WriteIntoStore(i, e);
+  unsigned impls = 0;
 
-  //ako ima samo jednog predhodnika
-  if (_ParentBlock->PredsNumber() == 1) {
+  llvm::PHINode *phiin = static_cast<llvm::PHINode *>(i);
 
-    LBlock *pred = _ParentBlock->GetPred();
+  std::vector<llvm::BasicBlock *> IncomingBlocks;
+  for (unsigned j = 0; j < phiin->getNumIncomingValues(); j++) {
+    llvm::BasicBlock *bb1 =
+        llvm::dyn_cast<llvm::BasicBlock>(phiin->getIncomingBlock(j));
+    LBlock *pred = _ParentBlock->GetParentFunction()->GetLBlock(bb1);
+    if (!pred->IsUnreachableBlock())
+      IncomingBlocks.push_back(bb1);
+  }
 
-    for (unsigned j = 0; j + 1 < i->getNumOperands(); j += 2) {
-      llvm::BasicBlock *bb1 =
-          llvm::dyn_cast<llvm::BasicBlock>(i->getOperand(j + 1));
-      assert(bb1 != NULL);
-      LBlock *fbb1 = _ParentBlock->GetParentFunction()->GetLBlock(bb1);
-      if (fbb1 != pred) {
-        continue;
+  std::vector<llvm::BasicBlock *> outside_phi;
+
+  //neki blok moze da bude unreachable zato sto je spojenu neki drugi
+  //ovde racunamo koji su to koji imaju neke koji su spojeni u njih
+  for (unsigned j = 0; j < phiin->getNumIncomingValues(); j++) {
+    llvm::BasicBlock *bb1 =
+        llvm::dyn_cast<llvm::BasicBlock>(phiin->getIncomingBlock(j));
+    LBlock *pred = _ParentBlock->GetParentFunction()->GetLBlock(bb1);
+    if (!pred->IsUnreachableBlock())
+      continue;
+
+    if (_ParentBlock->GetPredWithId(pred->Id()) == NULL) {
+      if (pred->IsMerged()) {
+        LBlock *merged = pred->MergedInto();
+        if (std::find(std::begin(IncomingBlocks), std::end(IncomingBlocks),
+                      merged->GetBasicBlock()) == std::end(IncomingBlocks))
+          outside_phi.push_back(merged->GetBasicBlock());
+      } //pred->IsMerged()
+    }   //==NULL
+  }     //KRAJ FOR-A
+
+  //dodajemo blokove koje smo sracunali, ali svaki blok samo po jednom
+  for (unsigned i = 0; i < outside_phi.size(); i++) {
+    bool counted = false;
+    for (unsigned j = 0; j < i; j++) {
+      if (outside_phi[i] == outside_phi[j])
+        counted = true;
+    }
+    if (counted)
+      continue;
+    IncomingBlocks.push_back(outside_phi[i]);
+  }
+
+  unsigned j;
+  bool pronadjeno = false;
+  for (j = 0; j < phiin->getNumIncomingValues(); j++) {
+    llvm::BasicBlock *bb1 =
+        llvm::dyn_cast<llvm::BasicBlock>(phiin->getIncomingBlock(j));
+    assert(bb1 != NULL && "bb1==NULL");
+
+    LBlock *pred = _ParentBlock->GetParentFunction()->GetLBlock(bb1);
+
+    pronadjeno = false;
+    for (unsigned i = 0; i < IncomingBlocks.size(); i++) {
+      if (bb1 == IncomingBlocks[i]) {
+        if (pred->HasMerged()) {
+          continue;
+        }
+        pronadjeno = true;
+        break;
       }
-      //dodati u store ovu vrednost
-
-      //FIXME, nedostaje metod za citanje ove vrednosti, ovo je copy-paste od
-      //onoga dole
-      aExp e3;
-      llvm::Constant *c1 = llvm::dyn_cast<llvm::Constant>(i->getOperand(j));
-      if (c1 != NULL)
-        e3 = evalConstant(c1);
-      else {
-        std::string s = GetOperandName(i->getOperand(j));
-        if (GetValue(s) != NULL)
-          e3 = *GetValue(s);
-        else {
-          //FIXME tip
-          e3 = ExpVar(s, argo::sInt32Type, false);
+      if (pred->IsMerged() &&
+          pred->MergedInto()->LastMerged()->Id() == pred->Id()) {
+        if (IncomingBlocks[i] == pred->MergedInto()->GetBasicBlock()) {
+          pred = pred->MergedInto();
+          pronadjeno = true;
+          break;
         }
       }
-      WriteIntoStore(i, e3);
-      break;
     }
-  } else {
-    //ako imamo vise od jednog prethodnika
-    llvm::PHINode *phiin = static_cast<llvm::PHINode *>(i);
-
-    vaExp options;
-    for (unsigned j = 0; j < phiin->getNumIncomingValues(); j++) {
-      llvm::BasicBlock *bb1 =
-          llvm::dyn_cast<llvm::BasicBlock>(phiin->getIncomingBlock(j));
-      assert(bb1 != NULL && "bb1==NULL");
-      LBlock *pred = _ParentBlock->GetParentFunction()->GetLBlock(bb1);
-
-      //ako su neki blokovi sracunati da ne mogu da budu predhodnici onda ih
-      //preskociti ne treba preskociti uvek, ako su spojeni uzeti ono u sta su
-      //spojeni
-      if (_ParentBlock->GetPredWithId(pred->Id()) == NULL) {
-        if (pred->IsMerged())
-          pred = pred->MergedInto();
-        else
-          continue;
-      }
-
+    //ako ih imamo vise, onda dodajemo implikaciju
+    if (IncomingBlocks.size() > 1) {
+      if (!pronadjeno)
+        continue;
+      impls++;
       aExp e1 = Transformation(_ParentBlock->GetFunctionName(), pred->Id(),
                                _ParentBlock->Id());
-
-      aExp e3;
-
-      llvm::Constant *c1 =
-          llvm::dyn_cast<llvm::Constant>(phiin->getIncomingValue(j));
-      if (c1 != NULL) {
-        e3 = evalConstant(c1);
-      } else {
-        std::string s = GetOperandName(phiin->getIncomingValue(j));
-        if (GetValue(s) != NULL) {
-          e3 = *GetValue(s);
-        } else
-          e3 = ExpVar(s, GetIntType(phiin->getIncomingValue(j)->getType()),
-                      false);
-      }
-
-      aExp e2 =
-          aExp::Equality(ExpVar(value, GetIntType(i->getType()), false), e3);
+      aExp e3 = GetPhiValue(phiin->getIncomingValue(j));
+      aExp e2 = aExp::Equality(e, e3);
       aExp impl = aExp::IMPL(e1, e2);
       AddConstraint(impl);
     }
-  } //od else
+    //ako je samo jedan, i pronadjen je, onda ne trazimo vise
+    if (IncomingBlocks.size() == 1) {
+      if (pronadjeno)
+        break;
+    }
+  }
+
+  if (IncomingBlocks.size() == 1) {
+    if (!pronadjeno) {
+      assert(0 && "ProcessPHI::Missing block!");
+      return;
+    }
+    aExp e3 = GetPhiValue(phiin->getIncomingValue(j));
+    WriteIntoStore(i, e3);
+    return;
+  }
+
+  assert((impls != IncomingBlocks.size()) && "ProcessPHI::Missing blocks!");
+  return;
 }
 
 //FIXME ako ima noreturn function call
@@ -1683,7 +1723,6 @@ void LState::ProcessBr(LInstruction *fi) {
     } else if (check.IsBOT()) {
       s = FLAWED;
     } else {
-      //!@#$ ovo otkomentarisati
       if (MemoryFlag)
         _ParentBlock->UpdateAndSetAddresses();
       if (!EnableParallel) //za paralelnost su iskljucene lokalne provere pa je

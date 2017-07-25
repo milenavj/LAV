@@ -1078,8 +1078,7 @@ void LBlock::TryMerge() {
     fb->_MergeInfo.AddMerged(this);
     _ChangeInitStore = true;
     //fixme ovde petlje nismo oslobodili, jer nam ta informacija treba
-    //za kasnije, to je bas lose resenje, ali sta da se radi, treba
-    //smisliti nesto bolje
+    //za kasnije, to je nije dobro resenje
   }
 
 }
@@ -1434,9 +1433,9 @@ void LBlock::AddLocalCondition(caExp &r, LInstruction *fi, ERRKIND e) {
   //  AddLocalConditionTimer.startTimer();
 
   if (IsUnreachableBlock()) {
-    //        _LocalConditions.push_back(LLocalCondition(aExp::TOP(),aExp::TOP(),fi,
+    // LocalConditions.push_back(LLocalCondition(aExp::TOP(),aExp::TOP(),fi,
     // e, UNREACHABLE));
-    //    AddLocalConditionTimer.stopTimer();
+    // AddLocalConditionTimer.stopTimer();
     return;
   }
 
@@ -1506,8 +1505,9 @@ void LBlock::AddLocalConditionZeroDisequality(caExp &e, LInstruction *fi) {
 LBlock *LBlock::GetPred() const {
   LBlock *pred = _Preds[0];
   if (pred->HasMerged()) {
-    for (unsigned k = 0; k < pred->_MergeInfo.NumMerged(); k++)
+    for (unsigned k = 0; k < pred->_MergeInfo.NumMerged(); k++) {
       pred = pred->_MergeInfo.LastMerged();
+    }
   }
   return pred;
 }

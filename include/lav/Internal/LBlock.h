@@ -107,6 +107,7 @@ public:
   void TryMerge();
   inline bool IsMerged() const { return _MergeInfo.IsMerged(); }
   inline LBlock *MergedInto() const { return _MergeInfo.MergedInto(); }
+  inline LBlock *LastMerged() const { return _MergeInfo.LastMerged(); }
   inline bool HasMerged() const { return _MergeInfo.HasMerged(); }
   inline const vpBlock &BlocksMerged() const {
     return _MergeInfo.BlocksMerged();

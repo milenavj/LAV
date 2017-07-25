@@ -807,7 +807,7 @@ bool LAVUnroll(Loop *L, unsigned Count, unsigned CountEnd, LoopInfo *LI,
   if (Count > 0) {
     //ovo -1 je jer vec postoji jedno razmotavanje iz orginalnog koda na koje se
     //kace nova razmotavanja
-    for (unsigned It = 1; It < Count-1; ++It) {
+    for (unsigned It = 1; It < Count - 1; ++It) {
 
       TryToUnrollOnce(L, LI, It, Headers, Latches, Header, LatchBlock,
                       brRazmotavanja, BlockBegin, BlockEnd, OrigPHINode);

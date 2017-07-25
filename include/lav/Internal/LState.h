@@ -28,6 +28,7 @@ class Type;
 class Function;
 class Constant;
 class Instruction;
+class Value;
 }
 
 namespace lav {
@@ -71,7 +72,7 @@ private:
   aExp GetGlobalValue(const std::string &name);
   aExp StoreValue(LInstruction *fi);
   aExp GetDivValue(llvm::Instruction *i, bool b);
-  //    aExp     GetRemValue          (llvm::Instruction* i, bool b);
+  aExp GetPhiValue(llvm::Value *value);
 
   void ProcessGEPI(LInstruction *fi);
   void ProcessReturn(LInstruction *fi);
