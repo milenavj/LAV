@@ -30,8 +30,8 @@ public:
   void Init(std::vector<std::function<int()> > &&tasks,
             uint64_t num_threads = std::thread::hardware_concurrency() - 1);
   void Work();
-  void StartWorkerThreads();
-  void StartControlThread();
+  void CreateWorkerThreads();
+  void CreateControlThread();
   void JoinWorkerThreads();
   void DetachWorkerThreads();
   void JoinControlThread();
