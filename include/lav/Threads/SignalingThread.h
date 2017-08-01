@@ -9,7 +9,7 @@
 
 namespace Threads {
 struct SignalingThreadBaseFromMember {
-  std::shared_ptr<Event::Event> m_event;
+  Event::Pointer m_event;
   explicit SignalingThreadBaseFromMember();
   SignalingThreadBaseFromMember(SignalingThreadBaseFromMember &&st);
 
@@ -20,13 +20,13 @@ struct SignalingThreadBaseFromMember {
 class SignalingThread : protected SignalingThreadBaseFromMember,
                         public CancelableThread {
 public:
-  using Callable = std::function<void(const std::shared_ptr<Event::Event> &)>;
+  using Callable = std::function<void(const Event::Pointer &)>;
   SignalingThread(Callable f);
   SignalingThread(SignalingThread &&st);
   SignalingThread &operator=(SignalingThread &&st);
   virtual ~SignalingThread();
 
-  const std::shared_ptr<Event::Event> &ShareEvent() const;
+  const Event::Pointer &ShareEvent() const;
 };
 }
 

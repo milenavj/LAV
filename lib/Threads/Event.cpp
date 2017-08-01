@@ -55,8 +55,8 @@ Event::~Event() {
 
 void Event::Deleter(Event *shared) { delete shared; }
 
-std::shared_ptr<Event::Event> Event::Create() {
-	return std::shared_ptr<Event::Event> { new Event
+Event::Pointer Event::Create() {
+	return Pointer { new Event
  {}
  , &Event::Deleter
 }
@@ -117,15 +117,15 @@ Event::Sigval Event::Value(bool block) {
 }
 
 std::vector<size_t>
-Event::WaitForEvents(std::vector<std::shared_ptr<Event::Event> > &events,
-                     std::chrono::milliseconds waitMs, bool blosk) {
+Event::WaitForEvents(std::vector<Event::Pointer> &events,
+                     const std::chrono::milliseconds &waitMs, bool blosk) {
 	using poll_t = struct pollfd;
 	std::vector<poll_t> pevents;
 	pevents.reserve(events.size());
 
 	// Pravimo niz eventova za poll sistemski poziv
 	std::transform(events.cbegin(), events.cend(), back_inserter(pevents),
-                [ = ](const std::shared_ptr<Event::Event> & eptr) {
+                [ = ](const Event::Pointer & eptr) {
 				poll_t p;
 				p.events = POLLIN;
 				p.fd = eptr->m_fd;

@@ -14,7 +14,7 @@ public:
     Unsat = 1,
     Finished = 2
   };
-  //using Pointer = std::shared_ptr<Event>;
+  using Pointer = std::shared_ptr<Event>;
   using Sigval = uint64_t;
 
   static constexpr int InvalidEvent = -1;
@@ -35,7 +35,7 @@ private:
 public:
 
   // Kreiramo pokazivac koji ce niti da dele
-  static std::shared_ptr<Event> Create();
+  static Pointer Create();
 
   // Ispitujemo da li se desio neki dogadjaj
   bool Ready() const;
@@ -45,8 +45,8 @@ public:
   Sigval Value(bool block = false);
   // Cekamo dok se ne desi neki signal
   static std::vector<std::size_t>
-      WaitForEvents(std::vector<std::shared_ptr<Event> > &events,
-                    std::chrono::milliseconds waitMs = {
+      WaitForEvents(std::vector<Event::Pointer> &events,
+                    const std::chrono::milliseconds &waitMs = {
   },
                     bool block = true);
 

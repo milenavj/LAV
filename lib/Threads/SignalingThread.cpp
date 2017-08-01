@@ -47,6 +47,4 @@ SignalingThread &SignalingThread::operator=(SignalingThread &&st) {
 
 SignalingThread::~SignalingThread() {}
 
-const std::shared_ptr<Event::Event> &SignalingThread::ShareEvent() const {
-  return m_event;
-}
+const Event::Pointer &SignalingThread::ShareEvent() const { return m_event; }
