@@ -73,9 +73,9 @@ void ThreadPool::Init(std::vector<std::function<int()> > &&tasks,
   m_num_tasks = tasks.size();
 }
 
-void ThreadPool::StartWorkerThreads() {
+void ThreadPool::CreateWorkerThreads() {
   // Funkcija koju izvrsava svaka nit
-  auto f = [this](const Event::Pointer & eptr) {
+  auto f = [this](const std::shared_ptr<Event> & eptr) {
     // Uzima zadatak po zadatak i izvrsava ga
     while (!m_tasksPtr->Empty()) {
       auto taskPtr = m_tasksPtr->Pop();
@@ -99,11 +99,11 @@ void ThreadPool::StartWorkerThreads() {
     m_threads.emplace_back(f);
 }
 
-void ThreadPool::StartControlThread() {
+void ThreadPool::CreateControlThread() {
     // Pravimo kontrolnu nit koja ceka na signale
   m_control_thread = std::thread([this]() {
 
-    std::vector<Event::Pointer> events;
+    std::vector<std::shared_ptr<Event> > events;
     for (const auto &t : m_threads)
       events.push_back(t.ShareEvent());
 
@@ -141,14 +141,13 @@ void ThreadPool::StartControlThread() {
 }
 
 void ThreadPool::Work() {
-  StartWorkerThreads();
+  CreateWorkerThreads();
   if (FindFirstFlawed) {
     //        DetachWorkerThreads();
-    StartControlThread();
+    CreateControlThread();
     JoinControlThread();
     //        JoinWorkerThreads();
-  } else
-    JoinWorkerThreads();
+  }
 }
 
 ThreadPool::Result ThreadPool::GetResult() { return m_result; }
