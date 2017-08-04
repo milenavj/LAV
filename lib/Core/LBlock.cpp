@@ -602,7 +602,7 @@ void LBlock::CalculateConditions() {
       //std::cout << FindFirstFlawed << " find first flawed" << std::endl;
       if (stopWhenFound(localCond->Instruction(), s, true) == -1) {
         //	    	return -1;
-        exit(1);
+        quick_exit(0);
       }
       if (FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED)) {
         Delete(localCond->Instruction()->GetModelFileName());

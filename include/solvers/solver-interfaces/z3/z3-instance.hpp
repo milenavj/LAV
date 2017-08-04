@@ -26,10 +26,11 @@ public:
   void reset();
   std::string getAssignment(Z3_ast expr, size_t width);
 
+
 private:
   Z3Instance();
   Z3_model _m;
-  Z3_context _ctx;
+  thread_local static Z3_context _ctx;
   Z3_ast _blocking_clause;
   thread_local static unsigned _pushed;
 };

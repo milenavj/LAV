@@ -9,6 +9,7 @@ void exitf(const char *message);
 Z3_context mk_context();
 
 thread_local unsigned Z3Instance::_pushed = 0;
+thread_local Z3_context Z3Instance::_ctx=0;
 
 Z3Instance &Z3Instance::instance() {
   thread_local static Z3Instance _instance;
@@ -24,6 +25,7 @@ Z3Instance::Z3Instance() {
 Z3Instance::~Z3Instance() {
   if (_m)
     Z3_del_model(_ctx, _m);
+  if(_ctx)
   Z3_del_context(_ctx);
 }
 

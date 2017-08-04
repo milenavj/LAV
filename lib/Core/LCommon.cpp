@@ -111,7 +111,7 @@ void AbstractName(std::string &name) {
       name[i] = '_';
 }
 
-std::map<llvm::Value *, std::string> _Names;
+thread_local std::map<llvm::Value *, std::string> _Names;
 
 std::string GetOperandName(llvm::Value *v) {
   if (v->hasName()) {
@@ -329,7 +329,7 @@ argo::Expression MakeExp(const std::string &name, const std::string &function,
 }
 
 long long GetNext() {
-  static long long i = 0;
+  thread_local static long long i = 0;
   return i++;
 }
 
