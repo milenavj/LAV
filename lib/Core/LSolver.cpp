@@ -419,7 +419,7 @@ void WriteLines(std::ostream &ostr, const LBlock *fb) {
     ostr << v[j] << ": ";
 }
 
-//TODO prebaciti u klasu LBlock, mozda
+//TODO prebaciti u klasu LBlock
 void LSolver::WriteBlockInfo(std::ostream &ostr, stUrsaExp &symbolTable,
                              const LBlock *fb, const LInstruction *fi,
                              std::string s) {
@@ -1687,37 +1687,6 @@ void LSolver::GetEdges(const vStr &transforms, std::vector<unsigned> &prvi,
 
 }
 
-void LSolver::WriteSymbolTable(std::ostream &ostr, stUrsaExp &symbolTable) {
-
-  stUrsaExp::iterator it = symbolTable.begin(), ite = symbolTable.end();
-  for (; it != ite; it++) {
-    std::string s;
-    if (StartsWith(it->first, MEMORY))
-      continue;
-    if (StartsWith(it->first, VARNAME))
-      continue;
-    if (isArray(it->first))
-      continue;
-    if (StartsWith(it->first, TRANSFORMATION))
-      continue;
-    if (StartsWith(it->first, ACTIVEBLOCK))
-      continue;
-
-    try {
-      s = it->second.getAssignment();
-    }
-    catch (char const * ss) {
-      ostr << it->first << "  " << ss << std::endl;
-      continue;
-    }
-    if (s[0] == 'x') { //ostr << it->first << " == " /*<<std::flush << s <<
-                       //std::endl */<< "any value" << ", " ;
-    } else
-      ostr << it->first << " == " /*<<std::flush << s << std::endl */
-           << binarystring2signed(s) << ", ";
-  }
-}
-
 void LSolver::WriteStoreValues(std::ostream &ostr, const LBlock *fb_tekuci,
                                stUrsaExp &symbolTable, std::string s) {
 
@@ -1750,11 +1719,15 @@ void LSolver::WriteStoreValues(std::ostream &ostr, const LBlock *fb_tekuci,
       ostr << it->first << "  " << ss << std::endl;
       continue;
     }
-    //ovo zapravo vazi samo za boolector
-    if (asgn[0] == 'x') {
+    if (isBoolector() && asgn[0] == 'x') {
       //ostr << it->first << " = " /*<<std::flush << s << std::endl */<< "any
       //value" << ", " ;
     } else
+      //TODO asgn ne mora da bude broj
+      //ukoliko je u pitanju niz, treba izvuci odgovarajuce informacije
+      //da bi ovde omogucili da se dobije niz, potrebno je u
+      //LState::GetModelValues() dozvoliti da se u tabelu ubace nizovi 
+      //sto je trenutno zabranjeno jer nema podrske za nizove
       ostr << it->first << " = " /*<<std::flush << s << std::endl */
            << binarystring2signed(asgn) << ", ";
   }

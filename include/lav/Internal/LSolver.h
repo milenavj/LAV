@@ -78,7 +78,6 @@ public:
                              std::string s = "");
   static void WriteTrace(std::ostream &f, vUnsigned &prvi, vUnsigned &drugi,
                          const LBlock *fb_tekuci, stUrsaExp &symbolTable);
-  static void WriteSymbolTable(std::ostream &ostr, stUrsaExp &symbolTable);
   static bool isLATheory();
 
 private:

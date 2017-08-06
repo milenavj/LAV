@@ -161,7 +161,7 @@ std::string Z3Instance::getAssignment(Z3_ast expr, size_t width) {
 
 void exitf(const char *message) {
   fprintf(stderr, "BUG: %s.\n", message);
-  exit(1);
+  quick_exit(1);
 }
 
 void error_handler(Z3_context c, Z3_error_code e) {

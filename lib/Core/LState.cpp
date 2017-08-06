@@ -1111,7 +1111,7 @@ void LState::InlineFunction(LInstruction *fi, llvm::Function *f,
       //    ffTimer.stopTimer();
     } else {
       std::cout << "funkcija nije nadjena  " << std::endl;
-      exit(1);
+      quick_exit(1);
     }
   }
 
@@ -1762,8 +1762,7 @@ static std::string cut_addr(const std::string &s) {
 //ovde bi bilo bolje da se jednom sracunaju ove vrednosti a ne svaki put iz
 //pocetka problem je sto u zavisnosti od pozicije u bloku mozemo imati
 //razlicite vrednosti koje nam za model trebaju i to zavisi od trenutnog
-//stanja izvrsavanja instrukcija to komplikuje stvari i ne znam kako bi to
-//razresila drugacije nego da se svaki put iznova izracunava
+//stanja izvrsavanja instrukcija to komplikuje stvari
 mspaExp LState::GetModelValues() const {
   const msVarInfo &st = _Store.GetStore();
   mspaExp ModelValues;
@@ -1776,14 +1775,16 @@ mspaExp LState::GetModelValues() const {
 
   it = st.begin();
   for (; it != ite; it++) {
+    //TODO ova preskakanja treba ukloniti kada se obezbedi
+    //podrska za uzimanje modela za nizove
     if (StartsWith(it->first, MEMORY))
       continue;
     if (StartsWith(it->first, VARNAME))
       continue;
     if (isArray(it->first))
       continue;
-    //ovo je adresa od argumenata funkcije, skroz je budjavo
-    //sugavo je sto je ovde pretpostavka da ce llvm tako da ih nazove
+    //FIXME ovo je adresa od argumenata funkcije
+    //ovde je pretpostavka da ce llvm tako da ih nazove
     if (EndsWith(it->first, "_addr"))
       continue;
     if (skip.find(it->first) != skip.end()) {

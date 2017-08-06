@@ -52,7 +52,6 @@ public:
     return b;
   }
 
-  //      std::map<std::string, Z3_func_decl> _uf_registry;
   //  ovo se nikada ne poziva?
   void reset() {
     std::cout << "Z3 Reseting context..." << std::endl;
