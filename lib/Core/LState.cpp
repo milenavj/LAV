@@ -1396,8 +1396,20 @@ void LState::ProcessLibraryCall(LInstruction *fi, llvm::Function *f,
                               GetIntType(i->getOperand(0)->getType()));
       WriteIntoStore(i, e);
     }
-
-  } else {
+  }
+  else if ((f->getName().find("sqc", 0)) != (std::string::npos)) {
+      std::size_t found = f->getName().find_first_of("987654321");
+      if (found != std::string::npos) {
+        std::vector<aExp> operands;
+        int n = f->getName()[found] - '0';
+        for (int j = 0; j < n; j++)
+          operands.push_back(GetValue(argument(i, j)));
+        aExp e = aExp::Function(f->getName(), operands,
+                                GetIntType(i->getOperand(0)->getType()));
+        WriteIntoStore(i, e);
+  }
+  }
+  else {
     //FIXME trebalo bi da se napravi neinterpretirana funckija a ne nova
     //promenljiva
     aExp e = ExpVar(GetNameOfNextVariable(), GetIntType(i->getType()), false);
@@ -1521,7 +1533,6 @@ void LState::ProcessPHI(LInstruction *fi) {
   unsigned impls = 0;
 
   llvm::PHINode *phiin = static_cast<llvm::PHINode *>(i);
-
   std::vector<llvm::BasicBlock *> IncomingBlocks;
   for (unsigned j = 0; j < phiin->getNumIncomingValues(); j++) {
     llvm::BasicBlock *bb1 =
@@ -1595,6 +1606,7 @@ void LState::ProcessPHI(LInstruction *fi) {
     if (IncomingBlocks.size() > 1) {
       if (!pronadjeno)
         continue;
+
       impls++;
       aExp e1 = Transformation(_ParentBlock->GetFunctionName(), pred->Id(),
                                _ParentBlock->Id());
@@ -1876,32 +1888,41 @@ void LState::Update(LInstruction *fi) {
   ///////////////////////
   // Arithmetic / logical
   case llvm::Instruction::Add: {
+    //TODO model ce ici u isti fajl ako su obe opcije prisutne sto znaci da ce jedan
+    //biti pregazen
+    GetParentBlock()->AddLocalConditionOverflow(aExp::add(GetValue(argument(i, 0)), GetValue(argument(i, 1))), fi, OVERFLOW_ADD);
+    GetParentBlock()->AddLocalConditionUnderflow(aExp::add(GetValue(argument(i, 0)), GetValue(argument(i, 1))), fi, UNDERFLOW_ADD);
     aExp e = aExp::add(GetValue(argument(i, 0)), GetValue(argument(i, 1)));
     WriteIntoStore(i, e);
     break;
   }
 
   case llvm::Instruction::Sub: {
+    GetParentBlock()->AddLocalConditionOverflow(aExp::sub(GetValue(argument(i, 0)), GetValue(argument(i, 1))), fi, OVERFLOW_SUB);
+    GetParentBlock()->AddLocalConditionUnderflow(aExp::sub(GetValue(argument(i, 0)), GetValue(argument(i, 1))), fi, UNDERFLOW_SUB);
     aExp e = aExp::sub(GetValue(argument(i, 0)), GetValue(argument(i, 1)));
     WriteIntoStore(i, e);
     break;
   }
 
   case llvm::Instruction::Mul: {
+    GetParentBlock()->AddLocalConditionOverflow(aExp::mul(GetValue(argument(i, 0)), GetValue(argument(i, 1))), fi, OVERFLOW_MUL);
+    GetParentBlock()->AddLocalConditionUnderflow(aExp::mul(GetValue(argument(i, 0)), GetValue(argument(i, 1))), fi, UNDERFLOW_MUL);
     aExp e = aExp::mul(GetValue(argument(i, 0)), GetValue(argument(i, 1)));
     WriteIntoStore(i, e);
     break;
   }
 
   case llvm::Instruction::UDiv: {
-    GetParentBlock()->AddLocalConditionZeroDisequality(GetValue(argument(i, 1)),
-                                                       fi);
+    GetParentBlock()->AddLocalConditionOverflow(aExp::udiv(GetValue(argument(i, 0)), GetValue(argument(i, 1))), fi, OVERFLOW_UDIV);
+    GetParentBlock()->AddLocalConditionZeroDisequality(GetValue(argument(i, 1)), fi);
     aExp e = GetDivValue(i, true);
     WriteIntoStore(i, e);
     break;
   }
 
   case llvm::Instruction::SDiv: {
+    GetParentBlock()->AddLocalConditionOverflow(aExp::sdiv(GetValue(argument(i, 0)), GetValue(argument(i, 1))), fi, OVERFLOW_SDIV);
     GetParentBlock()->AddLocalConditionZeroDisequality(GetValue(argument(i, 1)),
                                                        fi);
     aExp e = GetDivValue(i, false);
@@ -2190,7 +2211,7 @@ void LState::Update(LInstruction *fi) {
 //ne moze zbog gettargetdata da se jednostavno izbaci iz bloka u common
 //FIXME
 aExp LState::evalConstantExpr(llvm::ConstantExpr *ce) {
-
+//std::cout << "evalConstantExpr" << std::endl;
   aExp op1 = ExpNumZeroInt, op2 = ExpNumZeroInt, op3 = ExpNumZeroInt;
 
   int numOperands = ce->getNumOperands();
@@ -2349,7 +2370,7 @@ aExp LState::evalConstant(llvm::Constant *c) {
     return evalConstantExpr(ce);
   } else {
     if (const llvm::ConstantInt *ci = llvm::dyn_cast<llvm::ConstantInt>(c)) {
-      return ExpNum1(ci->getValue().toString(10, true),
+        return ExpNum1(ci->getValue().toString(10, true),
                      GetIntType(c->getType()));
     } else if (const llvm::ConstantFP *cf =
                    llvm::dyn_cast<llvm::ConstantFP>(c)) {

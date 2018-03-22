@@ -211,6 +211,16 @@ public:
   }
 
   virtual ExpressionImp *
+  addOverflowGround(const ExpressionImpGroundInteger *const e) const {
+      throw "Z3LA - addSymbolic";
+  }
+
+  virtual ExpressionImp *
+  addOverflowSymbolic(const ExpressionImpSymbolic *const e) const {
+  throw "Z3LA - addSymbolic";
+  }
+
+  virtual ExpressionImp *
   subtractGround(const ExpressionImpGroundInteger *const e) const {
     SOLVER_EXPR_TYPE args[2];
     args[0] = this->_expr;

@@ -15,7 +15,8 @@ enum IntType {
   uInt32Type = 31,
   sInt32Type = 32,
   uInt64Type = 63,
-  sInt64Type = 64
+  sInt64Type = 64,
+  rInt2Type = 102
 };
 
 typedef mpz_class INT;

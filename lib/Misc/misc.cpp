@@ -67,6 +67,25 @@ void parseArguments(int argc, char **argv) {
   delete[] argArray;
 }
 
+bool isOverflow(ERRKIND er) {
+    return (er == OVERFLOW_ADD ||
+            er == OVERFLOW_SUB ||
+            er == OVERFLOW_SDIV ||
+            er == OVERFLOW_UDIV ||
+            er == OVERFLOW_MUL ||
+            er == OVERFLOW_NEG);
+}
+
+bool isUnderflow(ERRKIND er) {
+    return (er == UNDERFLOW_ADD ||
+            er == UNDERFLOW_SUB ||
+            er == UNDERFLOW_MUL);
+}
+
+bool isOverflowUnderflow(ERRKIND er) {
+    return isOverflow(er) || isUnderflow(er);
+}
+
 std::string sErrorKind(ERRKIND ErrKind) {
   if (ErrKind == BUFFEROVERFLOW)
     return "buffer_overflow";
@@ -76,6 +95,24 @@ std::string sErrorKind(ERRKIND ErrKind) {
     return "assertion_violated";
   else if (ErrKind == NULLDEREFERENCING)
     return "null_pointer_dereferencing";
+  else if (ErrKind == OVERFLOW_ADD)
+    return "overflow_addition";
+  else if (ErrKind == OVERFLOW_SUB)
+    return "overflow_substraction";
+  else if (ErrKind == OVERFLOW_UDIV)
+    return "overflow_unsigned_division";
+  else if (ErrKind == OVERFLOW_SDIV)
+    return "overflow_signed_division";
+  else if (ErrKind == OVERFLOW_NEG)
+    return "overflow_neg";
+  else if (ErrKind == OVERFLOW_MUL)
+    return "overflow_multiplication";
+  else if (ErrKind == UNDERFLOW_ADD)
+    return "underflow_addition";
+  else if (ErrKind == UNDERFLOW_SUB)
+    return "underflow_substraction";
+  else if (ErrKind == UNDERFLOW_MUL)
+    return "underflow_multiplication";
   else
     return "other";
 }

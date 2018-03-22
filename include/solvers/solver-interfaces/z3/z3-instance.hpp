@@ -28,6 +28,8 @@ public:
 
 
 private:
+  void print(Z3_ast expr);
+  void print_sat();
   Z3Instance();
   Z3_model _m;
   thread_local static Z3_context _ctx;

@@ -229,6 +229,17 @@ public:
   }
 
   virtual ExpressionImp *
+  addOverflowGround(const ExpressionImpGroundInteger *const e) const {
+      throw "Boolector::addOverflowGround";
+  }
+
+  virtual ExpressionImp *
+  addOverflowSymbolic(const ExpressionImpSymbolic *const e) const {
+    throw "Boolector::addOverflowSymbolic";
+  }
+
+
+  virtual ExpressionImp *
   subtractGround(const ExpressionImpGroundInteger *const e) const {
     SOLVER_EXPR_TYPE exp = boolector_sub(getSolver(), this->_expr,
                                          solverUnsignedExprFromGround(e));

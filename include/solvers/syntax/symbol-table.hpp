@@ -23,6 +23,12 @@ public:
 
   void set(const std::string &var, const T &val) { _map[var] = val; }
 
+  void print(std::ostream& ostr) {
+      const_iterator in = begin(), ie = end();
+      for( ; in!=ie;in++)
+               ostr << in->first <<" : " << in->second << endl;
+  }
+
   T get(const std::string &var) const {
     typename map_type::const_iterator i = _map.find(var);
     return i != _map.end() ? i->second : T();

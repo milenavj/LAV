@@ -58,6 +58,11 @@ public:
     Z3Instance::instance().reset();
   }
 
+  void print(Z3_ast exp) const;
+  void print(Z3_func_decl exp) const;
+  void print(Z3_sort exp) const;
+  void print(Z3_ast exp, Z3_sort sort) const;
+
   std::string getAssignment() const {
     //      if (_type == Z3_BITVECTOR) {
     return Z3Instance::instance().getAssignment(_expr, _width);
@@ -76,6 +81,7 @@ public:
       return unsigned_type;
     case BOOLEAN: { return bool_type; }
     case BITVECTOR: { return bv_type; }
+    case SQL: { return bv_type; }
     default:
       throw "Unsupported type for uninterpreted function";
     }
@@ -89,6 +95,8 @@ public:
     Z3_symbol s = Z3_mk_string_symbol(getSolver(), name.c_str());
     SOLVER_EXPR_TYPE exp = Z3_mk_const(getSolver(), s, a);
     //FIXME ovo width nije jasno sta je
+    print(exp,a);
+
     return new BVExpressionImpZ3(exp, range, Z3_ARRAY);
   }
 
@@ -151,6 +159,7 @@ public:
           getSolver(), Z3_mk_string_symbol(getSolver(), fun.getName().c_str()),
           n, domain_types, result_type);
       _uf_registry[fun.getName()] = f;
+      print(f);
       delete[] domain_types;
     } else {
       f = _uf_registry[fun.getName()];
@@ -188,6 +197,7 @@ public:
     Z3_sort sort = Z3_mk_bv_sort(getSolver(), width);
     Z3_symbol s = Z3_mk_string_symbol(getSolver(), name.c_str());
     SOLVER_EXPR_TYPE exp = Z3_mk_const(getSolver(), s, sort);
+    print(exp, sort);
     return new BVExpressionImpZ3(exp, width, Z3_BITVECTOR);
   }
 
@@ -196,6 +206,7 @@ public:
     Z3_sort sort = Z3_mk_bv_sort(getSolver(), width);
     Z3_symbol s = Z3_mk_string_symbol(getSolver(), name.c_str());
     SOLVER_EXPR_TYPE exp = Z3_mk_const(getSolver(), s, sort);
+    print(exp, sort);
     return new BVExpressionImpZ3(exp, width, Z3_BITVECTOR);
   }
 
@@ -245,194 +256,135 @@ public:
     Z3_sort ty = Z3_mk_bool_sort(getSolver());
     Z3_symbol s = Z3_mk_string_symbol(getSolver(), name.c_str());
     SOLVER_EXPR_TYPE exp = Z3_mk_const(getSolver(), s, ty);
+    print(exp,Z3_mk_bool_sort(getSolver()));
     return new BVExpressionImpZ3(exp, 1, Z3_BOOLEAN);
   }
 
   virtual ExpressionImp *booleanGround(bool x) const {
-    SOLVER_EXPR_TYPE exp =
+      SOLVER_EXPR_TYPE exp =
         x ? Z3_mk_true(getSolver()) : Z3_mk_false(getSolver());
     return new BVExpressionImpZ3(exp, 1, Z3_BOOLEAN);
   }
 
   virtual ExpressionImp *
-  addGround(const ExpressionImpGroundInteger *const e) const {
-    SOLVER_EXPR_TYPE exp =
-        Z3_mk_bvadd(getSolver(), this->_expr, solverUnsignedExprFromGround(e));
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  addGround(const ExpressionImpGroundInteger *const e) const;
 
   virtual ExpressionImp *
-  addSymbolic(const ExpressionImpSymbolic *const e) const {
-    const BVExpressionImpZ3 *const bexpr = llvm::dyn_cast<BVExpressionImpZ3>(e);
-    assert(bexpr != 0);
-    SOLVER_EXPR_TYPE exp = Z3_mk_bvadd(getSolver(), this->_expr, bexpr->_expr);
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  addSymbolic(const ExpressionImpSymbolic *const e) const;
 
   virtual ExpressionImp *
-  subtractGround(const ExpressionImpGroundInteger *const e) const {
-    SOLVER_EXPR_TYPE exp =
-        Z3_mk_bvsub(getSolver(), this->_expr, solverUnsignedExprFromGround(e));
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  addOverflowGround(const ExpressionImpGroundInteger *const e) const;
 
   virtual ExpressionImp *
-  subtractFromGround(const ExpressionImpGroundInteger *const e) const {
-    SOLVER_EXPR_TYPE exp =
-        Z3_mk_bvsub(getSolver(), solverUnsignedExprFromGround(e), this->_expr);
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  addOverflowSymbolic(const ExpressionImpSymbolic *const e) const;
 
   virtual ExpressionImp *
-  subtractSymbolic(const ExpressionImpSymbolic *const e) const {
-    const BVExpressionImpZ3 *const bexpr = llvm::dyn_cast<BVExpressionImpZ3>(e);
-    assert(bexpr != 0);
-    SOLVER_EXPR_TYPE exp = Z3_mk_bvsub(getSolver(), this->_expr, bexpr->_expr);
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  addUnderflowGround(const ExpressionImpGroundInteger *const e) const;
 
   virtual ExpressionImp *
-  subtractFromSymbolic(const ExpressionImpSymbolic *const e) const {
-    const BVExpressionImpZ3 *const bexpr = llvm::dyn_cast<BVExpressionImpZ3>(e);
-    assert(bexpr != 0);
-    SOLVER_EXPR_TYPE exp = Z3_mk_bvsub(getSolver(), bexpr->_expr, this->_expr);
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  addUnderflowSymbolic(const ExpressionImpSymbolic *const e) const;
 
   virtual ExpressionImp *
-  multGround(const ExpressionImpGroundInteger *const e) const {
-    SOLVER_EXPR_TYPE exp =
-        Z3_mk_bvmul(getSolver(), this->_expr, solverUnsignedExprFromGround(e));
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  subOverflowGround(const ExpressionImpGroundInteger *const e) const;
 
   virtual ExpressionImp *
-  multSymbolic(const ExpressionImpSymbolic *const e) const {
-    const BVExpressionImpZ3 *const bexpr = llvm::dyn_cast<BVExpressionImpZ3>(e);
-    assert(bexpr != 0);
-    SOLVER_EXPR_TYPE exp = Z3_mk_bvmul(getSolver(), this->_expr, bexpr->_expr);
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  subOverflowSymbolic(const ExpressionImpSymbolic *const e) const;
 
   virtual ExpressionImp *
-  udivGround(const ExpressionImpGroundInteger *const e) const {
-    SOLVER_EXPR_TYPE exp =
-        Z3_mk_bvudiv(getSolver(), this->_expr, solverUnsignedExprFromGround(e));
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  subUnderflowGround(const ExpressionImpGroundInteger *const e) const;
 
   virtual ExpressionImp *
-  udivFromGround(const ExpressionImpGroundInteger *const e) const {
-    SOLVER_EXPR_TYPE exp =
-        Z3_mk_bvudiv(getSolver(), solverUnsignedExprFromGround(e), this->_expr);
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  subUnderflowSymbolic(const ExpressionImpSymbolic *const e) const;
 
   virtual ExpressionImp *
-  udivSymbolic(const ExpressionImpSymbolic *const e) const {
-    const BVExpressionImpZ3 *const bexpr = llvm::dyn_cast<BVExpressionImpZ3>(e);
-    assert(bexpr != 0);
-    SOLVER_EXPR_TYPE exp = Z3_mk_bvudiv(getSolver(), this->_expr, bexpr->_expr);
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  mulOverflowGround(const ExpressionImpGroundInteger *const e) const;
 
   virtual ExpressionImp *
-  udivFromSymbolic(const ExpressionImpSymbolic *const e) const {
-    const BVExpressionImpZ3 *const bexpr = llvm::dyn_cast<BVExpressionImpZ3>(e);
-    assert(bexpr != 0);
-    SOLVER_EXPR_TYPE exp = Z3_mk_bvudiv(getSolver(), bexpr->_expr, this->_expr);
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  mulOverflowSymbolic(const ExpressionImpSymbolic *const e) const;
 
   virtual ExpressionImp *
-  sdivGround(const ExpressionImpGroundInteger *const e) const {
-    SOLVER_EXPR_TYPE exp =
-        Z3_mk_bvsdiv(getSolver(), this->_expr, solverSignedExprFromGround(e));
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  mulUnderflowGround(const ExpressionImpGroundInteger *const e) const;
 
   virtual ExpressionImp *
-  sdivFromGround(const ExpressionImpGroundInteger *const e) const {
-    SOLVER_EXPR_TYPE exp =
-        Z3_mk_bvsdiv(getSolver(), solverSignedExprFromGround(e), this->_expr);
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  mulUnderflowSymbolic(const ExpressionImpSymbolic *const e) const;
 
   virtual ExpressionImp *
-  sdivSymbolic(const ExpressionImpSymbolic *const e) const {
-    const BVExpressionImpZ3 *const bexpr = llvm::dyn_cast<BVExpressionImpZ3>(e);
-    assert(bexpr != 0);
-    SOLVER_EXPR_TYPE exp = Z3_mk_bvsdiv(getSolver(), this->_expr, bexpr->_expr);
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  sdivOverflowGround(const ExpressionImpGroundInteger *const e) const;
 
   virtual ExpressionImp *
-  sdivFromSymbolic(const ExpressionImpSymbolic *const e) const {
-    const BVExpressionImpZ3 *const bexpr = llvm::dyn_cast<BVExpressionImpZ3>(e);
-    assert(bexpr != 0);
-    SOLVER_EXPR_TYPE exp = Z3_mk_bvsdiv(getSolver(), bexpr->_expr, this->_expr);
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  sdivOverflowSymbolic(const ExpressionImpSymbolic *const e) const;
 
   virtual ExpressionImp *
-  uremGround(const ExpressionImpGroundInteger *const e) const {
-    SOLVER_EXPR_TYPE exp =
-        Z3_mk_bvurem(getSolver(), this->_expr, solverUnsignedExprFromGround(e));
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  udivOverflowGround(const ExpressionImpGroundInteger *const e) const;
 
   virtual ExpressionImp *
-  uremFromGround(const ExpressionImpGroundInteger *const e) const {
-    SOLVER_EXPR_TYPE exp =
-        Z3_mk_bvurem(getSolver(), solverUnsignedExprFromGround(e), this->_expr);
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  udivOverflowSymbolic(const ExpressionImpSymbolic *const e) const;
 
   virtual ExpressionImp *
-  uremSymbolic(const ExpressionImpSymbolic *const e) const {
-    const BVExpressionImpZ3 *const bexpr = llvm::dyn_cast<BVExpressionImpZ3>(e);
-    assert(bexpr != 0);
-    SOLVER_EXPR_TYPE exp = Z3_mk_bvurem(getSolver(), this->_expr, bexpr->_expr);
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  subtractGround(const ExpressionImpGroundInteger *const e) const;
 
   virtual ExpressionImp *
-  uremFromSymbolic(const ExpressionImpSymbolic *const e) const {
-    const BVExpressionImpZ3 *const bexpr = llvm::dyn_cast<BVExpressionImpZ3>(e);
-    assert(bexpr != 0);
-    SOLVER_EXPR_TYPE exp = Z3_mk_bvurem(getSolver(), bexpr->_expr, this->_expr);
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  subtractFromGround(const ExpressionImpGroundInteger *const e) const;
 
   virtual ExpressionImp *
-  sremGround(const ExpressionImpGroundInteger *const e) const {
-    SOLVER_EXPR_TYPE exp =
-        Z3_mk_bvsrem(getSolver(), this->_expr, solverSignedExprFromGround(e));
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  subtractSymbolic(const ExpressionImpSymbolic *const e) const;
 
   virtual ExpressionImp *
-  sremFromGround(const ExpressionImpGroundInteger *const e) const {
-    SOLVER_EXPR_TYPE exp =
-        Z3_mk_bvsrem(getSolver(), solverSignedExprFromGround(e), this->_expr);
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  subtractFromSymbolic(const ExpressionImpSymbolic *const e) const;
 
   virtual ExpressionImp *
-  sremSymbolic(const ExpressionImpSymbolic *const e) const {
-    const BVExpressionImpZ3 *const bexpr = llvm::dyn_cast<BVExpressionImpZ3>(e);
-    assert(bexpr != 0);
-    SOLVER_EXPR_TYPE exp = Z3_mk_bvsrem(getSolver(), this->_expr, bexpr->_expr);
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  multGround(const ExpressionImpGroundInteger *const e) const;
 
   virtual ExpressionImp *
-  sremFromSymbolic(const ExpressionImpSymbolic *const e) const {
-    const BVExpressionImpZ3 *const bexpr = llvm::dyn_cast<BVExpressionImpZ3>(e);
-    assert(bexpr != 0);
-    SOLVER_EXPR_TYPE exp = Z3_mk_bvsrem(getSolver(), bexpr->_expr, this->_expr);
-    return new BVExpressionImpZ3(exp, _width, Z3_BITVECTOR);
-  }
+  multSymbolic(const ExpressionImpSymbolic *const e) const;
+
+  virtual ExpressionImp *
+  udivGround(const ExpressionImpGroundInteger *const e) const;
+
+  virtual ExpressionImp *
+  udivFromGround(const ExpressionImpGroundInteger *const e) const;
+
+  virtual ExpressionImp *
+  udivSymbolic(const ExpressionImpSymbolic *const e) const;
+
+  virtual ExpressionImp *
+  udivFromSymbolic(const ExpressionImpSymbolic *const e) const;
+
+  virtual ExpressionImp *
+  sdivGround(const ExpressionImpGroundInteger *const e) const;
+
+  virtual ExpressionImp *
+  sdivFromGround(const ExpressionImpGroundInteger *const e) const;
+
+  virtual ExpressionImp *
+  sdivSymbolic(const ExpressionImpSymbolic *const e) const;
+
+  virtual ExpressionImp *
+  sdivFromSymbolic(const ExpressionImpSymbolic *const e) const;
+
+  virtual ExpressionImp *
+  uremGround(const ExpressionImpGroundInteger *const e) const;
+
+  virtual ExpressionImp *
+  uremFromGround(const ExpressionImpGroundInteger *const e) const;
+
+  virtual ExpressionImp *
+  uremSymbolic(const ExpressionImpSymbolic *const e) const;
+
+  virtual ExpressionImp *
+  uremFromSymbolic(const ExpressionImpSymbolic *const e) const;
+
+  virtual ExpressionImp *
+  sremGround(const ExpressionImpGroundInteger *const e) const;
+
+  virtual ExpressionImp *
+  sremFromGround(const ExpressionImpGroundInteger *const e) const;
+
+  virtual ExpressionImp *
+  sremSymbolic(const ExpressionImpSymbolic *const e) const;
+
+  virtual ExpressionImp *
+  sremFromSymbolic(const ExpressionImpSymbolic *const e) const;
 
   virtual ExpressionImp *
   shiftLGround(const ExpressionImpGroundInteger *const e) const {
@@ -741,10 +693,13 @@ public:
 
   //FIXME da li ovo moze da bude negativno width - _width
   virtual ExpressionImp *zextimp(size_t width) const {
+//      std::cout << "zext********************************" << width - _width<<std::endl;
     assert((width - _width) > 0);
-    //if((width - _width)<=0) std::cout << "zext********************************
-    //" << width - _width << " ********************************"<<
+  //  if((width - _width)<=0) std::cout << "zext********************************"
+    //                                  << width - _width << " ********************************"<<
     //std::endl<<std::endl<<std::endl;
+
+    print(this->_expr);
     SOLVER_EXPR_TYPE exp =
         Z3_mk_zero_ext(getSolver(), width - _width, this->_expr);
     return new BVExpressionImpZ3(exp, width, Z3_BITVECTOR);
@@ -768,7 +723,7 @@ public:
 
   virtual ExpressionImp *
   eqGround(const ExpressionImpGroundInteger *const e) const {
-    SOLVER_EXPR_TYPE exp =
+      SOLVER_EXPR_TYPE exp =
         Z3_mk_eq(getSolver(), this->_expr, solverUnsignedExprFromGround(e));
     return new BVExpressionImpZ3(exp, 1, Z3_BOOLEAN);
   }
@@ -833,11 +788,6 @@ private:
   SOLVER_EXPR_TYPE solverUnsignedExprFromGround(
       const ExpressionImpGroundInteger *const e) const {
     unsigned long value = e->getUnsignedValue();
-    //FIXME reci filipu, ovde je bilo _width a ja sam promenila u e->getwidth -
-    //i gore sam promenila tip
-    //i u klasu sam ubacila getwidth jer se _width nije postavljalo u ovom
-    //slucaju i pucalo e
-    //ispravjljen je i neq
     Z3_sort sort = Z3_mk_bv_sort(getSolver(), e->GetWidth());
     SOLVER_EXPR_TYPE exp =
         Z3_mk_numeral(getSolver(), toString(value).c_str(), sort);

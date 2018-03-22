@@ -95,19 +95,21 @@ private:
                                std::map<std::string, long> &Addresses);
   static void GetAddresses(caExp &addr, std::map<std::string, long> &Addresses);
   static bool TryExportExpression(caExp &a, UrsaExp &exported_a,
-                                  stUrsaExp &symbolTable);
-  static UrsaExp ExportExpressionBV(caExp &e, stUrsaExp &symbolTable);
+                                  stUrsaExp &symbolTable, ERRKIND erKind = OTHER);
+  static UrsaExp ExportExpressionBV(caExp &e, stUrsaExp &symbolTable, ERRKIND erKind);
   static UrsaExp ExportExpressionLA(caExp &e, stUrsaExp &symbolTable);
   static UrsaExp ExportVariable(caExp &e, stUrsaExp &symbolTable, cStr &s = "");
   static bool AddTempConstraint(UrsaExp &e);
   static bool AddConstraint(UrsaExp &e);
 
   bool FinalAddIntoSolver();
-  void GetConstraints(caExp &a, caExp &b, aExp &ab, aExp &anegb,
+  void GetConstraints(caExp &a, caExp &b, aExp &abs_a, aExp &abs_b, aExp &abs_neg_b, //aExp &ab, aExp &anegb,
                       std::set<aExp> &ls, std::set<aExp> &rs);
-  bool Export(caExp &a, UrsaExp &ue, std::set<aExp> &ls, std::set<aExp> &rs,
-              UrsaExp &impls);
-  bool Export(caExp &anegb, UrsaExp &ue, UrsaExp &impls);
+  bool Export(caExp &a, caExp& b, UrsaExp &ue, std::set<aExp> &ls, std::set<aExp> &rs,
+              UrsaExp &impls, ERRKIND erKind);
+  bool ExportOU(caExp &a, caExp& b, UrsaExp &ue, ERRKIND erKind);
+  bool ExportOU(caExp &b, UrsaExp &exported_b, ERRKIND erKind);
+  bool Export(caExp &a, caExp& b, UrsaExp &ue, UrsaExp &impls);
 
 private:
   static bool GetOut(SOLVERCONTEXT c, bool satnegb);

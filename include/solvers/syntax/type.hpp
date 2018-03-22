@@ -7,7 +7,8 @@ enum _Type {
   BITVECTOR,
   ARRAY,
   STATEMENT,
-  ERROR
+  ERROR,
+  SQL
 };
 
 namespace UrsaMajor {

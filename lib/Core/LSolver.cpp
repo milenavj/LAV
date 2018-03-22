@@ -675,9 +675,13 @@ void PrintAB(caExp &a, caExp &b) {
   PrintA(b, "bbbbb");
 }
 
-UrsaExp LSolver::ExportExpressionBV(caExp &e, stUrsaExp &symbolTable) {
+UrsaExp LSolver::ExportExpressionBV(caExp &e, stUrsaExp &symbolTable, ERRKIND erKind) {
 
-  if (e.IsTOP())
+//    std::cout << "ExportExpressionBV" << std::endl;
+//    PrintA(e, "e" );
+//    std::cout  << std::endl;
+
+    if (e.IsTOP())
     return UrsaExp::booleanGround(true);
 
   if (e.IsBOT())
@@ -685,7 +689,7 @@ UrsaExp LSolver::ExportExpressionBV(caExp &e, stUrsaExp &symbolTable) {
 
   if (e.IsNumeral()) //FIXME ovo je bezveze
       {
-    if (e.getIntWidth() < 3) {
+      if (e.getIntWidth() < 3) {
       if (e.GetValue().get_si() == 0)
         return UrsaExp::booleanGround(false);
       else
@@ -743,7 +747,7 @@ UrsaExp LSolver::ExportExpressionBV(caExp &e, stUrsaExp &symbolTable) {
 
   std::vector<UrsaExp> operands;
   for (unsigned i = 0; i < e.GetArity(); i++) {
-    operands.push_back(ExportExpressionBV(e[i], symbolTable));
+    operands.push_back(ExportExpressionBV(e[i], symbolTable, erKind));
   }
 
   if (e.isSelect()) {
@@ -760,7 +764,9 @@ UrsaExp LSolver::ExportExpressionBV(caExp &e, stUrsaExp &symbolTable) {
       return GetAbstractASS(e);
   }
 
-  if (e.isAdd() || e.isGepi())
+  if (e.isGepi())
+    return operands[0] + operands[1];
+  if (e.isAdd())
     return operands[0] + operands[1];
   if (e.isSub())
     return operands[0] - operands[1];
@@ -770,6 +776,25 @@ UrsaExp LSolver::ExportExpressionBV(caExp &e, stUrsaExp &symbolTable) {
     return operands[0].sdiv(operands[1]);
   if (e.isUdiv())
     return operands[0].udiv(operands[1]);
+
+/*  if (e.isAdd() && (erKind == OVERFLOW_ADD))
+    return operands[0].addOverflow(operands[1]);
+  if (e.isAdd() && (erKind == UNDERFLOW_ADD))
+    return operands[0].addUnderflow(operands[1]);
+  if (e.isSub() && (erKind == OVERFLOW_SUB))
+    return operands[0].subOverflow(operands[1]);
+  if (e.isSub() && (erKind == UNDERFLOW_SUB))
+    return operands[0].subUnderflow(operands[1]);
+  if (e.isMul() && (erKind == OVERFLOW_MUL))
+    return operands[0].mulOverflow(operands[1]);
+  if (e.isMul() && (erKind == UNDERFLOW_MUL))
+    return operands[0].mulUnderflow(operands[1]);
+  if (e.isUdiv() && (erKind == OVERFLOW_UDIV))
+    return operands[0].udivOverflow(operands[1]);
+  if (e.isSdiv() && (erKind == OVERFLOW_SDIV))
+    return operands[0].sdivOverflow(operands[1]);
+*/
+
   if (e.isSrem())
     return operands[0].srem(operands[1]);
   if (e.isUrem())
@@ -824,48 +849,49 @@ UrsaExp LSolver::ExportExpressionBV(caExp &e, stUrsaExp &symbolTable) {
   if (e.isSext())
     return operands[0].sext(e[1].GetValue().get_si());
   if (e.isZext()) {
-    //ovde nesto nije u redu sa z3-om jer ne dozvoljava
-    //zext na bool-u sto je dozvoljeno u c-u pa takvi
-    //izrazi nastaju, boolector za ovo ne pravi problem
-    //na primer, ovo je za z3 neispravno jer se zext primenjuje
-    //na a<=b koje je tipa bool, mozda je novi z3 ovo ispravio pa
-    //nema ga smisla budziti za ovaj specijalni slucaj
-    //  i = (a <= b);
-    //  assert(i!=1);
-
-    if (isZ3()) {
-      //ako je bool ne smem zext(bool) vec mora ite(bool ? 1,0)
-      if ((e[0].IsNumeral() ||
-           e[0].IsVariable())) { //&& e[0].getIntWidth() < 3) {
+/*
+  //ovde nesto nije u redu sa z3-om jer ne dozvoljava
+  //zext na bool-u sto je dozvoljeno u c-u pa takvi
+  //izrazi nastaju, boolector za ovo ne pravi problem
+  //na primer, ovo je za z3 neispravno jer se zext primenjuje
+  //na a<=b koje je tipa bool, mozda je novi z3 ovo ispravio pa
+  //nema ga smisla budziti za ovaj specijalni slucaj
+  //  i = (a <= b);
+  //  assert(i!=1);
+  if (isZ3()) {
+    //ako je bool ne smem zext(bool) vec mora ite(bool ? 1,0)
+    if ((e[0].IsNumeral() ||
+         e[0].IsVariable())) { //&& e[0].getIntWidth() < 3) {
+      int width = e[1].GetValue().get_si();
+      UrsaExp eu1 = UrsaExp::integerGround(1, width);
+      UrsaExp eu0 = UrsaExp::integerGround(0, width);
+      return operands[0].ite(eu1, eu0, width);
+    } else if (e[0].IsITE()) {
+      //zext (ITE bot  0  1 ) 32 )
+      if (e[0][0].IsBOT() && e[0][2].IsNumeral()) {
         int width = e[1].GetValue().get_si();
-        UrsaExp eu1 = UrsaExp::integerGround(1, width);
-        UrsaExp eu0 = UrsaExp::integerGround(0, width);
-        return operands[0].ite(eu1, eu0, width);
-      } else if (e[0].IsITE()) {
-        //zext (ITE bot  0  1 ) 32 )
-        if (e[0][0].IsBOT() && e[0][2].IsNumeral()) {
-          int width = e[1].GetValue().get_si();
-          UrsaExp eu0 =
-              UrsaExp::integerGround(e[0][2].GetValue().get_si(), width);
-          return eu0;
-        } else if (e[0][0].IsTOP() && e[0][1].IsNumeral()) {
-          int width = e[1].GetValue().get_si();
-          UrsaExp eu0 =
-              UrsaExp::integerGround(e[0][1].GetValue().get_si(), width);
-          return eu0;
-        } else {
-          int width = e[1].GetValue().get_si();
+        UrsaExp eu0 =
+            UrsaExp::integerGround(e[0][2].GetValue().get_si(), width);
+        return eu0;
+      } else if (e[0][0].IsTOP() && e[0][1].IsNumeral()) {
+        int width = e[1].GetValue().get_si();
+        UrsaExp eu0 =
+            UrsaExp::integerGround(e[0][1].GetValue().get_si(), width);
+        return eu0;
+      } else {
+        int width = e[1].GetValue().get_si();
+*/
+      if (isZ3()) {
+        //ako je bool ne smem zext(bool) vec mora ite(bool ? 1,0)
+        if ((e[0].IsNumeral() || e[0].IsVariable()) && e[0].getIntWidth() < 3) {
+            int width = e[1].GetValue().get_si();
           UrsaExp eu1 = UrsaExp::integerGround(1, width);
           UrsaExp eu0 = UrsaExp::integerGround(0, width);
-          UrsaExp uslov = ExportExpressionBV(e[0][0], symbolTable);
-          return uslov.ite(eu1, eu0, width);
+          return operands[0].ite(eu1, eu0, width);
         }
-
       }
-    }
-    return operands[0].zext(e[1].GetValue().get_si());
+      return operands[0].zext(e[1].GetValue().get_si());
   }
-
   if (e.isExtract())
     return operands[0]
         .extract(e[1].GetValue().get_si(), e[2].GetValue().get_si());
@@ -1179,7 +1205,7 @@ UrsaExp LSolver::ExportExpressionLA(caExp &e, stUrsaExp &symbolTable) {
     if (isZ3()) {
       //ako je bool ne smem zext(bool) vec mora ite(bool ? 1,0)
       if ((e[0].IsNumeral() || e[0].IsVariable()) && e[0].getIntWidth() < 3) {
-        int width = e[1].GetValue().get_si();
+          int width = e[1].GetValue().get_si();
         UrsaExp eu1 = UrsaExp::integerGround(1, width);
         UrsaExp eu0 = UrsaExp::integerGround(0, width);
         return operands[0].ite(eu1, eu0, width);
@@ -1557,12 +1583,12 @@ STATUS LSolver::callSolver(caExp &a, caExp &b, const LBlock *fb,
                            const LInstruction *fi, ERRKIND erKind, bool m,
                            SOLVERCONTEXT c) {
 
-  //    std::cout << "---------------------------------------------------"
-  //              << std::endl;
-  //    std::cout << "callSolver" << std::endl;
-  //    std::cout << "---------------------------------------------------"
-  //              << std::endl;
-  //    PrintAB(a, b);
+//      std::cout << "---------------------------------------------------"
+//                << std::endl;
+//      std::cout << "callSolver" << std::endl;
+//      std::cout << "---------------------------------------------------"
+//                << std::endl;
+//      PrintAB(a, b);
 
   //  NonIncrementalPreparationTime.startTimer();
   saExp ls;
@@ -1578,13 +1604,64 @@ STATUS LSolver::callSolver(caExp &a, caExp &b, const LBlock *fb,
   stUrsaExp symbolTable;
 
   bool exported;
+//  PrintA(abs_a, "abs_a");
   exported = TryExportExpression(abs_a, exported_a, symbolTable);
   if (!exported)
     return ERROR;
+//  std::cout << "callSolver exported_a" << std::endl;
+//  std::cout << exported_a << std::endl;
+//  std::cout << "symbolTable" << std::endl;
+//  symbolTable.print(std::cout);
 
-  exported = TryExportExpression(abs_neg_b, exported_neg_b, symbolTable);
-  if (!exported)
+//  PrintA(abs_neg_b, "callSolver abs_neg_b");
+
+//  exported = TryExportExpression(abs_neg_b, exported_neg_b, symbolTable, erKind);
+
+  if(isOverflow(erKind) || isUnderflow(erKind)) {
+
+      UrsaExp exported_b0, exported_b1;
+      aExp b = abs_b;
+      bool exportedb0 = TryExportExpression(b[0], exported_b0, symbolTable, erKind);
+      bool exportedb1 = TryExportExpression(b[1], exported_b1, symbolTable, erKind);
+      PrintA(abs_b, "abs_b");
+
+      if (b.isAdd() && (erKind == OVERFLOW_ADD))
+           exported_b = exported_b0.addOverflow(exported_b1);
+      else if (b.isAdd() && (erKind == UNDERFLOW_ADD))
+           exported_b = exported_b0.addUnderflow(exported_b1);
+      else if (b.isSub() && (erKind == OVERFLOW_SUB))
+          exported_b = exported_b0.subOverflow(exported_b1);
+      else if (b.isSub() && (erKind == UNDERFLOW_SUB))
+          exported_b = exported_b0.subOverflow(exported_b1);
+      else if (b.isMul() && (erKind == OVERFLOW_MUL))
+          exported_b = exported_b0.mulOverflow(exported_b1);
+      else if (b.isMul() && (erKind == UNDERFLOW_MUL))
+          exported_b = exported_b0.mulUnderflow(exported_b1);
+      else if (b.isUdiv() && (erKind == OVERFLOW_UDIV))
+          exported_b = exported_b0.udivOverflow(exported_b1);
+      else if (b.isSdiv() && (erKind == OVERFLOW_SDIV))
+          exported_b = exported_b0.sdivOverflow(exported_b1);
+        else {std::cout << " PROBLEM " << std::endl;}
+std::cout << " OVERFLOW - UNDERFLOW " << std::endl;
+      exported = exportedb0 && exportedb1;
+      exported_neg_b = !exported_b;
+  }
+  else  {
+      exported = TryExportExpression(abs_b, exported_b, symbolTable, erKind);
+      exported_neg_b = !exported_b;
+  }
+
+
+  if (!exported) {
+      std::cout << "!exported" << std::endl;
     return ERROR;
+  }
+/*  std::cout << "exported_b" << std::endl;
+  std::cout << exported_b << std::endl;
+  std::cout << "exported_neg_b" << std::endl;
+  std::cout << exported_neg_b << std::endl;
+  std::cout << "symbolTable" << std::endl;
+  symbolTable.print(std::cout);*/
 
   //Posle exporta, dodati ackimplikacije, ako je potrebno
   if (Ackermannize())
@@ -1598,6 +1675,7 @@ STATUS LSolver::callSolver(caExp &a, caExp &b, const LBlock *fb,
   //  NonIncrementalTime.stopTimer();
 
   if (m && (c == NORMAL) && (satnegb == true) && Model) {
+    std::cout << "GetModel" << std::endl;
     GetModel(symbolTable, fb, fi, erKind);
   }
 
@@ -1611,10 +1689,13 @@ STATUS LSolver::callSolver(caExp &a, caExp &b, const LBlock *fb,
       return UNSAFE;
   }
 
-  exported = TryExportExpression(abs_b, exported_b, symbolTable);
-  if (!exported)
-    return ERROR;
+//  exported = TryExportExpression(abs_b, exported_b, symbolTable, erKind);
+//  if (!exported)
+//    return ERROR;
 
+//  std::cout << "exported_b" << std::endl;
+//  std::cout << exported_b << std::endl;
+//  std::cout << "AddTempConstraint(exported_b)" << std::endl;
   //  NonIncrementalTime.startTimer();
   bool satb = AddTempConstraint(exported_b);
   //  NonIncrementalTime.stopTimer();
@@ -1783,6 +1864,13 @@ STATUS LSolver::callSolverBlock(caExp &f,
   if (FinalAddIntoSolver() == false)
     return ERROR;
 
+/*  STATUS s =
+      callSolverIncremental(aExp::AND(f, conds[0]->LHS()), conds[0]->RHS(),
+                            conds[0]->Instruction()->GetParentBlock(),
+                            conds[0]->Instruction(), conds[0]->ErrorKind());
+  conds[0]->Status() = s;
+*/
+
   //uraditi prvo varijantu bez akermanizacije
   //F and (p1 or p2 or p3) and
   //(p1 <=> a1/\!b1) and (p2 <=> a2/\!b2) and (p3 <=> a3/\!b3)
@@ -1797,6 +1885,17 @@ STATUS LSolver::callSolverBlock(caExp &f,
     ands.push_back(aExp::IFF(pi, anegb));
   }
 
+/*
+  std::vector<aExp> ors;
+  aExp negs = aExp::TOP();
+  ors.push_back(pis[0]);
+  for (unsigned i = 1; i < pis.size(); i++) {
+      negs.AND(aExp::NOT(pis[i-1]));
+      ors.push_back(aExp::AND(negs,pis[i]));
+  }
+  ands.push_back(aExp::OR(ors));
+*/
+
   ands.push_back(aExp::OR(pis));
   ands.push_back(f);
   aExp blockCond = aExp::AND(ands);
@@ -1804,6 +1903,7 @@ STATUS LSolver::callSolverBlock(caExp &f,
   UrsaExp::setFactory(_Factory.get());
   UrsaExp exported_cond;
   bool exported;
+
   exported = TryExportExpression(blockCond, exported_cond, _SymbolTable);
   if (!exported)
     return ERROR;
@@ -1848,7 +1948,6 @@ STATUS LSolver::callSolverBlock(caExp &f,
 bool LSolver::FinalAddIntoSolver() {
   saExp ls;
   saExp rs;
-  //  	  std::cout << "LSolver::FinalAddIntoSolver()" << std::endl;
   aExp abs_cond;
   if (Ackermannize()) {
     //ovim se dobije flattened abs_cond
@@ -1869,8 +1968,6 @@ bool LSolver::FinalAddIntoSolver() {
 
   UrsaExp exported_cond;
   bool exported;
-  //  	  std::cout << "TryExportExpression(abs_cond, exported_cond,
-  // _SymbolTable);" << std::endl;
   exported = TryExportExpression(abs_cond, exported_cond, _SymbolTable);
   if (!exported)
     return false;
@@ -1895,26 +1992,87 @@ bool LSolver::FinalAddIntoSolver() {
   return true; //uspelo dodavanje
 }
 
-void LSolver::GetConstraints(caExp &a, caExp &b, aExp &ab, aExp &anegb,
+void LSolver::GetConstraints(caExp &a, caExp &b, aExp &abs_a, aExp &abs_b, aExp &abs_neg_b, //aExp &ab, aExp &anegb,
                              saExp &ls, saExp &rs) {
   if (Ackermannize()) {
-    aExp abs_a, abs_b, abs_neg_b;
+//    aExp abs_a, abs_b, abs_neg_b;
     PrepareAckIncremental(a, b, abs_a, abs_b, abs_neg_b, ls, rs);
-    ab = aExp::AND(abs_a, abs_b);
-    anegb = aExp::AND(abs_a, abs_neg_b);
+//    ab = aExp::AND(abs_a, abs_b);
+//    anegb = aExp::AND(abs_a, abs_neg_b);
   } else {
-    aExp abs_a, abs_b, abs_neg_b;
+//    aExp abs_a, abs_b, abs_neg_b;
     PrepareNoAck(a, b, abs_a, abs_b, abs_neg_b);
-    ab = aExp::AND(abs_a, abs_b);
-    anegb = aExp::AND(abs_a, abs_neg_b);
+//    ab = aExp::AND(abs_a, abs_b);
+//    anegb = aExp::AND(abs_a, abs_neg_b);
   }
 }
 
-bool LSolver::Export(caExp &anegb, UrsaExp &exported_anegb, saExp &ls,
-                     saExp &rs, UrsaExp &impls) {
+
+bool LSolver::ExportOU(caExp &b, UrsaExp &exported_b, ERRKIND erKind) {
+    if(isOverflow(erKind) || isUnderflow(erKind)) {
+        UrsaExp exported_b0, exported_b1;
+        bool exportedb0 = TryExportExpression(b[0], exported_b0, _SymbolTable, OTHER);
+        bool exportedb1 = TryExportExpression(b[1], exported_b1, _SymbolTable, OTHER);
+
+        if (b.isAdd() && (erKind == OVERFLOW_ADD))
+             exported_b = exported_b0.addOverflow(exported_b1);
+        if (b.isAdd() && (erKind == UNDERFLOW_ADD))
+             exported_b = exported_b0.addUnderflow(exported_b1);
+        if (b.isSub() && (erKind == OVERFLOW_SUB))
+            exported_b = exported_b0.subOverflow(exported_b1);
+        if (b.isSub() && (erKind == UNDERFLOW_SUB))
+            exported_b = exported_b0.subOverflow(exported_b1);
+        if (b.isMul() && (erKind == OVERFLOW_MUL))
+            exported_b = exported_b0.mulOverflow(exported_b1);
+        if (b.isMul() && (erKind == UNDERFLOW_MUL))
+            exported_b = exported_b0.mulUnderflow(exported_b1);
+        if (b.isUdiv() && (erKind == OVERFLOW_UDIV))
+            exported_b = exported_b0.udivOverflow(exported_b1);
+        if (b.isSdiv() && (erKind == OVERFLOW_SDIV))
+            exported_b = exported_b0.sdivOverflow(exported_b1);
+
+        return exportedb0 && exportedb1;
+    }
+    else return false;
+
+}
+
+
+bool LSolver::ExportOU(caExp &a, caExp &negb, UrsaExp &exported_anegb, ERRKIND erKind) {
+    UrsaExp exported_a, exported_negb, exported_b;
+    bool exportedb, exported, exportedb0, exportedb1;
+    bool exporteda = TryExportExpression(a, exported_a, _SymbolTable, OTHER);
+    aExp b;
+    if(negb.IsNOT()) b = negb[0];
+    else b = negb;
+
+    exportedb = ExportOU(b,exported_b,erKind);
+
+    if(negb.IsNOT()) exported_negb = !exported_b;
+    else exported_negb = exported_b;
+    exportedb = exportedb0 && exportedb1;
+
+    exported_anegb = exported_a && exported_negb;
+    exported = exporteda && exportedb;
+    return exported;
+
+}
+bool LSolver::Export(caExp &a, caExp &negb, UrsaExp &exported_anegb, saExp &ls,
+                     saExp &rs, UrsaExp &impls, ERRKIND erKind) {
   bool exported;
 
-  exported = TryExportExpression(anegb, exported_anegb, _SymbolTable);
+  if(isOverflow(erKind) || isUnderflow(erKind)) {
+    exported = ExportOU(a, negb, exported_anegb, erKind);
+  }
+//  ovo ne eksportuje dobro, tj preskoci da eksportuje a
+  //else exported = TryExportExpression(a.AND(negb), exported_anegb, _SymbolTable, erKind);
+{
+      UrsaExp exported_a, exported_negb;
+      bool exporteda = TryExportExpression(a, exported_a, _SymbolTable, erKind);
+      bool exportednegb = TryExportExpression(negb, exported_negb, _SymbolTable, erKind);
+      exported_anegb = exported_a && exported_negb;
+      exported = exporteda && exportednegb;
+  }
   if (!exported)
     return false;
 
@@ -1928,12 +2086,14 @@ bool LSolver::Export(caExp &anegb, UrsaExp &exported_anegb, saExp &ls,
   return true;
 }
 
-bool LSolver::Export(caExp &ab, UrsaExp &exported_ab, UrsaExp &impls) {
-  bool exported;
-  exported = TryExportExpression(ab, exported_ab, _SymbolTable);
-  if (!exported)
+bool LSolver::Export(caExp &a, caExp& b, UrsaExp &exported_ab, UrsaExp &impls) {
+  bool exporteda, exportedb;
+  UrsaExp exported_a, exported_b;
+  exporteda = TryExportExpression(a, exported_a, _SymbolTable);
+  exportedb = TryExportExpression(b, exported_b, _SymbolTable);
+  if (!(exporteda && exportedb))
     return false;
-
+  exported_ab = exported_a && exported_b;
   if (Ackermannize()) {
     exported_ab = impls && exported_ab;
   }
@@ -1944,9 +2104,9 @@ bool LSolver::Export(caExp &ab, UrsaExp &exported_ab, UrsaExp &impls) {
 STATUS LSolver::callSolverIncremental(caExp &a, caExp &b, const LBlock *fb,
                                       const LInstruction *fi, ERRKIND erKind) {
 
-  //    std::cout << "callSolverIncremental" << std::endl;
-  //    PrintAB(a, b);
-  // 	  std::cout << "FinalAddIntoSolver() " << std::endl;
+//    std::cout << "----------------------------------------------------" << std::endl;
+//    std::cout << "callSolverIncremental" << std::endl;
+//    PrintAB(a, b);
 
   UrsaExp::setFactory(_Factory.get());
 
@@ -1959,11 +2119,14 @@ STATUS LSolver::callSolverIncremental(caExp &a, caExp &b, const LBlock *fb,
   //anegb je negacija uslova ispravnosti
   //ab je negacija uslova neispravnosti
   aExp ab, anegb;
-  GetConstraints(a, b, ab, anegb, ls, rs);
+  aExp abs_a, abs_b, abs_neg_b;
+  GetConstraints(a, b, abs_a, abs_b, abs_neg_b, ls, rs);
+  ab = aExp::AND(abs_a, abs_b);
+  anegb = aExp::AND(abs_a, abs_neg_b);
 
   UrsaExp::setFactory(_Factory.get());
   UrsaExp exported_anegb, exported_ab, impls;
-  if (Export(anegb, exported_anegb, ls, rs, impls) == false)
+  if (Export(abs_a, abs_neg_b, exported_anegb, ls, rs, impls, erKind) == false)
     return ERROR;
 
   //proverava se negacija uslova ispravnosti
@@ -1988,12 +2151,11 @@ STATUS LSolver::callSolverIncremental(caExp &a, caExp &b, const LBlock *fb,
       return SAFE;
   }
 
-  if (Export(ab, exported_ab, ls, rs, impls) == false)
+  if (Export(abs_a, abs_b, exported_ab, ls, rs, impls, erKind) == false)
     return ERROR;
 
   //  IncrementalTime.startTimer();
   bool satb = AddTempConstraint(exported_ab);
-  //  	  std::cout << " AddTempConstraint(exported_ab)end" << std::endl;
   //  IncrementalTime.stopTimer();
 
   return GetStatus(((satnegb == true) ? SAT : UNSAT),
@@ -2001,11 +2163,12 @@ STATUS LSolver::callSolverIncremental(caExp &a, caExp &b, const LBlock *fb,
 }
 
 bool LSolver::TryExportExpression(caExp &a, UrsaExp &exported_a,
-                                  stUrsaExp &symbolTable) {
-  try {
-    if (_BV)
-      exported_a = ExportExpressionBV(a, symbolTable);
-    else
+                                  stUrsaExp &symbolTable, ERRKIND erKind) {
+    try {
+    if (_BV) {
+      exported_a = ExportExpressionBV(a, symbolTable, erKind);
+    }
+      else
       exported_a = ExportExpressionLA(a, symbolTable);
   }
   catch (const char * msg) {
@@ -2072,7 +2235,7 @@ bool LSolver::AddTempConstraint(UrsaExp &e) {
 }
 
 bool LSolver::AddConstraint(UrsaExp &e) {
-  //      std::cout << "LSolver::addConstraint()" <<std::endl;
+  //std::cout << "LSolver::addConstraint()" <<std::endl;
   bool sat = e.addConstraint();
   return sat;
 }

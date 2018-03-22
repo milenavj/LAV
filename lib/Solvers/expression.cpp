@@ -115,6 +115,38 @@ Expression Expression::operator<<(const Expression &expr) const {
 //    return Expression(((*this)._imp)->shiftR(expr._imp.get()));
 //  }
 
+Expression Expression::addOverflow(const Expression &expr) const {
+  return Expression(((*this)._imp)->addOverflow(expr._imp.get()));
+}
+
+Expression Expression::addUnderflow(const Expression &expr) const {
+  return Expression(((*this)._imp)->addUnderflow(expr._imp.get()));
+}
+
+Expression Expression::subOverflow(const Expression &expr) const {
+  return Expression(((*this)._imp)->subOverflow(expr._imp.get()));
+}
+
+Expression Expression::subUnderflow(const Expression &expr) const {
+  return Expression(((*this)._imp)->subUnderflow(expr._imp.get()));
+}
+
+Expression Expression::mulOverflow(const Expression &expr) const {
+  return Expression(((*this)._imp)->mulOverflow(expr._imp.get()));
+}
+
+Expression Expression::mulUnderflow(const Expression &expr) const {
+  return Expression(((*this)._imp)->mulUnderflow(expr._imp.get()));
+}
+
+Expression Expression::sdivOverflow(const Expression &expr) const {
+  return Expression(((*this)._imp)->sdivOverflow(expr._imp.get()));
+}
+
+Expression Expression::udivOverflow(const Expression &expr) const {
+  return Expression(((*this)._imp)->udivOverflow(expr._imp.get()));
+}
+
 Expression Expression::aShiftR(const Expression &expr) const {
   return Expression(((*this)._imp)->aShiftRimp(expr._imp.get()));
 }

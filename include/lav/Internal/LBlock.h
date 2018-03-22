@@ -52,6 +52,8 @@ public:
   void AddLocalCondition(const aExp &e, LInstruction *fi, ERRKIND er);
   void AddLocalConditionZeroDisequality(const aExp &e, LInstruction *fi);
   void AddLocalConditionPointers(const aExp &e, LInstruction *fi);
+  void AddLocalConditionOverflow(caExp &r, LInstruction *fi, errkind e);
+  void AddLocalConditionUnderflow(caExp &r, LInstruction *fi, errkind e);
   void ConnectFunctionConditions(LInstruction *fi, LFunction *ff);
   void AddStore(const vStr &variables, const vVarInfo &fvis);
 

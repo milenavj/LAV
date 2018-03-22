@@ -86,6 +86,16 @@ llvm::cl::opt<bool> SkipInsideLoop(
         "LAV --- Skip checking inner loop unwindings (default = true)"),
     llvm::cl::init(true));
 
+llvm::cl::opt<bool> CheckOverflow(
+    "check-overflow",
+    llvm::cl::desc("LAV --- Check for overflows (default = false)"),
+    llvm::cl::init(false));
+
+llvm::cl::opt<bool> CheckUnderflow(
+    "check-underflow",
+    llvm::cl::desc("LAV --- Check for underflows (default = false)"),
+    llvm::cl::init(false));
+
 // Autor: Branislava
 // Dodato zbog paralelizacije
 
@@ -98,6 +108,8 @@ llvm::cl::opt<bool> EnableParallel(
     "enable-parallel",
     llvm::cl::desc("LAV --- Enable parallel solver calls (default = false)"),
     llvm::cl::init(false));
+
+
 
 namespace lav {
 

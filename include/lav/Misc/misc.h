@@ -28,9 +28,21 @@ typedef enum errkind {
   DIVISIONBYZERO,
   BUFFEROVERFLOW,
   NULLDEREFERENCING,
-  ASSERT
+  ASSERT,
+  OVERFLOW_ADD,
+  OVERFLOW_SUB,
+  OVERFLOW_NEG,
+  OVERFLOW_SDIV,
+  OVERFLOW_UDIV,
+  OVERFLOW_MUL,
+  UNDERFLOW_ADD,
+  UNDERFLOW_SUB,
+  UNDERFLOW_MUL,
 } ERRKIND;
 
+bool isOverflow(ERRKIND er);
+bool isUnderflow(ERRKIND er);
+bool isOverflowUnderflow(ERRKIND er);
 std::string sErrorKind(ERRKIND er);
 
 void parseArguments(int argc, char **argv);

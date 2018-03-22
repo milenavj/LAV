@@ -72,6 +72,16 @@ public:
   Expression aShiftR(const Expression &expr) const;
   Expression lShiftR(const Expression &expr) const;
 
+  Expression addOverflow(const Expression &expr) const;
+  Expression addUnderflow(const Expression &expr) const;
+  Expression subOverflow(const Expression &expr) const;
+  Expression subUnderflow(const Expression &expr) const;
+  Expression mulOverflow(const Expression &expr) const;
+  Expression mulUnderflow(const Expression &expr) const;
+  Expression udivOverflow(const Expression &expr) const;
+  Expression udivUnderflow(const Expression &expr) const;
+  Expression sdivOverflow(const Expression &expr) const;
+  Expression sdivUnderflow(const Expression &expr) const;
   Expression udiv(const Expression &expr) const;
   Expression sdiv(const Expression &expr) const;
   Expression urem(const Expression &expr) const;
@@ -165,6 +175,120 @@ public:
       addGround(const ExpressionImpGroundInteger *const e) const = 0;
   virtual ExpressionImp *
       addSymbolic(const ExpressionImpSymbolic *const e) const = 0;
+
+  virtual ExpressionImp *addOverflow(const ExpressionImp *const e) const
+  { throw "addOverflow not supported!"; }
+  virtual ExpressionImp *
+      addOverflowGround(const ExpressionImpGroundInteger *const e) const
+  { throw "addOverflow not supported!"; }
+  virtual ExpressionImp *
+      addOverflowSymbolic(const ExpressionImpSymbolic *const e) const
+  { throw "addOverflow not supported!"; }
+
+  virtual ExpressionImp *subOverflow(const ExpressionImp *const e) const
+  { throw "subOverflow not supported!"; }
+
+  virtual ExpressionImp *
+      subOverflowGround(const ExpressionImpGroundInteger *const e) const
+  { throw "subOverflow not supported!"; }
+
+  virtual ExpressionImp *
+      subOverflowSymbolic(const ExpressionImpSymbolic *const e) const
+  { throw "subOverflow not supported!"; }
+
+
+  virtual ExpressionImp *addUnderflow(const ExpressionImp *const e) const
+  { throw "addUnderflow not supported!"; }
+
+  virtual ExpressionImp *
+      addUnderflowGround(const ExpressionImpGroundInteger *const e) const
+  { throw "addUnderflow not supported!"; }
+
+  virtual ExpressionImp *
+      addUnderflowSymbolic(const ExpressionImpSymbolic *const e) const
+  { throw "addUnderflow not supported!"; }
+
+  virtual ExpressionImp *subUnderflow(const ExpressionImp *const e) const
+  { throw "subUnderflow not supported!"; }
+
+  virtual ExpressionImp *
+      subUnderflowGround(const ExpressionImpGroundInteger *const e) const
+  { throw "subUnderflow not supported!"; }
+
+  virtual ExpressionImp *
+      subUnderflowSymbolic(const ExpressionImpSymbolic *const e) const
+  { throw "subUnderflow not supported!"; }
+
+
+  virtual ExpressionImp *mulOverflow(const ExpressionImp *const e) const
+  { throw "mulOverflow not supported!"; }
+
+  virtual ExpressionImp *
+      mulOverflowGround(const ExpressionImpGroundInteger *const e) const
+  { throw "mulOverflow not supported!"; }
+
+  virtual ExpressionImp *
+      mulOverflowSymbolic(const ExpressionImpSymbolic *const e) const
+  { throw "mulOverflow not supported!"; }
+
+  virtual ExpressionImp *mulUnderflow(const ExpressionImp *const e) const
+  { throw "mulUnderflow not supported!"; }
+
+  virtual ExpressionImp *
+      mulUnderflowGround(const ExpressionImpGroundInteger *const e) const
+  { throw "mulUnderflow not supported!"; }
+
+  virtual ExpressionImp *
+      mulUnderflowSymbolic(const ExpressionImpSymbolic *const e) const
+  { throw "mulUnderflow not supported!"; }
+
+
+  virtual ExpressionImp *sdivOverflow(const ExpressionImp *const e) const
+  { throw "sdivOverflow not supported!"; }
+
+  virtual ExpressionImp *
+      sdivOverflowGround(const ExpressionImpGroundInteger *const e) const
+  { throw "sdivOverflow not supported!"; }
+
+  virtual ExpressionImp *
+      sdivOverflowSymbolic(const ExpressionImpSymbolic *const e) const
+  { throw "sdivOverflow not supported!"; }
+
+  virtual ExpressionImp *sdivUnderflow(const ExpressionImp *const e) const
+  { throw "sdivUnderflow not supported!"; }
+
+  virtual ExpressionImp *
+      sdivUnderflowGround(const ExpressionImpGroundInteger *const e) const
+  { throw "sdivUnderflow not supported!"; }
+
+  virtual ExpressionImp *
+      sdivUnderflowSymbolic(const ExpressionImpSymbolic *const e) const
+  { throw "sdivUnderflow not supported!"; }
+
+
+
+  virtual ExpressionImp *udivOverflow(const ExpressionImp *const e) const
+  { throw "udivOverflow not supported!"; }
+
+  virtual ExpressionImp *
+      udivOverflowGround(const ExpressionImpGroundInteger *const e) const
+  { throw "udivOverflow not supported!"; }
+
+  virtual ExpressionImp *
+      udivOverflowSymbolic(const ExpressionImpSymbolic *const e) const
+  { throw "udivOverflow not supported!"; }
+
+  virtual ExpressionImp *udivUnderflow(const ExpressionImp *const e) const
+  { throw "udivUnderflow not supported!"; }
+
+  virtual ExpressionImp *
+      udivUnderflowGround(const ExpressionImpGroundInteger *const e) const
+  { throw "udivUnderflow not supported!"; }
+
+  virtual ExpressionImp *
+      udivUnderflowSymbolic(const ExpressionImpSymbolic *const e) const
+  { throw "udivUnderflow not supported!"; }
+
 
   virtual ExpressionImp *subtract(const ExpressionImp *const e) const = 0;
   virtual ExpressionImp *
@@ -522,6 +646,188 @@ public:
     throw "ExpressionImpGround::addSymbolic N/A";
   }
 
+  // ------------------------------------------------
+  // add Overflow
+  virtual ExpressionImp *addOverflow(const ExpressionImp *const e) const {
+    throw "ExpressionImpGround::add N/A";
+  }
+
+  virtual ExpressionImp *
+  addOverflowGround(const ExpressionImpGroundInteger *const e) const {
+    throw "ExpressionImpGround::addOverflowGround N/A";
+  }
+
+  virtual ExpressionImp *
+  addOverflowSymbolic(const ExpressionImpSymbolic *const e) const {
+    throw "ExpressionImpGround::addOverflowSymbolic N/A";
+  }
+  // ------------------------------------------------
+
+  // ------------------------------------------------
+  //sub Overflow
+  // ------------------------------------------------
+  virtual ExpressionImp *subOverflow(const ExpressionImp *const e) const {
+    throw "ExpressionImpGround::add N/A";
+  }
+
+  virtual ExpressionImp *
+  subOverflowSymbolic(const ExpressionImpSymbolic *const e) const {
+    throw "ExpressionImpGround::subOverflowSymbolic N/A";
+  }
+
+  virtual ExpressionImp *
+  subOverflowGround(const ExpressionImpGroundInteger *const e) const {
+    throw "ExpressionImpGround::addGround N/A";
+  }
+  // ------------------------------------------------
+
+  // ------------------------------------------------
+  // add underflow
+  // ------------------------------------------------
+  virtual ExpressionImp *addUnderflow(const ExpressionImp *const e) const {
+    throw "ExpressionImpGround::add N/A";
+  }
+
+  virtual ExpressionImp *
+  addUnderflowGround(const ExpressionImpGroundInteger *const e) const {
+    throw "ExpressionImpGround::addGround N/A";
+  }
+
+  virtual ExpressionImp *
+  addUnderflowSymbolic(const ExpressionImpSymbolic *const e) const {
+    throw "ExpressionImpGround::addSymbolic N/A";
+  }
+  // ------------------------------------------------
+
+  // ------------------------------------------------
+  // sub underflow
+  // ------------------------------------------------
+  virtual ExpressionImp *subUnderflow(const ExpressionImp *const e) const {
+    throw "ExpressionImpGround::add N/A";
+  }
+
+  virtual ExpressionImp *
+  subUnderflowGround(const ExpressionImpGroundInteger *const e) const {
+    throw "ExpressionImpGround::addGround N/A";
+  }
+
+  virtual ExpressionImp *
+  subUnderflowSymbolic(const ExpressionImpSymbolic *const e) const {
+    throw "ExpressionImpGround::addSymbolic N/A";
+  }
+  // ------------------------------------------------
+
+
+  // ------------------------------------------------
+  // mul Overflow
+  // ------------------------------------------------
+  virtual ExpressionImp *mulOverflow(const ExpressionImp *const e) const {
+    throw "ExpressionImpGround::mul N/A";
+  }
+
+  virtual ExpressionImp *
+  mulOverflowGround(const ExpressionImpGroundInteger *const e) const {
+    throw "ExpressionImpGround::mulOverflowGround N/A";
+  }
+
+  virtual ExpressionImp *
+  mulOverflowSymbolic(const ExpressionImpSymbolic *const e) const {
+    throw "ExpressionImpGround::mulOverflowSymbolic N/A";
+  }
+  // ------------------------------------------------
+
+  // ------------------------------------------------
+  // mul Underflow
+  // ------------------------------------------------
+  virtual ExpressionImp *mulUnderflow(const ExpressionImp *const e) const {
+    throw "ExpressionImpGround::mul N/A";
+  }
+
+  virtual ExpressionImp *
+  mulUnderflowGround(const ExpressionImpGroundInteger *const e) const {
+    throw "ExpressionImpGround::mulUnderflowGround N/A";
+  }
+
+  virtual ExpressionImp *
+  mulUnderflowSymbolic(const ExpressionImpSymbolic *const e) const {
+    throw "ExpressionImpGround::mulUnderSymbolic N/A";
+  }
+  // ------------------------------------------------
+
+  // ------------------------------------------------
+  // sdiv Overflow
+  // ------------------------------------------------
+  virtual ExpressionImp *sdivOverflow(const ExpressionImp *const e) const {
+    throw "ExpressionImpGround::sdiv N/A";
+  }
+
+  virtual ExpressionImp *
+  sdivOverflowGround(const ExpressionImpGroundInteger *const e) const {
+    throw "ExpressionImpGround::sdivOverflowGround N/A";
+  }
+
+  virtual ExpressionImp *
+  sdivOverflowSymbolic(const ExpressionImpSymbolic *const e) const {
+    throw "ExpressionImpGround::sdivOverflowSymbolic N/A";
+  }
+  // ------------------------------------------------
+
+  // ------------------------------------------------
+  // sdiv Underflow
+  // ------------------------------------------------
+  virtual ExpressionImp *sdivUnderflow(const ExpressionImp *const e) const {
+    throw "ExpressionImpGround::sdiv N/A";
+  }
+
+  virtual ExpressionImp *
+  sdivUnderflowGround(const ExpressionImpGroundInteger *const e) const {
+    throw "ExpressionImpGround::sdivUnderflowGround N/A";
+  }
+
+  virtual ExpressionImp *
+  sdivUnderflowSymbolic(const ExpressionImpSymbolic *const e) const {
+    throw "ExpressionImpGround::sdivUnderSymbolic N/A";
+  }
+  // ------------------------------------------------
+
+  // ------------------------------------------------
+  // udiv Overflow
+  // ------------------------------------------------
+  virtual ExpressionImp *udivOverflow(const ExpressionImp *const e) const {
+    throw "ExpressionImpGround::udiv N/A";
+  }
+
+  virtual ExpressionImp *
+  udivOverflowGround(const ExpressionImpGroundInteger *const e) const {
+    throw "ExpressionImpGround::udivOverflowGround N/A";
+  }
+
+  virtual ExpressionImp *
+  udivOverflowSymbolic(const ExpressionImpSymbolic *const e) const {
+    throw "ExpressionImpGround::udivOverflowSymbolic N/A";
+  }
+  // ------------------------------------------------
+
+  // ------------------------------------------------
+  // udiv Underflow
+  // ------------------------------------------------
+  virtual ExpressionImp *udivUnderflow(const ExpressionImp *const e) const {
+    throw "ExpressionImpGround::udiv N/A";
+  }
+
+  virtual ExpressionImp *
+  udivUnderflowGround(const ExpressionImpGroundInteger *const e) const {
+    throw "ExpressionImpGround::udivUnderflowGround N/A";
+  }
+
+  virtual ExpressionImp *
+  udivUnderflowSymbolic(const ExpressionImpSymbolic *const e) const {
+    throw "ExpressionImpGround::udivUnderSymbolic N/A";
+  }
+  // ------------------------------------------------
+
+
+
   virtual ExpressionImp *subtract(const ExpressionImp *const e) const {
     throw "ExpressionImpGround::subtract N/A";
   }
@@ -773,6 +1079,23 @@ public:
   lShiftRSymbolic(const ExpressionImpSymbolic *const e) const {
     throw "ExpressionImpGround::shiftRSymbolic N/A";
   }
+
+  virtual ExpressionImp *addOverflowimp(const ExpressionImp *const e) const {
+    throw "ExpressionImpGround::addOverflowimp N/A";
+  }
+
+  virtual ExpressionImp *subOverflowimp(const ExpressionImp *const e) const {
+    throw "ExpressionImpGround::subOverflowimp N/A";
+  }
+
+  virtual ExpressionImp *addUnderflowimp(const ExpressionImp *const e) const {
+    throw "ExpressionImpGround::addUnderflowimp N/A";
+  }
+
+  virtual ExpressionImp *subUnderflowimp(const ExpressionImp *const e) const {
+    throw "ExpressionImpGround::subUnderflowimp N/A";
+  }
+
 
   virtual ExpressionImp *ultimp(const ExpressionImp *const e) const {
     throw "ExpressionImpGround::lt N/A";
@@ -1109,6 +1432,38 @@ public:
 
   virtual ExpressionImp *
       addSymbolic(const ExpressionImpSymbolic *const e) const;
+
+  virtual ExpressionImp *addOverflow(const ExpressionImp *const e) const {
+    return e->addOverflowGround(this);
+  }
+  virtual ExpressionImp *subOverflow(const ExpressionImp *const e) const {
+    return e->subOverflowGround(this);
+  }
+
+  //fixme izbaciti izuzetak
+  virtual ExpressionImp *
+  addOverflowGround(const ExpressionImpGroundInteger *const e) const {
+    return new ExpressionImpGroundInteger(this->_n + e->_n);
+  }
+
+  //fixme izbaciti izuzetak
+  virtual ExpressionImp *
+  subOverflowGround(const ExpressionImpGroundInteger *const e) const {
+    return new ExpressionImpGroundInteger(this->_n - e->_n);
+  }
+
+
+  virtual ExpressionImp *
+      addOverflowSymbolic(const ExpressionImpSymbolic *const e) const;
+
+  virtual ExpressionImp *
+      subOverflowSymbolic(const ExpressionImpSymbolic *const e) const;
+
+  virtual ExpressionImp *
+      addUnderflowSymbolic(const ExpressionImpSymbolic *const e) const;
+
+  virtual ExpressionImp *
+      subUnderflowSymbolic(const ExpressionImpSymbolic *const e) const;
 
   virtual ExpressionImp *subtract(const ExpressionImp *const e) const {
     return e->subtractFromGround(this);
@@ -1531,6 +1886,38 @@ private:
 
   virtual ExpressionImp *add(const ExpressionImp *const e) const {
     return e->addSymbolic(this);
+  }
+
+  virtual ExpressionImp *addOverflow(const ExpressionImp *const e) const {
+    return e->addOverflowSymbolic(this);
+  }
+
+  virtual ExpressionImp *mulOverflow(const ExpressionImp *const e) const {
+    return e->mulOverflowSymbolic(this);
+  }
+
+  virtual ExpressionImp *subOverflow(const ExpressionImp *const e) const {
+    return e->subOverflowSymbolic(this);
+  }
+
+  virtual ExpressionImp *addUnderflow(const ExpressionImp *const e) const {
+    return e->addOverflowSymbolic(this);
+  }
+
+  virtual ExpressionImp *mulUnderflow(const ExpressionImp *const e) const {
+    return e->mulOverflowSymbolic(this);
+  }
+
+  virtual ExpressionImp *subUnderflow(const ExpressionImp *const e) const {
+    return e->subOverflowSymbolic(this);
+  }
+
+  virtual ExpressionImp *sdivOverflow(const ExpressionImp *const e) const {
+    return e->sdivOverflowSymbolic(this);
+  }
+
+  virtual ExpressionImp *udivOverflow(const ExpressionImp *const e) const {
+    return e->udivOverflowSymbolic(this);
   }
 
   virtual ExpressionImp *subtract(const ExpressionImp *const e) const {

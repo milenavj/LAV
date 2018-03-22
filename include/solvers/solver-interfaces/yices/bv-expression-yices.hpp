@@ -141,6 +141,17 @@ public:
   }
 
   virtual ExpressionImp *
+  addOverflowGround(const ExpressionImpGroundInteger *const e) const {
+      throw "yices::addOverflowGround not supported!";
+  }
+
+  virtual ExpressionImp *
+  addOverflowSymbolic(const ExpressionImpSymbolic *const e) const {
+      throw "yices::addOverflowSymbolic not supported!";
+  }
+
+
+  virtual ExpressionImp *
   subtractGround(const ExpressionImpGroundInteger *const e) const {
     SOLVER_EXPR_TYPE exp = yices_mk_bv_sub(getSolver(), this->_expr,
                                            solverUnsignedExprFromGround(e));

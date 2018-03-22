@@ -4,6 +4,13 @@
 
 #include "solvers/solver-interfaces/z3/z3-instance.hpp"
 
+#include "llvm/Support/CommandLine.h"
+
+llvm::cl::opt<bool>
+    DumpSMT("Z3-dump-SMT", llvm::cl::desc("LAV --- Dump SMT formula to output (default=false)"),
+          llvm::cl::init(false));
+
+
 namespace UrsaMajor {
 void exitf(const char *message);
 Z3_context mk_context();
@@ -31,7 +38,6 @@ Z3Instance::~Z3Instance() {
 
 bool Z3Instance::nextModel(Z3_ast expr) {
   if (_blocking_clause == 0) {
-    //  	  std::cout << "Z3Instance::nextModel::Z3_push(_ctx);" << std::endl;
     Z3_push(_ctx);
     Z3_assert_cnstr(_ctx, expr);
     _pushed++;
@@ -48,11 +54,21 @@ bool Z3Instance::nextModel(Z3_ast expr) {
 }
 std::string display_ast(Z3_context c, Z3_ast v);
 
+void Z3Instance::print(Z3_ast expr){
+    if(!DumpSMT) return;
+    std::cerr << "(assert "
+              << Z3_ast_to_string(_ctx, expr) << ")"<<std::endl;
+}
+
+void Z3Instance::print_sat(){
+    if(!DumpSMT) return;
+    std::cerr << "(check-sat)" << std::endl;
+}
+
 bool Z3Instance::addConstraint(Z3_ast expr) {
-  //  	  std::cout << "Z3Instance::addConstraint::Z3_push(_ctx);" << std::endl;
-  Z3_push(_ctx);
-  //  	  std::cout << display_ast(_ctx, expr) << std::endl;
-  //  	  std::cout << "Z3Instance::Z3_assert_cnstr(_ctx, expr);;" << std::endl;
+    Z3_push(_ctx);
+//  Z3_set_ast_print_mode(_ctx, Z3_PRINT_SMTLIB_FULL);
+  print(expr);
   Z3_assert_cnstr(_ctx, expr);
   // Z3_lbool result = Z3_check(_ctx);
   _pushed++;
@@ -67,11 +83,11 @@ bool Z3Instance::addTempConstraint(Z3_ast expr) {
     Z3_del_model(_ctx, _m);
   _m = 0;
 
-  //  	  std::cout << "Z3Instance::addTempConstraint::Z3_push(_ctx);" <<
-  // std::endl;
   Z3_push(_ctx);
+  print(expr);
   Z3_assert_cnstr(_ctx, expr);
 
+  print_sat();
   // Z3_lbool result = Z3_check(_ctx);
   Z3_lbool result = Z3_check_and_get_model(_ctx, &_m);
 
@@ -183,6 +199,7 @@ Z3_context mk_context() {
   cfg = Z3_mk_config();
   ctx = mk_context_custom(cfg, error_handler);
   Z3_del_config(cfg);
+  Z3_set_ast_print_mode(ctx, Z3_PRINT_SMTLIB_FULL);
   return ctx;
 }
 

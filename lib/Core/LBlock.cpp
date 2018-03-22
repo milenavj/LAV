@@ -62,6 +62,9 @@ extern llvm::cl::opt<bool> PrintHtml;
 extern llvm::cl::opt<std::string> StartFunction;
 extern llvm::cl::opt<std::string> InputFile;
 extern llvm::cl::opt<std::string> OutputFolder;
+extern llvm::cl::opt<bool> CheckOverflow;
+extern llvm::cl::opt<bool> CheckUnderflow;
+
 // Autor: Branislav
 // Dodato zbog paralelizacije
 extern llvm::cl::opt<int> NumberThreads;
@@ -1363,6 +1366,17 @@ void LBlock::AddLocalConditionPointers(caExp &r, LInstruction *fi) {
   if (CheckPointers)
     AddLocalCondition(r, fi, BUFFEROVERFLOW);
 }
+
+void LBlock::AddLocalConditionOverflow(caExp &r, LInstruction *fi, errkind e) {
+  if (CheckOverflow)
+    AddLocalCondition(r, fi, e);
+}
+
+void LBlock::AddLocalConditionUnderflow(caExp &r, LInstruction *fi, errkind e) {
+  if (CheckUnderflow)
+    AddLocalCondition(r, fi, e);
+}
+
 
 bool LBlock::IsUnreachableBlock() const {
   return ((_Preds.size() == 0) && (_NoPreds.size() != 0)) ||
