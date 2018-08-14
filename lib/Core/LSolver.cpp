@@ -639,8 +639,8 @@ UrsaExp LSolver::ExportVariable(caExp &e, stUrsaExp &symbolTable, cStr &s) {
       }
     }
   }
-
   std::string name = s + e.GetName();
+
   if (symbolTable.contains(name)) {
     return symbolTable.get(name);
   } else {
@@ -981,9 +981,8 @@ UrsaExp LSolver::ExportExpressionBV(caExp &e, stUrsaExp &symbolTable, ERRKIND er
       int n = e.GetName()[found] - '0';
       for (int i = 0; i < n; i++)
         args.push_back(UrsaMajor::TypedId(
-            UrsaMajor::Type(BITVECTOR, e[0].getIntWidth()), ItoS(i)));
-
-      UrsaMajor::Function f(UrsaMajor::Type(BITVECTOR, e[0].getIntWidth()),
+            UrsaMajor::Type(BITVECTOR, e.getIntWidth()), ItoS(i)));
+      UrsaMajor::Function f(UrsaMajor::Type(BITVECTOR, e.getIntWidth()),
                             e.GetName(), args, 0);
       UrsaExp uf = UrsaExp::uninterpretedFunction(f, operands);
       return uf;
@@ -994,8 +993,9 @@ UrsaExp LSolver::ExportExpressionBV(caExp &e, stUrsaExp &symbolTable, ERRKIND er
   if (e.IsFunction() && (solver != BoolectorBV)) {
     std::vector<UrsaMajor::TypedId> args;
     for (unsigned i = 0; i < operands.size(); i++) {
+      //prilikom eksporta funkcija ovde moze da bude problem sa tipovima!!!
       args.push_back(UrsaMajor::TypedId(
-          UrsaMajor::Type(BITVECTOR, e[i].getIntWidth()), ItoS(i)));
+          UrsaMajor::Type(BITVECTOR, e.getIntWidth()), ItoS(i)));
     }
 
     UrsaMajor::Function f(UrsaMajor::Type(BITVECTOR, e.getIntWidth()),
@@ -1988,7 +1988,6 @@ bool LSolver::FinalAddIntoSolver() {
   AddConstraint(exported_cond);
   //  	  std::cout << "AddConstraint(exported_cond); end" << std::endl;
   //  IncrementalTime.stopTimer();
-
   return true; //uspelo dodavanje
 }
 

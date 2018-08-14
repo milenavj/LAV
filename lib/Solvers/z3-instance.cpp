@@ -10,7 +10,6 @@ llvm::cl::opt<bool>
     DumpSMT("Z3-dump-SMT", llvm::cl::desc("LAV --- Dump SMT formula to output (default=false)"),
           llvm::cl::init(false));
 
-
 namespace UrsaMajor {
 void exitf(const char *message);
 Z3_context mk_context();
@@ -68,7 +67,8 @@ void Z3Instance::print_sat(){
 bool Z3Instance::addConstraint(Z3_ast expr) {
     Z3_push(_ctx);
 //  Z3_set_ast_print_mode(_ctx, Z3_PRINT_SMTLIB_FULL);
-  print(expr);
+    if(DumpSMT)
+          print(expr);
   Z3_assert_cnstr(_ctx, expr);
   // Z3_lbool result = Z3_check(_ctx);
   _pushed++;

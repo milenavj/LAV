@@ -11,7 +11,7 @@ namespace UrsaMajor {
 thread_local std::map<std::string, Z3_func_decl>
     BVExpressionImpZ3::_uf_registry;
 
-void BVExpressionImpZ3::print(Z3_ast  exp) const {
+void BVExpressionImpZ3::print(Z3_ast exp) const {
     if(DumpSMT)
         std::cerr << Z3_ast_to_string (getSolver(), exp) << std::endl;
 }
@@ -33,7 +33,6 @@ void BVExpressionImpZ3::print(Z3_ast expr, Z3_sort sort) const {
               << ")"
               << std::endl;
 }
-
 
 ExpressionImp *
 BVExpressionImpZ3::addGround(const ExpressionImpGroundInteger *const e) const {

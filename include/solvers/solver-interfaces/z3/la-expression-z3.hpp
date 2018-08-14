@@ -39,7 +39,9 @@ public:
     return Z3Instance::instance().addTempConstraint(_expr);
   }
 
-  bool addConstraint() { return Z3Instance::instance().addConstraint(_expr); }
+  bool addConstraint() {
+      return Z3Instance::instance().addConstraint(_expr);
+  }
 
   void reset() {
     std::cout << "Reseting context..." << std::endl;
@@ -57,6 +59,7 @@ public:
     Z3_sort sort = Z3_mk_int_sort(getSolver());
     Z3_symbol s = Z3_mk_string_symbol(getSolver(), name.c_str());
     SOLVER_EXPR_TYPE exp = Z3_mk_const(getSolver(), s, sort);
+    print(exp, sort);
     return new LAExpressionImpZ3(exp);
   }
 
@@ -66,6 +69,7 @@ public:
     Z3_sort sort = Z3_mk_int_sort(getSolver());
     Z3_symbol s = Z3_mk_string_symbol(getSolver(), name.c_str());
     SOLVER_EXPR_TYPE exp = Z3_mk_const(getSolver(), s, sort);
+    print(exp, sort);
     return new LAExpressionImpZ3(exp);
   }
 
@@ -73,6 +77,7 @@ public:
     Z3_sort ty = Z3_mk_bool_sort(getSolver());
     Z3_symbol s = Z3_mk_string_symbol(getSolver(), name.c_str());
     SOLVER_EXPR_TYPE exp = Z3_mk_const(getSolver(), s, ty);
+    print(exp,Z3_mk_bool_sort(getSolver()));
     return new LAExpressionImpZ3(exp);
   }
 
@@ -185,6 +190,9 @@ public:
     }
 
     SOLVER_EXPR_TYPE exp = Z3_mk_app(getSolver(), f, n, exps);
+
+    print(f);
+
     delete[] exps;
     return new LAExpressionImpZ3(exp);
   }
@@ -538,6 +546,8 @@ public:
     Z3_sort a = Z3_mk_array_sort(getSolver(), z3domain, z3range);
     Z3_symbol s = Z3_mk_string_symbol(getSolver(), name.c_str());
     SOLVER_EXPR_TYPE exp = Z3_mk_const(getSolver(), s, a);
+    print(exp,a);
+
     return new LAExpressionImpZ3(exp); //, range, Z3_ARRAY);
   }
 
@@ -744,6 +754,12 @@ public:
   }
 
 private:
+
+  void print(Z3_ast exp) const;
+  void print(Z3_func_decl exp) const;
+  void print(Z3_sort exp) const;
+  void print(Z3_ast exp, Z3_sort sort) const;
+
   static SOLVER_TYPE getSolver() { return Z3Instance::instance().getSolver(); }
 
   SOLVER_EXPR_TYPE

@@ -6,6 +6,8 @@
 #include "../expression.hpp"
 #include "z3-instance.hpp"
 
+extern bool FinalAdd;
+
 namespace UrsaMajor {
 class BVExpressionImpZ3 : public ExpressionImpSymbolic {
 public:
@@ -159,11 +161,12 @@ public:
           getSolver(), Z3_mk_string_symbol(getSolver(), fun.getName().c_str()),
           n, domain_types, result_type);
       _uf_registry[fun.getName()] = f;
-      print(f);
       delete[] domain_types;
     } else {
       f = _uf_registry[fun.getName()];
     }
+
+    print(f);
 
     SOLVER_EXPR_TYPE *exps = new SOLVER_EXPR_TYPE[n + 1];
 
