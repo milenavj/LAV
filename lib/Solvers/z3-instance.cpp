@@ -47,7 +47,9 @@ bool Z3Instance::nextModel(Z3_ast expr) {
   if (_m)
     Z3_del_model(_ctx, _m);
   _m = 0;
-  Z3_lbool result = Z3_check_and_get_model(_ctx, &_m);
+  Z3_lbool result = Z3_L_TRUE;
+  if(!DumpSMT)
+    result = Z3_check_and_get_model(_ctx, &_m);
 
   return result == Z3_L_TRUE;
 }
@@ -89,7 +91,9 @@ bool Z3Instance::addTempConstraint(Z3_ast expr) {
 
   print_sat();
   // Z3_lbool result = Z3_check(_ctx);
-  Z3_lbool result = Z3_check_and_get_model(_ctx, &_m);
+  Z3_lbool result = Z3_L_TRUE;
+  if(!DumpSMT)
+    result = Z3_check_and_get_model(_ctx, &_m);
 
   // if(result == Z3_L_TRUE)
   //    printf("sat\n%s\n", Z3_model_to_string(_ctx, _m));
