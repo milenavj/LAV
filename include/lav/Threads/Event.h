@@ -44,7 +44,7 @@ public:
   // Citamo vrednost koja je signalizirana
   Sigval Value(bool block = false);
   // Cekamo dok se ne desi neki signal
-  thread_local static std::vector<std::size_t>
+  static std::vector<std::size_t>
       WaitForEvents(std::vector<std::shared_ptr<Event> > &events,
                     std::chrono::milliseconds waitMs = {
   });
