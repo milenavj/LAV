@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
 
   std::cout << "Finished " << std::endl << std::endl;
 
-  return 0;
+  quick_exit(0);
 }
 
 static void CheckTimeOut(int argc, char **argv) {
@@ -149,7 +149,7 @@ static void CheckTimeOut(int argc, char **argv) {
     std::string echo = (std::string) "echo " + s;
     int sys = system(echo.c_str());
     sys = system(s.c_str());
-    exit(sys);
+    quick_exit(sys);
   }
 
 }
@@ -398,7 +398,7 @@ int solvererror() {
             << std::endl;
   std::cerr << "---------------------------------------------------------------"
                "-----\n\n" << std::endl;
-  exit(EXIT_FAILURE);
+  quick_exit(EXIT_FAILURE);
 }
 
 bool solverDefined() {

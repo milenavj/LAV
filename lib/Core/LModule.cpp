@@ -35,6 +35,7 @@ extern llvm::cl::opt<std::string> OutputFolder;
 extern llvm::cl::opt<bool> PrintHtml;
 // Autor: Branislava
 // Dodato zbog paralelizacije
+extern llvm::cl::opt<bool> EnableParallelFunctions;
 extern llvm::cl::opt<bool> EnableParallel;
 extern llvm::cl::opt<int> NumberThreads;
 
@@ -91,7 +92,7 @@ void LModule::CalculateDescriptions() {
 
 void LModule::Run() {
   //Autor: Branislava
-  if (EnableParallel) {
+  if (EnableParallelFunctions) {
     // Pravimo strukturu rezultata
     std::map<std::string, FutureResult> res;
     for (unsigned i = 0; i < _Functions.size(); i++)
@@ -136,7 +137,7 @@ void LModule::Run() {
 
     t.Work();
 
-  } else {
+  } else { // sequential approach
     int b = 0;
     for (unsigned i = 0; i < _Functions.size(); i++)
       if (_Functions[i]->GetFunctionName() == StartFunction) {
@@ -291,7 +292,7 @@ void LModule::AddGlobalVariables() {
   }
 
 }
-static argo::SMTFormater SMTF;
+thread_local static argo::SMTFormater SMTF;
 
 void LModule::GetAddresses(std::vector<argo::Expression> &eqs) const {
   //FIXME globalni malloc nije uzet u obzir!!!!
@@ -300,7 +301,7 @@ void LModule::GetAddresses(std::vector<argo::Expression> &eqs) const {
   for (; it != ie; ++it) {
     //FIXME zbog free dodati proveru da li je second nula
     argo::Expression e;
-    if (isAddress(it->first))
+    if (isAddress(it->first))        
       e = argo::Expression::Equality(ExpVar(it->first, fpointer_type, false),
                                      ExpNum1(it->second, fpointer_type));
     /*    else if(isMalloc(it->first))
@@ -357,7 +358,6 @@ void LModule::init() {
         llvm::Type *t = stype->getElementType();
 
         argo::Expression e = ExpGlobalAddress(GetOperandName(gv));
-
         if (llvm::dyn_cast<llvm::PointerType>(t)) {
           //Ako je alociran pointer njegovi left i right se postavljaju na nulu
           _GlobalConstraints.AddConstraint(e, 0, 0);

@@ -25,11 +25,7 @@ public:
 
   std::string GetName(SORT sort) { return Instance()->names().GetName(); }
 
-  static SortRegistry *Instance() {
-    if (!_instance)
-      _instance = new SortRegistry();
-    return _instance;
-  }
+  static SortRegistry *Instance();
 
   void Register(const std::string &name, SORT sort_1) {
     std::vector<SORT> sorts;

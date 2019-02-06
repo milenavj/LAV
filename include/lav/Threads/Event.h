@@ -17,7 +17,7 @@ public:
   //using Pointer = std::shared_ptr<Event>;
   using Sigval = uint64_t;
 
-  static constexpr int InvalidEvent = -1;
+  thread_local static constexpr int InvalidEvent = -1;
 
 private:
   int m_fd;
@@ -44,11 +44,10 @@ public:
   // Citamo vrednost koja je signalizirana
   Sigval Value(bool block = false);
   // Cekamo dok se ne desi neki signal
-  static std::vector<std::size_t>
+  thread_local static std::vector<std::size_t>
       WaitForEvents(std::vector<std::shared_ptr<Event> > &events,
                     std::chrono::milliseconds waitMs = {
-  },
-                    bool block = true);
+  });
 
 };
 }

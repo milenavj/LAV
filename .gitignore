@@ -15,3 +15,9 @@ Makefile.common
 Makefile.config
 include/config.h
 Debug+Asserts/
+*qt.config
+*qt.creator
+*qt.creator.user
+*qt.files
+*qt.includes
+

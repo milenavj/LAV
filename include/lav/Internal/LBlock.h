@@ -118,6 +118,9 @@ public:
   aExp AddAddresses(const aExp &e);
   void UpdateAndSetAddresses();
   int stopWhenFound(const LInstruction *fi, STATUS s, bool count) const;
+  void SetConditionsCalcualted() {_ConditionsCalculated = true;}
+  aExp GetPredsConditions() const;
+  aExp BlockEntry() const;
 
 private:
 
@@ -144,9 +147,7 @@ private:
 
   aExp GetExitConditions() const;
   aExp GetEntryConditions() const;
-  aExp GetPredsConditions() const;
   void AddNewPreds(vpBlock &preds, LBlock *p) const;
-  aExp BlockEntry() const;
   void UpdateAddresses();
   aExp Addresses() const { return _Addresses; }
 
@@ -162,7 +163,7 @@ private:
   LBlock(const LBlock &fb);
   LBlock &operator=(const LBlock &fb);
 
-  static unsigned BlockNumber;
+  thread_local static unsigned BlockNumber;
 
   unsigned _Id;
   llvm::BasicBlock *_BBlock;

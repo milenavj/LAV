@@ -109,6 +109,7 @@ private:
               UrsaExp &impls, ERRKIND erKind);
   bool ExportOU(caExp &a, caExp& b, UrsaExp &ue, ERRKIND erKind);
   bool ExportOU(caExp &b, UrsaExp &exported_b, ERRKIND erKind);
+  static bool ExportOU(caExp &b, UrsaExp &exported_b, ERRKIND erKind, stUrsaExp &symbolTable);
   bool Export(caExp &a, caExp& b, UrsaExp &ue, UrsaExp &impls);
 
 private:

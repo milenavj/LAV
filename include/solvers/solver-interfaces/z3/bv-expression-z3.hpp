@@ -165,7 +165,6 @@ public:
     } else {
       f = _uf_registry[fun.getName()];
     }
-
     print(f);
 
     SOLVER_EXPR_TYPE *exps = new SOLVER_EXPR_TYPE[n + 1];
@@ -174,20 +173,6 @@ public:
     int k;
     for (i = args.begin(), k = 0; i != args.end(); i++, k++) {
       exps[k] = solverExprFromUnknown(*i);
-      /*        const ExpressionImpGroundInteger* u =
-                llvm::dyn_cast<const ExpressionImpGroundInteger*>(*i);
-              const ExpressionImpGroundBoolean* b =
-                llvm::dyn_cast<const ExpressionImpGroundBoolean*>(*i);
-              const BVExpressionImpZ3* y =
-                llvm::dyn_cast<const BVExpressionImpZ3*>(*i);
-              if (u != 0) {
-                exps[k] = solverUnsignedExprFromGround(u);
-              } else if (b != 0) {
-                exps[k] = solverBooleanExprFromGround(b);
-              } else {
-                assert(y != 0);
-                exps[k] = y->_expr;
-              }*/
     }
 
     SOLVER_EXPR_TYPE exp = Z3_mk_app(getSolver(), f, n, exps);

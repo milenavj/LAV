@@ -3,6 +3,8 @@
 #ifdef Z3
 
 #include "solvers/solver-interfaces/z3/z3-instance.hpp"
+#include "solvers/solver-interfaces/z3/bv-expression-z3.hpp"
+#include "solvers/solver-interfaces/z3/la-expression-z3.hpp"
 
 #include "llvm/Support/CommandLine.h"
 
@@ -104,11 +106,12 @@ bool Z3Instance::addTempConstraint(Z3_ast expr) {
 
 //FIXME mozda treba vise pop-ova
 void Z3Instance::reset() {
-  //  	  std::cout << "Z3Instance::reset()" << std::endl;
   for (; _pushed > 0; _pushed--)
     Z3_pop(_ctx, 1);
   _m = 0;
   _blocking_clause = 0;
+  LAExpressionImpZ3::_uf_registry.clear();
+  BVExpressionImpZ3::_uf_registry.clear();
 }
 
 /**
@@ -185,9 +188,12 @@ void exitf(const char *message) {
 }
 
 void error_handler(Z3_context c, Z3_error_code e) {
-  printf("Error code: %d\n", e);
+  printf("%lu Error code: %d\n", pthread_self(), e);
+  printf("%lu %s\n", pthread_self(), Z3_get_error_msg(e));
+  printf("pthread: %lu\n", pthread_self());
   exitf("incorrect use of Z3");
 }
+
 
 Z3_context mk_context_custom(Z3_config cfg, Z3_error_handler err) {
   Z3_context ctx;

@@ -8,6 +8,8 @@
 extern llvm::cl::opt<bool> DumpSMT;
 
 namespace UrsaMajor {
+thread_local std::map<std::string, Z3_func_decl>
+    LAExpressionImpZ3::_uf_registry;
 
 void LAExpressionImpZ3::print(Z3_ast exp) const {
     if(DumpSMT)

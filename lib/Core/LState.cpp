@@ -51,13 +51,15 @@ extern llvm::cl::opt<bool> MemoryFlag;
 extern llvm::cl::opt<bool> CheckAssert;
 extern llvm::cl::opt<int> NumberThreads;
 extern llvm::cl::opt<bool> EnableParallel;
+extern llvm::cl::opt<bool> EnableParallelBlocks;
+extern llvm::cl::opt<bool> EnableParallelFunctions;
 extern llvm::cl::opt<bool> CheckPointers;
 
 namespace lav {
 
 //llvm::Timer Branching("Branching time --- call solver light");
 
-static argo::SMTFormater SMTF;
+thread_local static argo::SMTFormater SMTF;
 pthread_mutex_t var = PTHREAD_MUTEX_INITIALIZER;
 
 void LState::WriteIntoStore(llvm::Instruction *i, const aExp &e) {
@@ -424,7 +426,7 @@ void LState::ProcessICmp(LInstruction *fi) {
   default: {
     assert("unexpected command!");
     std::cerr << "unexpected command!" << std::endl;
-    exit(1);
+    quick_exit(1);
   }
   }
 }
@@ -483,7 +485,7 @@ void LState::ProcessFCmp(LInstruction *fi) {
   default: {
     assert("unexpected command!");
     std::cerr << "unexpected command!" << std::endl;
-    exit(1);
+    quick_exit(1);
   }
   }
 
@@ -536,6 +538,32 @@ void LState::ProcessAllocation(LInstruction *fi) {
       //ovo je na primer za alokaciju int-a
       if (_Store.IsDefined(GetOperandName(ai)))
         return;
+
+      // VLA
+      if(ai->isArrayAllocation()) {
+          aExp e = ExpAddress(GetParentBlock()->GetFunctionName(), GetOperandName(i));
+
+          WriteIntoStore(i, e);
+          aExp size = aExp::Numeral("4", fint_type);
+
+          if(ai->getAllocatedType()->getScalarSizeInBits() == 64)
+              size = aExp::Numeral("8", fint_type);
+          aExp right = aExp::mul(GetValue(argument(i, 0)), size);
+
+          aExp eq1 = aExp::Equality(ExpLeft(e), ExpNumZeroInt);
+          aExp eq2 = aExp::Equality(ExpRight(e), right);
+
+          //FIXME: ogranicenje indukovano nondet primerima iz svbenc-a
+          aExp num = aExp::Numeral("1000", fint_type);
+          aExp eq3 = aExp::sle(GetValue(argument(i, 0)), num);
+
+          _Constraints.Add(eq1);
+          _Constraints.Add(eq2);
+          _Constraints.Add(eq3);
+
+          return;
+      }
+
       //FIXME ovo treba i za pointere
       //ako se negde uzima referenca od ovog int-a onda se ne ubacuje u store
       if (GetParentBlock()->GetParentFunction()->GetReferences().find(
@@ -543,6 +571,8 @@ void LState::ProcessAllocation(LInstruction *fi) {
           GetParentBlock()->GetParentFunction()->GetReferences().end()) {
         return;
       }
+
+
       argo::IntType iType = GetIntType(ai->getAllocatedType());
       //      IntType iType = GetIntType(ai->getType());
 
@@ -1074,12 +1104,27 @@ void LState::InlineFunction(LInstruction *fi, llvm::Function *f,
   //vazno jer su mu sve
   //instrukcije i onako unreachable
 
+  if ((f->getName() == "__VERIFIER_assert")) {
+      if (CheckAssert) {
+//        std::cout << "__VERIFIER_assert __VERIFIER_assert __VERIFIER_assert" << std::endl;
+        aExp r = GetValue(argument(i, 0));
+        if (r.isZext()) {
+          GetParentBlock()->AddLocalCondition(r[0], fi, ASSERT);
+        } else {
+          const llvm::Type *t = (fi->Instruction())->getType();
+          aExp e = aExp::Disequality(r, ExpNumZero(GetIntType(t)));
+          GetParentBlock()->AddLocalCondition(e, fi, ASSERT);
+        }
+      }
+      return;
+  }
+
   //pronadji LFunction koji odgovara ovoj funkciji
   LFunction *ff = GetParentBlock()->GetParentModule()->GetLFunction(f);
 
   // Autor: Branislava
   // Dodato zbog paralelizacije funkcija
-  if (EnableParallel) {
+  if (EnableParallelFunctions) {
     std::cout << "Funkcija: " << ff->GetFunctionName()
               << " - Cekamo na vrednost shared future!" << std::endl;
 
@@ -1136,13 +1181,14 @@ void LState::InlineFunction(LInstruction *fi, llvm::Function *f,
 }
 
 void LState::ProcessFunctionCall(LInstruction *fi) {
-  //fixme sta ako je invoke
   llvm::Instruction *i = fi->Instruction();
 
   unsigned numArgs;
   llvm::Function *f = GetFunction(i, numArgs);
   if (!f) //FIXME ovo je vazno i treba ga srediti
-      {
+  {
+    aExp e = ExpVar(GetNextVariable(), GetIntType(i->getType()), false);
+    WriteIntoStore(i, e);
     std::cout << " funkcija nije deklarisana!!! " << std::endl;
     llvm::outs() << *i << '\n';
     std::cout << " !f ????: " << std::endl;
@@ -1357,6 +1403,7 @@ void LState::ProcessLibraryCall(LInstruction *fi, llvm::Function *f,
   } else if ((f->getName() == "ASSERT") || (f->getName() == "assert") ||
              (f->getName() == "ASSERT_") || (f->getName() == "assert_") ||
              (f->getName() == "ASSERT_LAV") || (f->getName() == "assert_lav") ||
+             (f->getName() == "__VERIFIER_assert") ||
              (f->getName().find("assert_lav") != std::string::npos)) {
     if (CheckAssert) {
       aExp r = GetValue(argument(i, 0));
@@ -1371,6 +1418,7 @@ void LState::ProcessLibraryCall(LInstruction *fi, llvm::Function *f,
   } else if ((f->getName() == "ASSUME") || (f->getName() == "assume") ||
              (f->getName() == "ASSUME_") || (f->getName() == "assume_") ||
              (f->getName() == "ASSUME_LAV") || (f->getName() == "assume_lav") ||
+             (f->getName() == "__VERIFIER_assume") ||
              (f->getName().find("assume_lav") != std::string::npos)) {
     aExp cond = GetValue(argument(i, 0));
     if (cond.isZext())
@@ -1396,8 +1444,10 @@ void LState::ProcessLibraryCall(LInstruction *fi, llvm::Function *f,
                               GetIntType(i->getOperand(0)->getType()));
       WriteIntoStore(i, e);
     }
-  }
-  else if ((f->getName().find("sqc", 0)) != (std::string::npos)) {
+  } else if ((f->getName() == "__VERIFIER_nondet_int")) {
+      aExp e = ExpVar(GetNameOfNextVariable(), fint_type, false);
+      WriteIntoStore(i, e);
+  } else if ((f->getName().find("sqc", 0)) != (std::string::npos)) {
       std::size_t found = f->getName().find_first_of("987654321");
       if (found != std::string::npos) {
         std::vector<aExp> operands;

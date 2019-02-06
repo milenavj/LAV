@@ -118,7 +118,7 @@ Event::Sigval Event::Value(bool block) {
 
 std::vector<size_t>
 Event::WaitForEvents(std::vector<std::shared_ptr<Event> > &events,
-                     std::chrono::milliseconds waitMs, bool blosk) {
+                     std::chrono::milliseconds waitMs) {
 	using poll_t = struct pollfd;
 	std::vector<poll_t> pevents;
 	pevents.reserve(events.size());
@@ -132,8 +132,6 @@ Event::WaitForEvents(std::vector<std::shared_ptr<Event> > &events,
 				p.revents = 0;
 				return p;
   });
-
-
 
 	std::vector<size_t> readyEvents;
 	int iWaitMs = static_cast<int>(waitMs.count());

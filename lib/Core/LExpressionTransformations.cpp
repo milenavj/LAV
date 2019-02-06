@@ -15,7 +15,7 @@
 #include "lav/Internal/LCommon.h"
 
 namespace lav {
-static argo::SMTFormater SMTF;
+thread_local static argo::SMTFormater SMTF;
 
 argo::Expression SetWidth(const argo::Expression &e, unsigned width_old,
                           unsigned width_new) {
@@ -35,32 +35,34 @@ argo::Expression SetWidth(const argo::Expression &e, unsigned width_old,
 }
 
 argo::Expression ToInt(const argo::Expression &e, unsigned width) {
-  static unsigned int width_int = GetBitWidth(fint_type);
+  thread_local static unsigned int width_int = GetBitWidth(fint_type);
   return SetWidth(e, width, width_int);
 }
 
 argo::Expression ToPointer(const argo::Expression &e, unsigned width) {
-  static unsigned int width_pointer = GetBitWidth(fpointer_type);
+  thread_local static unsigned int width_pointer = GetBitWidth(fpointer_type);
   return SetWidth(e, width, width_pointer);
 }
 
 argo::Expression PtrToInt(const argo::Expression &e) {
-  static unsigned int width_int = GetBitWidth(fint_type);
-  static unsigned int width_pointer = GetBitWidth(fpointer_type);
+  thread_local static unsigned int width_int = GetBitWidth(fint_type);
+  thread_local static unsigned int width_pointer = GetBitWidth(fpointer_type);
 
   return SetWidth(e, width_pointer, width_int);
 }
 
 argo::Expression IntToPtr(const argo::Expression &e) {
-  static unsigned int width_int = GetBitWidth(fint_type);
-  static unsigned int width_pointer = GetBitWidth(fpointer_type);
+  thread_local static unsigned int width_int = GetBitWidth(fint_type);
+  thread_local static unsigned int width_pointer = GetBitWidth(fpointer_type);
   return SetWidth(e, width_int, width_pointer);
 }
 
 argo::Expression
 MakeANDFromExpressions(const std::vector<argo::Expression> &exps) {
-  if (exps.size() > 1)
+
+  if (exps.size() > 1) {
     return argo::Expression::AND(exps);
+  }
   else if (exps.size() == 1)
     return exps[0];
   else

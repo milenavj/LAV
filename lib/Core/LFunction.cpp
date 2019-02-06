@@ -33,7 +33,26 @@
 
 #include "expression/output/SMTFormater.h"
 
+#include <ostream>
+#include <iostream>
+#include <sstream>
+#include <assert.h>
+#include <fstream>
+#include <tr1/memory>
+#include <map>
+#include <vector>
+
+extern llvm::cl::opt<int> NumberThreads;
+extern llvm::cl::opt<bool> EnableParallel;
+extern llvm::cl::opt<bool> EnableParallelBlock;
+
+#include "lav/Threads/FixedQueue.h"
+#include "lav/Threads/ThreadPool.h"
+
+using namespace Threads;
+
 extern llvm::cl::opt<bool> FindFirstFlawed;
+extern llvm::cl::opt<bool> EnableParallel;
 
 namespace {
 llvm::cl::opt<bool> CalculateAll(
@@ -50,7 +69,7 @@ llvm::cl::opt<bool> CalculateBlock(
 }
 
 namespace lav {
-static argo::SMTFormater SMTF;
+thread_local static argo::SMTFormater SMTF;
 
 LFunction::LFunction(llvm::Function *f, LModule *p)
     : _Function(f), _Parent(p), _PostconditionIsSet(false),
@@ -155,6 +174,8 @@ bool LFunction::AddAllocationFixedAddress(llvm::AllocaInst *ai,
 void LFunction::AddReferenceConstraint(llvm::AllocaInst *ai) {
   //  if(_References.find(GetOperandName(ai)) != _References.end())
   //  {
+
+  if(ai->isArrayAllocation()) return;
   llvm::Type *t = ai->getAllocatedType();
 
   //FIXME ovo treba i za pointere
@@ -167,6 +188,7 @@ void LFunction::AddReferenceConstraint(llvm::AllocaInst *ai) {
   unsigned size = GetParentModule()->GetTargetData()->getTypeAllocSize(t);
   argo::Expression a = ExpAddress(GetFunctionName(), GetOperandName(ai));
   FunctionConstraints().AddConstraint(a, 0, size);
+
   //  }
 }
 
@@ -570,7 +592,7 @@ void LFunction::CalculateAllConditions() {
     for (unsigned i = 0; i < conds.size(); i++)
       if (conds[i]->Instruction()->GetParentBlock()->stopWhenFound(
               conds[i]->Instruction(), conds[i]->Status(), true) == -1)
-        exit(1);
+        quick_exit(1);
 
   _ConditionsCalculated = true;
   LSolver::instance().reset();
@@ -591,11 +613,67 @@ void LFunction::CalculateConditions() {
   if (CalculateAll)
     CalculateAllConditions();
   else if (CalculateBlock) {
-    LSolver::instance().AddIntoSolver(
-        GetParentModule()->GetGlobalConstraints());
-    LSolver::instance().AddIntoSolver(GetFunctionConstraints());
-    for (unsigned i = 0; i < _Blocks.size(); i++)
-      _Blocks[i]->CalculateConditionsBlock();
+      if(EnableParallel) {
+          // napravi funkciju koju ce da izvrsava svaka nit
+          auto maxf =
+              [&](LBlock * block) {
+//              std::cout
+//                  << "\n ----------------- Start solver, thread id: " << pthread_self()
+//                  << " ------------------ \n" << std::endl;
+              LSolver::instance().reset();
+              LSolver::instance().setFactory();
+              LSolver::instance().AddIntoSolver(block->GetParentModule()->GetGlobalConstraints());
+              LSolver::instance().AddIntoSolver(block->GetParentFunction()->GetFunctionConstraints());
+              LSolver::instance().AddIntoSolver(block->GetPredsConditions());
+              std::vector<LLocalCondition *> conds;
+              block->GetAllConditions(conds);
+              aExp F = block->AddAddresses(block->BlockEntry());
+              STATUS s = LSolver::instance().callSolverBlock(F, conds);
+//              std::cout
+//                  << "\n ----------------- End solver, thread id: " << pthread_self()
+//                  << "------------------ \n" << std::endl;
+              if (s != SAFE && FindFirstFlawed) {
+                for (unsigned i = 0; i < conds.size(); i++){
+                  if ((block->stopWhenFound(conds[i]->Instruction(), conds[i]->Status(), true)) == -1) {
+                        std::cout << "quick_exit " << std::endl;
+                      quick_exit(1);
+                  }
+                }
+              }
+              block->SetConditionsCalcualted();
+              LSolver::instance().reset();
+              return 0;
+          }
+          ;
+          std::vector<std::function<int()> > functions;
+
+          // BindTasksForThreads;
+          for (unsigned i = 0; i < _Blocks.size(); i++) {
+            if (_Blocks[i]->GetLocalConditions().size() == 0)
+              continue;
+            // dodaj funkcije koje ce niti da izvrsavaju u red
+            functions.push_back(std::bind(maxf, _Blocks[i]));
+          }
+
+          if (functions.size() != 0) {
+            ThreadPool t;
+            // napravi thread pool i pokreni ga
+            if (NumberThreads)
+              t.Init(std::move(functions), NumberThreads);
+            else
+              t.Init(std::move(functions),
+                     (std::thread::hardware_concurrency() < functions.size())
+                         ? std::thread::hardware_concurrency()
+                         : functions.size());
+            t.Work();
+          }
+     }
+      else {
+            LSolver::instance().AddIntoSolver(GetParentModule()->GetGlobalConstraints());
+            LSolver::instance().AddIntoSolver(GetFunctionConstraints());
+            for (unsigned i = 0; i < _Blocks.size(); i++)
+                _Blocks[i]->CalculateConditionsBlock();
+      }
   } else if (_Blocks.size() > 7) {
     LSolver::instance().AddIntoSolver(
         GetParentModule()->GetGlobalConstraints());
@@ -638,7 +716,7 @@ void LFunction::Run() {
 void LFunction::CalculateDescriptions() {
   //test primeri prolaze i bez ovog reset, mozda je visak
   LSolver::instance().reset();
-  std::vector<unsigned> desc;
+//  std::vector<unsigned> desc;
   if (_DescriptionsCalculated)
     return;
   for (unsigned i = 0; i < _Blocks.size(); i++) {

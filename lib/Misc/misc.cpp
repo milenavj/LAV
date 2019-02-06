@@ -121,7 +121,7 @@ void perror(const std::string &s) { std::cerr << "Error: " << s << std::endl; }
 
 void exit_error(const std::string &s) {
   perror(s);
-  exit(EXIT_FAILURE);
+  quick_exit(EXIT_FAILURE);
 }
 
 void perror(const std::string &s, const std::string &fileName) {
@@ -135,7 +135,7 @@ void perror(const std::string &s, const std::string &fileName) {
 
 void exit_error(const std::string &s, const std::string &fileName) {
   perror(s, fileName);
-  exit(EXIT_FAILURE);
+  quick_exit(EXIT_FAILURE);
 }
 
 int MakeDirectory(std::string s) {

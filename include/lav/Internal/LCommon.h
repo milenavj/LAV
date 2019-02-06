@@ -28,6 +28,7 @@ namespace lav {
 #define GLOBAL_MEMORY "G_M"
 #define ADDRESS "AD_"
 #define MALLOC "ML_"
+#define VLA "VLA_"
 #define CONTEXT "_CX_"
 #define GLOBAL "GL"
 #define ARR "AR"

@@ -17,9 +17,13 @@ void Names::AddName(const std::string &name) {
   }
 }
 
+pthread_mutex_t vargetname= PTHREAD_MUTEX_INITIALIZER;
+
 std::string Names::GetName() {
   std::ostringstream s_name;
+  pthread_mutex_lock(&vargetname);
   s_name << _prefix << _max_num++;
+  pthread_mutex_unlock(&vargetname);
 
   return s_name.str();
 }

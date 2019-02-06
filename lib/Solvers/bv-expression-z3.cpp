@@ -134,7 +134,7 @@ ExpressionImp *
 #define ENSURE(_x_)                                         \
     if (!(_x_)) {                                           \
         std::cerr << "Failed to verify: " << #_x_ << "\n";  \
-        exit(-1);                                           \
+        quick_exit(-1);                                           \
     }
 
 #define TEST(ctx, TEST_NAME, TEST_OUTCOME, NEG_TEST_OUTCOME) \

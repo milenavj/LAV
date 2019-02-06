@@ -27,7 +27,7 @@
 using namespace llvm;
 
 namespace lav {
-static argo::SMTFormater SMTF;
+thread_local static argo::SMTFormater SMTF;
 
 argo::Expression EvaluateArithmetic(const argo::Expression &e,
                                     const argo::Expression &e1,

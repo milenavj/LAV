@@ -219,7 +219,6 @@ Expression Expression::AND(const Expression &arg1, const Expression &arg2) {
   operands.push_back(arg1);
   operands.push_back(arg2);
   return AND(operands);
-
 }
 
 Expression Expression::AND(const Expression &arg1) {
@@ -228,14 +227,19 @@ Expression Expression::AND(const Expression &arg1) {
   return AND(operands);
 }
 
+pthread_mutex_t varandsimp = PTHREAD_MUTEX_INITIALIZER;
+
 Expression Expression::AND(const std::vector<Expression> &operands) {
 #ifndef NDEBUG
   unsigned int iarg;
   for (iarg = 0; iarg < operands.size(); iarg++)
     assert(operands[iarg].IsFormula());
 #endif
-
-  return Expression(ANDNode::Simplify(operands));
+  pthread_mutex_lock(&varandsimp);
+  Expression e(ANDNode::Simplify(operands));
+  pthread_mutex_unlock(&varandsimp);
+  return e;
+//  return Expression(ANDNode::Simplify(operands));
 }
 
 Expression Expression::OR(const Expression &arg1, const Expression &arg2) {
@@ -257,7 +261,11 @@ Expression Expression::OR(const std::vector<Expression> &operands) {
   for (iarg = 0; iarg < operands.size(); iarg++)
     assert(operands[iarg].IsFormula());
 #endif
-  return Expression(ORNode::Simplify(operands));
+  pthread_mutex_lock(&varandsimp);
+  Expression e(ORNode::Simplify(operands));
+  pthread_mutex_unlock(&varandsimp);
+  return e;
+//  return Expression(ORNode::Simplify(operands));
 }
 
 Expression Expression::IMPL(const Expression &pre, const Expression &ant) {

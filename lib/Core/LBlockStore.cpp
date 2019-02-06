@@ -20,7 +20,7 @@
 #include "expression/output/SMTFormater.h"
 
 namespace lav {
-static argo::SMTFormater SMTF;
+thread_local static argo::SMTFormater SMTF;
 
 //////////////////////////////////////////////////////////////
 // LVariableInfo

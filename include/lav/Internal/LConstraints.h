@@ -26,7 +26,6 @@ public:
 
 private:
   std::vector<aExp> _Constraints;
-
 };
 
 }

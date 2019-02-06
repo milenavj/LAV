@@ -158,12 +158,12 @@ void OperatorNode::Print(OutputFormater *formater, std::ostream &ostr) {
 ////	Class ANDNode
 ////////////////////////////////////////////////////////////////////////////////
 ExpressionNode *ANDNode::Simplify(const std::vector<Expression> &operands) {
-
   if (operands.empty())
     return new ExpressionNode(EXPR_TOP, "top");
 
   std::vector<Expression> new_operands;
   std::vector<Expression>::const_iterator it, iend = operands.end();
+
   for (it = operands.begin(); it != iend; ++it) {
 
     // x && BOT = BOT

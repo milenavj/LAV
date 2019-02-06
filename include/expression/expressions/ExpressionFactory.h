@@ -18,12 +18,7 @@ namespace argo {
 
 class ExpressionFactory {
 public:
-  static ExpressionFactory *Instance() {
-    if (ExpressionFactory::_expression_factory == 0)
-      ExpressionFactory::_expression_factory = new ExpressionFactory();
-
-    return ExpressionFactory::_expression_factory;
-  }
+  static ExpressionFactory *Instance();
 
   ~ExpressionFactory() {}
   ExpressionNode *Get(ExpressionNode *expr_node);

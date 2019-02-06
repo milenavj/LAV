@@ -10,6 +10,17 @@ thread_local std::vector<Expression> dummy_vector;
 #include "expression/output/Output.h"
 
 namespace argo {
+pthread_mutex_t varef= PTHREAD_MUTEX_INITIALIZER;
+
+ExpressionFactory *ExpressionFactory::Instance() {
+  pthread_mutex_lock(&varef);
+  if (ExpressionFactory::_expression_factory == 0)
+    ExpressionFactory::_expression_factory = new ExpressionFactory();
+  pthread_mutex_unlock(&varef);
+  return ExpressionFactory::_expression_factory;
+}
+
+
 ExpressionNode *ExpressionFactory::Get(ExpressionNode *expr_node) {
   //	coutput << _existing_nodes.size() << "/" << _existing_nodes.bucket_count()
   //<< endl;

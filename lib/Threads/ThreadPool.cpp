@@ -100,6 +100,7 @@ void ThreadPool::CreateWorkerThreads() {
 }
 
 void ThreadPool::CreateControlThread() {
+
     // Pravimo kontrolnu nit koja ceka na signale
   m_control_thread = std::thread([this]() {
 
@@ -119,6 +120,7 @@ void ThreadPool::CreateControlThread() {
         Event::Sigval value = events[idx]->Value();
 
         if (value == Event::Outcome::Unsat || cancel) {
+            quick_exit(1);
           for (auto &t : m_threads)
             t.Cancel();
           std::cout << "Task finished unsuccessfully." << std::endl;
@@ -127,7 +129,7 @@ void ThreadPool::CreateControlThread() {
           break;
         }
 
-        std::cout << "Task finished successfully." << std::endl;
+//        std::cout << "Task finished successfully." << std::endl;
       }
       if (cancel)
         break;
@@ -136,6 +138,7 @@ void ThreadPool::CreateControlThread() {
     if (!cancel) {
       m_result = ThreadPool::Succ;
       std::cout << "All tasks are finished successfully." << std::endl;
+      return;
     }
   });
 }

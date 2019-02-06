@@ -69,10 +69,13 @@ extern llvm::cl::opt<bool> CheckUnderflow;
 // Dodato zbog paralelizacije
 extern llvm::cl::opt<int> NumberThreads;
 extern llvm::cl::opt<bool> EnableParallel;
+extern llvm::cl::opt<bool> EnableParallelBlock;
+
 
 namespace lav {
+pthread_mutex_t vargpc = PTHREAD_MUTEX_INITIALIZER;
 extern std::map<llvm::BasicBlock *, vLoop> FLoopBlocks;
-static argo::SMTFormater SMTF;
+thread_local static argo::SMTFormater SMTF;
 
 //llvm::Timer TryMergeTimer("TryMerge Time");
 //llvm::Timer SetStoreTimer("SetStore Time");
@@ -185,7 +188,7 @@ LBlock::LBlock(llvm::BasicBlock *bb, LFunction *parent)
   init();
 }
 
-unsigned LBlock::BlockNumber = 0;
+thread_local unsigned LBlock::BlockNumber = 0;
 
 LBlock::~LBlock() {
   for (unsigned i = 0; i < _Instructions.size(); i++)
@@ -243,7 +246,7 @@ void LBlock::ConnectFunctionConditions(LInstruction *fi, LFunction *ff) {
       //proveravaju se oni uslovi koji nisu safe
       //    if((lc[m].Status()==UNSAFE) || (lc[m].Status()==UNCHECKED) ||
       // (lc[m].Status()==ERROR)) {
-      if ((lc[m].Status() == UNSAFE) || (lc[m].Status() == ERROR)) {
+      if ((lc[m].Status() == UNSAFE) || (lc[m].Status() == FLAWED) || (lc[m].Status() == ERROR)) {
 
         //ako postoji takav uslov onda se sracunava rename trace-a od blok-a
         if (b) {
@@ -267,11 +270,12 @@ void LBlock::ConnectFunctionConditions(LInstruction *fi, LFunction *ff) {
         //ovde ima neki problem kada je povratna vrednost struktura
         //kod je takav da se ne vidi gde se ta memorija rezervise za strukturu
         //treba proveriti da li je u pitanju neka optimizacija koja to zezne
-        if (Id() == 0) {
+        if ((Id() == 0) && (!EnableParallel)) {
           aExp l = AddAddresses(aExp::AND(AllConstraints(), lhs3));
           s = LSolver::callSolver(l, rhs, this, ffi, lc[m].ErrorKind(), true);
-          if (stopWhenFound(ffi, s, true) == -1)
-            exit(1);
+          if (stopWhenFound(ffi, s, true) == -1) {
+            quick_exit(1);
+          }
           if (FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED))
             Delete(ffi->GetModelFileName());
         }
@@ -539,7 +543,7 @@ void LBlock::ReCalculateConditions(int ex_size) {
         _LocalConditions[i].ErrorKind());
 
     if (stopWhenFound(_LocalConditions[i].Instruction(), s, true) == -1)
-      exit(1);
+      quick_exit(1);
     if (FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED))
       Delete(_LocalConditions[i].Instruction()->GetModelFileName());
 
@@ -578,35 +582,29 @@ void LBlock::CalculateConditions() {
 
   // Autor: Branislava
   // Dodato zbog paralelizacije bloka
-  if (EnableParallel) //<-----------------------IZBACITI
-      //NEGACIJU!!!!!!!!!!!!!!!!!!!!!!!!!
-      {
-    std::cout << "\n\n\n\n\n -----------------BRANISLAVA begin "
-                 "------------------ \n\n\n\n\n " << std::endl;
-    ;
-
+  if (EnableParallelBlock) { //BLOCK PARALLEL
     // napravi funkciju koju ce da izvrsava svaka nit
     auto maxf =
         [&](LLocalCondition * localCond, aExp * cond, LBlock * block, int i) {
       aExp e1 = aExp::AND(*cond, aExp(localCond->LHS()));
       aExp e2 = aExp(localCond->RHS());
-      std::cout
-          << "\n ----------------- Start solver, thread id: " << pthread_self()
-          << " ------------------ \n" << std::endl;
+//      std::cout
+//          << "\n ----------------- Start solver, thread id: " << pthread_self()
+//          << " ------------------ \n" << std::endl;
 
       STATUS s = LSolver::instance().callSolver(
           e1, e2, block, localCond->Instruction(), localCond->ErrorKind(),
           true);
 
-      std::cout
-          << "\n ----------------- End solver, thread id: " << pthread_self()
-          << "------------------ \n" << std::endl;
+//      std::cout
+//          << "\n ----------------- End solver, thread id: " << pthread_self()
+//          << "------------------ \n" << std::endl;
 
       //std::cout << FindFirstFlawed << " find first flawed" << std::endl;
       if (stopWhenFound(localCond->Instruction(), s, true) == -1) {
-        //	    	return -1;
         quick_exit(0);
       }
+
       if (FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED)) {
         Delete(localCond->Instruction()->GetModelFileName());
         return -1;
@@ -631,7 +629,6 @@ void LBlock::CalculateConditions() {
     //    BindTasksForThreads.stopTimer();
 
     //    ParallelExecution.startTimer();
-
     if (functions.size() != 0) {
       ThreadPool t;
       // napravi thread pool i pokreni ga
@@ -646,14 +643,10 @@ void LBlock::CalculateConditions() {
       t.Work();
     }
     //    ParallelExecution.stopTimer();
-
-    std::cout << "\n\n\n\n\n -----------------BRANISLAVA end "
-                 "------------------ \n\n\n\n\n" << std::endl;
-  } else {
-    std::cout << "\n\n ----------------- BEGIN SEQUENTIAL BLOCK "
-                 "------------------ \n\n";
-
-    for (unsigned i = 0; i < _LocalConditions.size(); i++) {
+  } else { //BEGIN SEQUENTIAL BLOCK
+//      std::cout << "\n ----------------- BEGIN SEQUENTIAL BLOCK: " << pthread_self()
+//      << "------------------ \n" << std::endl;
+      for (unsigned i = 0; i < _LocalConditions.size(); i++) {
       if (SkipLocalCondition(_LocalConditions[i]))
         continue;
 
@@ -664,7 +657,7 @@ void LBlock::CalculateConditions() {
                               _LocalConditions[i].ErrorKind(), true);
 
       if (stopWhenFound(_LocalConditions[i].Instruction(), s, true) == -1) {
-        exit(1);
+        quick_exit(1);
       }
 
       if (FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED))
@@ -672,10 +665,7 @@ void LBlock::CalculateConditions() {
 
       _LocalConditions[i].Status() = s;
     }
-    std::cout << "\n\n ----------------- END SEQUENTIAL BLOCK "
-                 "------------------ \n\n";
   }
-
 }
 
 bool LBlock::IsInsideLoop() const { return (_Loop.size() != 0); }
@@ -821,6 +811,7 @@ aExp LBlock::GetTraceGlobFuncCons() {
 }
 
 caExp &LBlock::GetTrace() {
+
   if (_TraceCalculated)
     return _Trace;
   _Trace = MakeTrace();
@@ -870,7 +861,7 @@ void LBlock::CalculateConditionsBlock() {
     for (unsigned i = 0; i < conds.size(); i++)
       if (stopWhenFound(conds[i]->Instruction(), conds[i]->Status(), true) ==
           -1)
-        exit(1);
+        quick_exit(1);
 
   _ConditionsCalculated = true;
 }
@@ -893,7 +884,7 @@ void LBlock::CalculateConditionsIncremental() {
         _LocalConditions[i].ErrorKind());
 
     if (stopWhenFound(_LocalConditions[i].Instruction(), s, true) == -1)
-      exit(1);
+      quick_exit(1);
 
     if (FindFirstFlawed && Model && (s == UNSAFE || s == FLAWED))
       Delete(_LocalConditions[i].Instruction()->GetModelFileName());
@@ -1234,6 +1225,7 @@ aExp LBlock::GetExitConditions() const {
 }
 
 aExp LBlock::GetPredsConditions() const {
+  pthread_mutex_lock(&vargpc);
   vaExp expressions;
   vpBlock preds(_Preds);
 
@@ -1243,8 +1235,9 @@ aExp LBlock::GetPredsConditions() const {
     expressions.push_back(preds[j]->Postcondition());
     AddNewPreds(preds, preds[j]);
   }
-
-  return MakeANDFromExpressions(expressions);
+  aExp result = MakeANDFromExpressions(expressions);
+  pthread_mutex_unlock(&vargpc);
+  return result;
 }
 
 void LBlock::AddNewPreds(vpBlock &preds, LBlock *p) const {
@@ -1384,13 +1377,12 @@ bool LBlock::IsUnreachableBlock() const {
 }
 
 void LBlock::FlawedFound(const LInstruction *fi, ERRKIND e) {
-  //!@#$ ovo otkomentarisati
-  //bool reachable =true; //= CheckReachability();
+
   bool reachable = CheckReachability();
   if (reachable) {
     //    AddLocalConditionTimer.stopTimer();
     if (stopWhenFound(fi, FLAWED, false) == -1)
-      exit(1);
+      quick_exit(1);
     //ovo је dostizno ukoliko nije find-first-flawed
     _LocalConditions.push_back(
         LLocalCondition(aExp::TOP(), aExp::TOP(), fi, e, FLAWED));
@@ -1480,7 +1472,7 @@ void LBlock::AddLocalCondition(caExp &r, LInstruction *fi, ERRKIND e) {
   
     if (Id() == 0)
       if (stopWhenFound(fi, s, true) == -1)
-        exit(1);
+        quick_exit(1);
     if (ProcessStatus(fi, e, s) == true)
       return;
   */

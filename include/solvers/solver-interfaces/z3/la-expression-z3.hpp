@@ -51,6 +51,7 @@ public:
   std::string getAssignment() const {
     // TODO: FIXME: getIntAssignment vs getBooleanAssignment
     //      return Z3Instance::instance().getIntAssignment(_expr);
+      return Z3Instance::instance().getAssignment(_expr,0);
     return "error";
   }
 
@@ -124,8 +125,8 @@ public:
   }
 
   Z3_sort translateType(Type t) {
-    static Z3_sort unsigned_type = Z3_mk_int_sort(getSolver());
-    static Z3_sort bool_type = Z3_mk_bool_sort(getSolver());
+    thread_local static Z3_sort unsigned_type = Z3_mk_int_sort(getSolver());
+    thread_local static Z3_sort bool_type = Z3_mk_bool_sort(getSolver());
     switch (t.getType()) {
     case UNSIGNED:
       return unsigned_type;
@@ -136,19 +137,12 @@ public:
     }
   }
 
+  thread_local static std::map<std::string, Z3_func_decl> _uf_registry;
+
   virtual ExpressionImp *
   uninterpretedFunction(const Function &fun,
                         const std::vector<const ExpressionImp *> &args) {
     size_t n = args.size();
-
-    //ako bi bilo static, onda prilikom resetovanja ovde ostane u registru i
-    //onda ili pukne program je se na adresi z3_func_decl nalazi nesto bezveze
-    //ili ne pukne jer tu bude neka sasvim deseta funkcija, ali svakako bude
-    //neka greska
-    //problem je sto ako nema resetovanja izmedju, sta onda???!?? isto i za
-    //bitvektore
-    //static
-    std::map<std::string, Z3_func_decl> _uf_registry;
     Z3_func_decl f;
     if (_uf_registry.find(fun.getName()) == _uf_registry.end()) {
       Z3_sort *domain_types = new Z3_sort[n + 1];
@@ -164,7 +158,7 @@ public:
       f = _uf_registry[fun.getName()];
     }
 
-    SOLVER_EXPR_TYPE *exps = new SOLVER_EXPR_TYPE[n];
+    SOLVER_EXPR_TYPE *exps = new SOLVER_EXPR_TYPE[n + 1];
 
     std::vector<const ExpressionImp *>::const_iterator i;
     int k;
@@ -188,7 +182,6 @@ public:
         exps[k] = y->_expr;
       }
     }
-
     SOLVER_EXPR_TYPE exp = Z3_mk_app(getSolver(), f, n, exps);
 
     print(f);

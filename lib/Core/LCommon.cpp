@@ -20,6 +20,7 @@
 #include "llvm/IR/GlobalVariable.h"
 #include "llvm/Support/CallSite.h"
 #include "llvm/Support/CommandLine.h"
+#include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
 
@@ -104,11 +105,21 @@ llvm::cl::opt<int> NumberThreads(
     llvm::cl::desc(
         "LAV --- Number of threads (default = hardware_concurrency)"),
     llvm::cl::init(0));
+
+llvm::cl::opt<bool> EnableParallelBlock(
+    "enable-parallel-block",
+    llvm::cl::desc("LAV --- Enable parallel block solver calls (default = false)"),
+    llvm::cl::init(false));
+
 llvm::cl::opt<bool> EnableParallel(
     "enable-parallel",
     llvm::cl::desc("LAV --- Enable parallel solver calls (default = false)"),
     llvm::cl::init(false));
 
+llvm::cl::opt<bool> EnableParallelFunctions(
+    "enable-parallel-functions",
+    llvm::cl::desc("LAV --- Enable parallel functions solver calls (default = false)"),
+    llvm::cl::init(false));
 
 
 namespace lav {

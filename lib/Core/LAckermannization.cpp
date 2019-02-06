@@ -14,7 +14,7 @@
 
 namespace lav {
 
-static argo::SMTFormater SMTF;
+thread_local static argo::SMTFormater SMTF;
 
 aExp AbstrAckLeft(const aExp &e) {
   return ExpVar(LEFT + e.GetName(), fint_type, false);

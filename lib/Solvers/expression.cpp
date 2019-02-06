@@ -17,8 +17,8 @@ Expression::Expression(ExpressionImp *imp) {
 Expression::Expression(std::tr1::shared_ptr<ExpressionImp> imp) : _imp(imp) {}
 
 void Expression::setFactory(ExpressionFactory *factory) {
-  //   if (_factory)
-  //     delete _factory;
+   if (_factory && _factory!=factory)
+     delete _factory;
   _factory = factory;
 }
 

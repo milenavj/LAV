@@ -17,7 +17,7 @@ extern llvm::cl::opt<bool> CheckPointers;
 
 namespace lav {
 
-static argo::SMTFormater SMTF;
+thread_local static argo::SMTFormater SMTF;
 
 void LConstraints::Print() const {
   for (unsigned k = 0; k < _Constraints.size(); k++) {
