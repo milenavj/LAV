@@ -579,13 +579,20 @@ void LFunction::CalculateAllConditions() {
   LSolver::instance().AddIntoSolver(_Blocks[0]->Active());
 
   std::vector<LLocalCondition *> conds;
+  std::vector<aExp> postconds;
+  postconds.push_back(_Blocks[0]->Active());
   for (unsigned i = 0; i < _Blocks.size(); i++) {
-    _Blocks[i]->AddPostconditionToSolver();
-    _Blocks[i]->GetAllConditions(conds);
+      //    _Blocks[i]->AddPostconditionToSolver();
+     postconds.push_back(_Blocks[i]->Postcondition());
+     if(_Blocks[i]->IsUnreachableBlock())
+         continue;
+    _Blocks[i]->GetAllConditionsWithActive(conds);
   }
+
   _Blocks[_Blocks.size() - 1]->UpdateAndSetAddresses();
 
-  aExp F = aExp::TOP();
+//  aExp F = aExp::TOP();
+  aExp F = MakeANDFromExpressions(postconds);
   STATUS s = LSolver::instance().callSolverBlock(F, conds);
 
   if (s != SAFE && FindFirstFlawed)

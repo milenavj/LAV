@@ -1125,8 +1125,8 @@ void LState::InlineFunction(LInstruction *fi, llvm::Function *f,
   // Autor: Branislava
   // Dodato zbog paralelizacije funkcija
   if (EnableParallelFunctions) {
-    std::cout << "Funkcija: " << ff->GetFunctionName()
-              << " - Cekamo na vrednost shared future!" << std::endl;
+//    std::cout << "Funkcija: " << ff->GetFunctionName()
+//              << " - Cekamo na vrednost shared future!" << std::endl;
 
     auto FutureResultsPtr =
         GetParentBlock()->GetParentModule()->GetFutureResultsPtr();
@@ -1136,8 +1136,8 @@ void LState::InlineFunction(LInstruction *fi, llvm::Function *f,
 
     ff->SetPostcondition();
 
-    std::cout << "Funkcija: " << ff->GetFunctionName()
-              << " - Dobili smo vrednost shared future!" << std::endl;
+//    std::cout << "Funkcija: " << ff->GetFunctionName()
+//              << " - Dobili smo vrednost shared future!" << std::endl;
   } else {
     //da li je funkcija sracunata
     //ako nije, izracunaj je - pretpostavka da nema rekurzije

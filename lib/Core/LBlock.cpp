@@ -846,6 +846,18 @@ void LBlock::GetAllConditions(std::vector<LLocalCondition *> &conds) {
   }
 }
 
+void LBlock::GetAllConditionsWithActive(std::vector<LLocalCondition *> &conds) {
+  for (unsigned i = 0; i < _LocalConditions.size(); i++) {
+    //ovde bi mozda trebalo one koji se ne racunaju pobrisati da se ne cuvaju
+    //i ne prave guzvu bezveze
+    if (SkipLocalCondition(_LocalConditions[i])) {
+      continue;
+    }
+    _LocalConditions[i].LHS() = aExp::AND(_LocalConditions[i].LHS(),Active());
+    conds.push_back(&_LocalConditions[i]);
+  }
+}
+
 //ako u istom bloku postoji vise koje su unsafe, on ce pronaci
 //samo jednu, a ostale ce verovatno biti obelezene kao safe
 void LBlock::CalculateConditionsBlock() {

@@ -122,8 +122,8 @@ void LModule::Run() {
       //
       auto Function = _Functions[i];
       functions.push_back([&results, Function, i]() {
-        std::cout << "Funkcija[" << i << "]: " << Function->GetFunctionName()
-                  << " - Pocinje" << std::endl;
+//        std::cout << "Funkcija[" << i << "]: " << Function->GetFunctionName()
+//                  << " - Pocinje" << std::endl;
         Function->CalculateConditions();
         (*results)[std::string(Function->GetFunctionName())].setResult(1);
         return 1;
@@ -132,8 +132,11 @@ void LModule::Run() {
     }
 
     ThreadPool t;
-    // napravi thread pool i pokreni ga
-    t.Init(std::move(functions), _Functions.size());
+    if(NumberThreads)
+        t.Init(std::move(functions), NumberThreads);
+    else
+        // napravi thread pool i pokreni ga
+        t.Init(std::move(functions), _Functions.size());
 
     t.Work();
 

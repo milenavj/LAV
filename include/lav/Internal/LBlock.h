@@ -91,6 +91,7 @@ public:
   bool IsEntryBlock() const;
   void AddPostconditionToSolver();
   void GetAllConditions(std::vector<LLocalCondition *> &conds);
+  void GetAllConditionsWithActive(std::vector<LLocalCondition *> &conds);
 
   std::ostream &Print(std::ostream &ostr) const;
   std::ostream &PrintHTML(std::ostream &ostr) const;
