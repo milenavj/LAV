@@ -132,7 +132,7 @@ void LModule::Run() {
     }
 
     ThreadPool t;
-    if(NumberThreads)
+    if(NumberThreads && NumberThreads<=_Functions.size())
         t.Init(std::move(functions), NumberThreads);
     else
         // napravi thread pool i pokreni ga
