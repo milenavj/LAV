@@ -246,7 +246,7 @@ void LBlock::ConnectFunctionConditions(LInstruction *fi, LFunction *ff) {
       //proveravaju se oni uslovi koji nisu safe
       //    if((lc[m].Status()==UNSAFE) || (lc[m].Status()==UNCHECKED) ||
       // (lc[m].Status()==ERROR)) {
-      if ((lc[m].Status() == UNSAFE) || (lc[m].Status() == FLAWED) || (lc[m].Status() == ERROR)) {
+      if ((lc[m].Status() == UNSAFE) || (lc[m].Status() == FLAWED) || (lc[m].Status() == ERROR) || (lc[m].Status() == BLOCK_UNKNOWN)) {
 
         //ako postoji takav uslov onda se sracunava rename trace-a od blok-a
         if (b) {

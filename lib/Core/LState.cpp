@@ -49,7 +49,6 @@ extern llvm::cl::opt<bool> Students;
 extern llvm::cl::opt<bool> TrackPointers;
 extern llvm::cl::opt<bool> MemoryFlag;
 extern llvm::cl::opt<bool> CheckAssert;
-extern llvm::cl::opt<int> NumberThreads;
 extern llvm::cl::opt<bool> EnableParallel;
 extern llvm::cl::opt<bool> EnableParallelBlocks;
 extern llvm::cl::opt<bool> EnableParallelFunctions;
@@ -1400,7 +1399,10 @@ void LState::ProcessLibraryCall(LInstruction *fi, llvm::Function *f,
   } else if (f->getName() == "getchar") {
     aExp e = ExpVar(GetNextVariable(), fint_type, false);
     WriteIntoStore(i, e);
-  } else if ((f->getName() == "ASSERT") || (f->getName() == "assert") ||
+  } else if (f->getName() == "__VERIFIER_error") {
+      aExp e = GetParentBlock()->Active();
+      GetParentBlock()->AddLocalCondition(aExp::IMPL(e, aExp::BOT()), fi, ASSERT);
+  }  else if ((f->getName() == "ASSERT") || (f->getName() == "assert") ||
              (f->getName() == "ASSERT_") || (f->getName() == "assert_") ||
              (f->getName() == "ASSERT_LAV") || (f->getName() == "assert_lav") ||
              (f->getName() == "__VERIFIER_assert") ||

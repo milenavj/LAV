@@ -113,8 +113,6 @@ void LModule::Run() {
       //	     std::cout << "Funkcija["<< i << "]: "  <<
       //Function->GetFunctionName() << " - Pocinje" << std::endl;
       //             Function->CalculateConditions();
-      //
-      //
       //             (*results)[std::string(Function->GetFunctionName())].setResult(1);
       //         });
       //	}
@@ -131,6 +129,7 @@ void LModule::Run() {
       //	}
     }
 
+    //fixme manji broj niti nego sto treba moze da bude problem tj da se zbog toga zaglavi
     ThreadPool t;
     if(NumberThreads && NumberThreads<=_Functions.size())
         t.Init(std::move(functions), NumberThreads);

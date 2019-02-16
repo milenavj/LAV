@@ -45,14 +45,13 @@
 extern llvm::cl::opt<int> NumberThreads;
 extern llvm::cl::opt<bool> EnableParallel;
 extern llvm::cl::opt<bool> EnableParallelBlock;
+extern llvm::cl::opt<bool> FindFirstFlawed;
 
 #include "lav/Threads/FixedQueue.h"
 #include "lav/Threads/ThreadPool.h"
 
 using namespace Threads;
 
-extern llvm::cl::opt<bool> FindFirstFlawed;
-extern llvm::cl::opt<bool> EnableParallel;
 
 namespace {
 llvm::cl::opt<bool> CalculateAll(
