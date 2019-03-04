@@ -97,6 +97,12 @@ thread_local static argo::SMTFormater SMTF;
 //////////////////////////////////////////////////////////////
 std::ostream &LLocalCondition::Print(std::ostream &ostr) const {
   _Instruction->Print(ostr);
+//  ostr << "LHS: \n";
+//  _LHS.Print(&SMTF, ostr);
+//  ostr << std::endl;
+//  ostr << "RHS: \n";
+//  _RHS.Print(&SMTF, ostr);
+//  ostr << "\n";
   if (_Status == SAFE)
     ostr << "SAFE ";
   else if (_Status == FLAWED)

@@ -50,7 +50,6 @@ extern llvm::cl::opt<bool> TrackPointers;
 extern llvm::cl::opt<bool> MemoryFlag;
 extern llvm::cl::opt<bool> CheckAssert;
 extern llvm::cl::opt<bool> EnableParallel;
-extern llvm::cl::opt<bool> EnableParallelBlocks;
 extern llvm::cl::opt<bool> EnableParallelFunctions;
 extern llvm::cl::opt<bool> CheckPointers;
 

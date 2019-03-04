@@ -653,14 +653,20 @@ void LFunction::CalculateConditions() {
           ;
           std::vector<std::function<int()> > functions;
 
+          int block = 0;
           // BindTasksForThreads;
           for (unsigned i = 0; i < _Blocks.size(); i++) {
             if (_Blocks[i]->GetLocalConditions().size() == 0)
               continue;
+            block = i;
             // dodaj funkcije koje ce niti da izvrsavaju u red
             functions.push_back(std::bind(maxf, _Blocks[i]));
           }
 
+          //ako je sve skupljeno u jedan blok, primeni paralelnost na nivou bloka (ukoliko treba)
+          if ((functions.size() == 1) && (EnableParallelBlock))
+              _Blocks[block]->CalculateConditions();
+          else
           if (functions.size() != 0) {
             ThreadPool t;
             // napravi thread pool i pokreni ga

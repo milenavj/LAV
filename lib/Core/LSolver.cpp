@@ -889,7 +889,6 @@ UrsaExp LSolver::ExportExpressionBV(caExp &e, stUrsaExp &symbolTable, ERRKIND er
           errkind err = (e[0].isAdd() ? OVERFLOW_ADD : (e[0].isMul() ? OVERFLOW_MUL : (e[0].isSub() ? OVERFLOW_SUB : (e[0].isUdiv() ? OVERFLOW_UDIV : OVERFLOW_SDIV))) ) ;
           ExportOU(e[0], exported_exp, err, symbolTable);
           return !exported_exp;
-              //#####
       }
     return !operands[0];
   }
