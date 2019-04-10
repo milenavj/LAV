@@ -33,6 +33,7 @@ LVariableInfo::LVariableInfo(argo::Expression *v, const llvm::Type *t, bool rel,
   if (v != NULL) {
     _Value = new argo::Expression(SimplifyExpression(*v));
     delete v;
+    v = nullptr;
   }
 }
 
@@ -81,7 +82,12 @@ void LVariableInfo::init(const LVariableInfo &fv) {
   _TransformInclude = fv.IncludeInTransformation();
 }
 
-void LVariableInfo::deinit() { delete _Value; }
+void LVariableInfo::deinit() { 
+  if (_Value) {
+    delete _Value;
+    _Value = nullptr;
+  }
+}
 
 //////////////////////////////////////////////////////////////
 // LBlockStore

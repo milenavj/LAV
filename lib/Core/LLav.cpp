@@ -63,6 +63,8 @@ bool LavPass::runOnModule(Module &M) {
   //  PrintingTime.stopTimer();
   std::cout << "Printing results ... Completed " << std::endl << std::endl;
 
+  quick_exit(0);
+
   //modul nije modifikovan ovim pasom
   return false;
 }
